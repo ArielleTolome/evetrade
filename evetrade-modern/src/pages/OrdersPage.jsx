@@ -112,7 +112,7 @@ export function OrdersPage() {
         {/* Error */}
         {error && (
           <div className="mb-8 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
-            {error.message}
+            <strong>Error:</strong> {typeof error === 'string' ? error : error.message || 'An error occurred'}
           </div>
         )}
 

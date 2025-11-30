@@ -136,13 +136,34 @@ export function TradingTable({
     },
   };
 
-  // Handle row click
+  // Handle row click - only on tbody rows, not on buttons/pagination
   const handleRowClick = useCallback(
     (e) => {
       if (!onRowClick) return;
 
+      // Ignore clicks on buttons, inputs, selects, and pagination elements
+      const target = e.target;
+      if (
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'SELECT' ||
+        target.tagName === 'A' ||
+        target.closest('button') ||
+        target.closest('.dt-paging') ||
+        target.closest('.dt-buttons') ||
+        target.closest('.dt-search') ||
+        target.closest('.dt-length') ||
+        target.closest('.dt-top') ||
+        target.closest('.dt-bottom')
+      ) {
+        return;
+      }
+
       const row = e.target.closest('tr');
       if (!row || row.parentElement.tagName === 'THEAD') return;
+
+      // Only handle clicks on tbody
+      if (row.parentElement.tagName !== 'TBODY') return;
 
       const rowIndex = row.rowIndex - 1; // Subtract 1 for header
       if (rowIndex >= 0 && data[rowIndex]) {

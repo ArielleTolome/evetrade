@@ -45,8 +45,14 @@ export function StationAutocomplete({
   // Get security level for a station
   const getSecurityLevel = useCallback(
     (stationName) => {
-      if (!universeList) return 0;
-      const data = universeList[stationName];
+      if (!universeList || !stationName) return 0;
+      // Try exact match first
+      let data = universeList[stationName];
+      // If not found, try lowercase with spaces (keys are lowercase)
+      if (!data) {
+        const normalizedKey = stationName.toLowerCase().replace(/\*/g, '');
+        data = universeList[normalizedKey];
+      }
       return data?.security ?? 0;
     },
     [universeList]

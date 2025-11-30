@@ -11,12 +11,35 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo & Copyright */}
-          <div className="flex items-center gap-2 text-text-secondary text-sm">
-            <span className="font-display font-bold">
-              <span className="text-accent-cyan">EVE</span>Trade
-            </span>
-            <span className="opacity-50">|</span>
-            <span>&copy; 2016-{currentYear}</span>
+          <div className="flex flex-col items-center md:items-start gap-1 text-text-secondary text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-display font-bold">
+                <span className="text-accent-cyan">EVE</span>Trade
+              </span>
+              <span className="opacity-50">|</span>
+              <span>&copy; 2016-{currentYear}</span>
+            </div>
+            <div className="text-xs opacity-70">
+              Remixed by{' '}
+              <a
+                href="https://github.com/ArielleTolome"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-cyan hover:underline"
+              >
+                Ariel Tolome
+              </a>
+              {' '}&bull;{' '}
+              Original by{' '}
+              <a
+                href="https://github.com/awhipp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-purple hover:underline"
+              >
+                awhipp
+              </a>
+            </div>
           </div>
 
           {/* Links */}

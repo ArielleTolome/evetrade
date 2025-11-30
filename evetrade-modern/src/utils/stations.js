@@ -4,6 +4,76 @@
 const ROMAN_NUMERAL_PATTERN = /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/i;
 
 /**
+ * Normalize a station name to match universeList keys
+ * The universeList uses lowercase station names as keys
+ * @param {string} stationName - Station name to normalize
+ * @returns {string} Normalized key for universeList lookup
+ */
+export function normalizeStationKey(stationName) {
+  if (!stationName) return '';
+  // Remove citadel marker and convert to lowercase
+  return stationName.toLowerCase().replace(/\*$/, '');
+}
+
+/**
+ * Look up station data from universeList with normalized key
+ * @param {string} stationName - Station name to look up
+ * @param {object} universeList - Universe data
+ * @returns {object|null} Station data or null if not found
+ */
+export function getStationData(stationName, universeList) {
+  if (!stationName || !universeList) return null;
+
+  // Try exact match first
+  let data = universeList[stationName];
+
+  // If not found, try normalized key (lowercase)
+  if (!data) {
+    const normalizedKey = normalizeStationKey(stationName);
+    data = universeList[normalizedKey];
+  }
+
+  return data || null;
+}
+
+/**
+ * Get region data from universeList by region name
+ * Regions are stored in universeList with the region name (lowercase) as key
+ * @param {string} regionName - Region name to look up
+ * @param {object} universeList - Universe data
+ * @returns {object|null} Region data with region ID, or null if not found
+ */
+export function getRegionData(regionName, universeList) {
+  if (!regionName || !universeList) return null;
+
+  // Normalize the region name to lowercase for lookup
+  const normalizedKey = regionName.toLowerCase();
+
+  // Try exact match first
+  let data = universeList[regionName];
+
+  // Try lowercase match
+  if (!data) {
+    data = universeList[normalizedKey];
+  }
+
+  // If still not found, search all entries for matching regionName
+  if (!data) {
+    for (const [key, value] of Object.entries(universeList)) {
+      if (value.regionName && value.regionName.toLowerCase() === normalizedKey) {
+        return value;
+      }
+      // Also check if the key matches the region name (case-insensitive)
+      if (key.toLowerCase() === normalizedKey && value.region) {
+        return value;
+      }
+    }
+  }
+
+  return data || null;
+}
+
+/**
  * Check if a string is a Roman numeral
  * @param {string} str - String to check
  * @returns {boolean}
@@ -64,7 +134,7 @@ export function getSystemFromStation(stationName) {
 export function parseLocation(location, universeList) {
   if (!location || !universeList) return null;
 
-  const data = universeList[location];
+  const data = getStationData(location, universeList);
   if (!data) return null;
 
   return {
@@ -175,7 +245,7 @@ export function collapseToSystems(locations, universeList, stationList) {
     if (allSystemStations.length === stations.length &&
         allSystemStations.every((s) => stations.includes(s))) {
       // Use first station's region and system ID
-      const data = universeList[stations[0]];
+      const data = getStationData(stations[0], universeList);
       if (data) {
         result.push({
           type: 'system',
@@ -187,7 +257,7 @@ export function collapseToSystems(locations, universeList, stationList) {
     } else {
       // Keep individual stations
       stations.forEach((station) => {
-        const data = universeList[station];
+        const data = getStationData(station, universeList);
         if (data) {
           result.push({
             type: 'station',

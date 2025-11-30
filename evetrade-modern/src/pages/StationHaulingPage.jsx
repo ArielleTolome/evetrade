@@ -16,6 +16,7 @@ import {
   SYSTEM_SECURITY_OPTIONS,
   TRADE_PREFERENCE_OPTIONS,
 } from '../utils/constants';
+import { getStationData } from '../utils/stations';
 
 /**
  * Station Hauling Page Component
@@ -23,7 +24,7 @@ import {
 export function StationHaulingPage() {
   const navigate = useNavigate();
   const { universeList, loading: resourcesLoading } = useResources();
-  const { data, loading, error, execute, reset } = useApiCall(fetchStationHauling);
+  const { data, loading, error, execute } = useApiCall(fetchStationHauling);
 
   // Form state
   const [form, setForm] = useState({
@@ -74,7 +75,7 @@ export function StationHaulingPage() {
       if (stations.length === 0) return '';
 
       const locations = stations.map((station) => {
-        const data = universeList?.[station];
+        const data = getStationData(station, universeList);
         if (!data) return null;
         return `${data.region}:${data.station}`;
       }).filter(Boolean);
@@ -363,7 +364,7 @@ export function StationHaulingPage() {
         {/* Error */}
         {error && (
           <div className="mb-8 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
-            {error.message}
+            <strong>Error:</strong> {typeof error === 'string' ? error : error.message || 'An error occurred'}
           </div>
         )}
 

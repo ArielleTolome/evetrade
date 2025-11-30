@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { getCached, setCached } from './useCache';
 import { fetchResource } from '../api/client';
 import { RESOURCE_FILES } from '../utils/constants';
+import { getStationData, getRegionData } from '../utils/stations';
 
 /**
  * Resource Context
@@ -182,23 +183,15 @@ export function useLocationLookup() {
   const getLocationData = useCallback(
     (locationName) => {
       if (!universeList || !locationName) return null;
-      return universeList[locationName] || null;
+      return getStationData(locationName, universeList);
     },
     [universeList]
   );
 
-  const getRegionData = useCallback(
+  const getRegionDataFn = useCallback(
     (regionName) => {
       if (!universeList || !regionName) return null;
-
-      // Find region in universe list
-      for (const [name, data] of Object.entries(universeList)) {
-        if (data.regionName === regionName) {
-          return { name, ...data };
-        }
-      }
-
-      return null;
+      return getRegionData(regionName, universeList);
     },
     [universeList]
   );
@@ -229,7 +222,7 @@ export function useLocationLookup() {
 
   return {
     getLocationData,
-    getRegionData,
+    getRegionData: getRegionDataFn,
     searchStations,
     searchRegions,
   };

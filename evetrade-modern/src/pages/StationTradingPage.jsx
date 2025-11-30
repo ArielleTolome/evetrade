@@ -10,6 +10,7 @@ import { useApiCall } from '../hooks/useApiCall';
 import { fetchStationTrading } from '../api/trading';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 import { TAX_OPTIONS } from '../utils/constants';
+import { getStationData } from '../utils/stations';
 
 /**
  * Station Trading Page Component
@@ -47,7 +48,7 @@ export function StationTradingPage() {
 
     if (!form.station) {
       newErrors.station = 'Please select a station';
-    } else if (!universeList?.[form.station]) {
+    } else if (!getStationData(form.station, universeList)) {
       newErrors.station = 'Invalid station selected';
     }
 
@@ -82,7 +83,7 @@ export function StationTradingPage() {
 
       if (!validateForm()) return;
 
-      const stationData = universeList[form.station];
+      const stationData = getStationData(form.station, universeList);
       if (!stationData) return;
 
       try {
@@ -105,7 +106,7 @@ export function StationTradingPage() {
   // Handle row click to view orders
   const handleRowClick = useCallback(
     (item) => {
-      const stationData = universeList[form.station];
+      const stationData = getStationData(form.station, universeList);
       if (!stationData) return;
 
       const itemId = item['Item ID'] || item.itemId;
@@ -277,7 +278,7 @@ export function StationTradingPage() {
         {/* Error Display */}
         {error && (
           <div className="mb-8 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
-            <strong>Error:</strong> {error.message}
+            <strong>Error:</strong> {typeof error === 'string' ? error : error.message || 'An error occurred'}
           </div>
         )}
 

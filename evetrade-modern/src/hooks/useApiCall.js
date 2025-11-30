@@ -44,34 +44,3 @@ export function useApiCall(apiFunction) {
   };
 }
 
-/**
- * Hook for station trading
- */
-export function useStationTrading() {
-  const { fetchStationTrading } = require('../api/trading');
-  return useApiCall(fetchStationTrading);
-}
-
-/**
- * Hook for station hauling
- */
-export function useStationHauling() {
-  const { fetchStationHauling } = require('../api/trading');
-  return useApiCall(fetchStationHauling);
-}
-
-/**
- * Hook for region hauling
- */
-export function useRegionHauling() {
-  const { fetchRegionHauling } = require('../api/trading');
-  return useApiCall(fetchRegionHauling);
-}
-
-/**
- * Hook for orders
- */
-export function useOrders() {
-  const { fetchOrders } = require('../api/trading');
-  return useApiCall(fetchOrders);
-}

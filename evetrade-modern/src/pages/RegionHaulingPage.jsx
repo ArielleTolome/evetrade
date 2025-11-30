@@ -16,6 +16,7 @@ import {
   STRUCTURE_TYPE_OPTIONS,
   TRADE_PREFERENCE_OPTIONS,
 } from '../utils/constants';
+import { getRegionData } from '../utils/stations';
 
 /**
  * Region Hauling Page Component
@@ -63,12 +64,8 @@ export function RegionHaulingPage() {
     (regionName) => {
       if (!universeList) return null;
 
-      for (const [name, data] of Object.entries(universeList)) {
-        if (data.regionName === regionName || name === regionName) {
-          return data.region;
-        }
-      }
-      return null;
+      const regionData = getRegionData(regionName, universeList);
+      return regionData?.region || null;
     },
     [universeList]
   );
@@ -350,7 +347,7 @@ export function RegionHaulingPage() {
         {/* Error */}
         {error && (
           <div className="mb-8 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
-            {error.message}
+            <strong>Error:</strong> {typeof error === 'string' ? error : error.message || 'An error occurred'}
           </div>
         )}
 
