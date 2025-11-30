@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://evetrade.space/sitemap.xml

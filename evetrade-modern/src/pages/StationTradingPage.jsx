@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
+import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
@@ -16,7 +17,7 @@ import { TAX_OPTIONS } from '../utils/constants';
 export function StationTradingPage() {
   const navigate = useNavigate();
   const { universeList, loading: resourcesLoading } = useResources();
-  const { data, loading, error, execute, reset } = useApiCall(fetchStationTrading);
+  const { data, loading, error, execute } = useApiCall(fetchStationTrading);
 
   // Form state
   const [form, setForm] = useState({
@@ -35,7 +36,6 @@ export function StationTradingPage() {
   // Update form field
   const updateForm = useCallback((key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    // Clear error when field is updated
     if (errors[key]) {
       setErrors((prev) => ({ ...prev, [key]: null }));
     }
@@ -103,7 +103,7 @@ export function StationTradingPage() {
   );
 
   // Handle row click to view orders
-  const handleViewOrders = useCallback(
+  const handleRowClick = useCallback(
     (item) => {
       const stationData = universeList[form.station];
       if (!stationData) return;
@@ -123,6 +123,55 @@ export function StationTradingPage() {
         value: opt.value,
         label: opt.label,
       })),
+    []
+  );
+
+  // Table columns configuration
+  const tableColumns = useMemo(
+    () => [
+      {
+        key: 'Item',
+        label: 'Item',
+        className: 'font-medium',
+      },
+      {
+        key: 'Buy Price',
+        label: 'Buy Price',
+        type: 'num',
+        render: (data) => formatISK(data, false),
+      },
+      {
+        key: 'Sell Price',
+        label: 'Sell Price',
+        type: 'num',
+        render: (data) => formatISK(data, false),
+      },
+      {
+        key: 'Volume',
+        label: 'Volume',
+        type: 'num',
+        render: (data) => formatNumber(data, 0),
+      },
+      {
+        key: 'Profit per Unit',
+        label: 'Profit/Unit',
+        type: 'num',
+        render: (data) => formatISK(data, false),
+      },
+      {
+        key: 'Net Profit',
+        label: 'Net Profit',
+        type: 'num',
+        defaultSort: true,
+        render: (data) => formatISK(data, false),
+      },
+      {
+        key: 'Gross Margin',
+        label: 'Margin',
+        type: 'num',
+        render: (data) => formatPercent(data / 100, 1),
+      },
+    ],
     []
   );
 
@@ -241,73 +290,26 @@ export function StationTradingPage() {
 
         {/* Results */}
         {data && !loading && (
-          <GlassmorphicCard padding="p-0">
+          <>
             {data.length === 0 ? (
-              <div className="p-8 text-center">
+              <GlassmorphicCard className="text-center py-12">
                 <p className="text-text-secondary text-lg">
                   No trades found matching your criteria.
                 </p>
                 <p className="text-text-secondary/70 mt-2">
                   Try lowering your minimum profit or adjusting margin ranges.
                 </p>
-              </div>
+              </GlassmorphicCard>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-space-mid text-accent-cyan font-display">
-                      <th className="px-4 py-3 text-left">Item</th>
-                      <th className="px-4 py-3 text-right">Buy Price</th>
-                      <th className="px-4 py-3 text-right">Sell Price</th>
-                      <th className="px-4 py-3 text-right">Volume</th>
-                      <th className="px-4 py-3 text-right">Profit/Unit</th>
-                      <th className="px-4 py-3 text-right">Net Profit</th>
-                      <th className="px-4 py-3 text-right">Margin</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.map((item, index) => (
-                      <tr
-                        key={item['Item ID'] || index}
-                        className="border-t border-accent-cyan/10 hover:bg-accent-cyan/5 transition-colors"
-                      >
-                        <td className="px-4 py-3 font-medium text-text-primary">
-                          {item.Item || item.name}
-                        </td>
-                        <td className="px-4 py-3 text-right text-text-secondary font-mono">
-                          {formatISK(item['Buy Price'] || item.buyPrice, false)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-text-secondary font-mono">
-                          {formatISK(item['Sell Price'] || item.sellPrice, false)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-text-secondary font-mono">
-                          {formatNumber(item.Volume || item.volume, 0)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-accent-cyan font-mono">
-                          {formatISK(item['Profit per Unit'] || item.profitPerUnit, false)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-accent-gold font-mono font-bold">
-                          {formatISK(item['Net Profit'] || item.netProfit, false)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-accent-purple font-mono">
-                          {formatPercent((item['Gross Margin'] || item.margin) / 100, 1)}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() => handleViewOrders(item)}
-                            className="px-3 py-1 text-xs font-medium text-accent-cyan border border-accent-cyan/30 rounded hover:bg-accent-cyan/10 transition-colors"
-                          >
-                            View Orders
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <TradingTable
+                data={data}
+                columns={tableColumns}
+                onRowClick={handleRowClick}
+                defaultSort={{ column: 'Net Profit', direction: 'desc' }}
+                emptyMessage="No trades found matching your criteria"
+              />
             )}
-          </GlassmorphicCard>
+          </>
         )}
       </div>
     </PageLayout>

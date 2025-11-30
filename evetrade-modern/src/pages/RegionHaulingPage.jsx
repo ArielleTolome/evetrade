@@ -1,7 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { FormInput, FormSelect, RegionAutocomplete } from '../components/forms';
+import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
@@ -19,6 +21,7 @@ import {
  * Region Hauling Page Component
  */
 export function RegionHaulingPage() {
+  const navigate = useNavigate();
   const { universeList, nearbyRegions, loading: resourcesLoading } = useResources();
   const { data, loading, error, execute } = useApiCall(fetchRegionHauling);
 
@@ -122,6 +125,74 @@ export function RegionHaulingPage() {
   const securityOptions = useMemo(() => SYSTEM_SECURITY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
   const structureOptions = useMemo(() => STRUCTURE_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
   const prefOptions = useMemo(() => TRADE_PREFERENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
+
+  // Table columns configuration
+  const tableColumns = useMemo(
+    () => [
+      {
+        key: 'Item',
+        label: 'Item',
+        className: 'font-medium',
+        render: (data, row) => row.Item || row.name,
+      },
+      {
+        key: 'From',
+        label: 'From',
+        render: (data) => (typeof data === 'object' ? data.name : data),
+      },
+      {
+        key: 'Take To',
+        label: 'To',
+        render: (data) => (typeof data === 'object' ? data.name : data),
+      },
+      {
+        key: 'Quantity',
+        label: 'Quantity',
+        type: 'num',
+        render: (data, row) => formatNumber(data || row.quantity, 0),
+      },
+      {
+        key: 'Profit',
+        label: 'Profit',
+        type: 'num',
+        defaultSort: true,
+        render: (data, row) => formatISK(data || row.profit, false),
+      },
+      {
+        key: 'Profit per Jump',
+        label: 'Profit/Jump',
+        type: 'num',
+        render: (data, row) => formatISK(data || row.profitPerJump, false),
+      },
+      {
+        key: 'ROI',
+        label: 'ROI',
+        type: 'num',
+        render: (data, row) => formatPercent((data || row.roi) / 100, 1),
+      },
+      {
+        key: 'Jumps',
+        label: 'Jumps',
+        type: 'num',
+        render: (data, row) => data || row.jumps || 'N/A',
+      },
+    ],
+    []
+  );
+
+  // Handle row click
+  const handleRowClick = useCallback(
+    (item) => {
+      const itemId = item['Item ID'] || item.itemId;
+      const fromLocation = item.fromLocation || '';
+      const toLocation = item.toLocation || '';
+
+      if (itemId && fromLocation && toLocation) {
+        navigate(`/orders?itemId=${itemId}&from=${fromLocation}&to=${toLocation}`);
+      }
+    },
+    [navigate]
+  );
 
   return (
     <PageLayout
@@ -292,61 +363,26 @@ export function RegionHaulingPage() {
 
         {/* Results */}
         {data && !loading && (
-          <GlassmorphicCard padding="p-0">
+          <>
             {data.length === 0 ? (
-              <div className="p-8 text-center text-text-secondary">
-                No trades found matching your criteria.
-              </div>
+              <GlassmorphicCard className="text-center py-12">
+                <p className="text-text-secondary text-lg">
+                  No trades found matching your criteria.
+                </p>
+                <p className="text-text-secondary/70 mt-2">
+                  Try adjusting your parameters or selecting different regions.
+                </p>
+              </GlassmorphicCard>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-space-mid text-accent-cyan font-display">
-                      <th className="px-4 py-3 text-left">Item</th>
-                      <th className="px-4 py-3 text-left">From</th>
-                      <th className="px-4 py-3 text-left">To</th>
-                      <th className="px-4 py-3 text-right">Quantity</th>
-                      <th className="px-4 py-3 text-right">Profit</th>
-                      <th className="px-4 py-3 text-right">Profit/Jump</th>
-                      <th className="px-4 py-3 text-right">ROI</th>
-                      <th className="px-4 py-3 text-right">Jumps</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.slice(0, 50).map((item, index) => (
-                      <tr
-                        key={index}
-                        className="border-t border-accent-cyan/10 hover:bg-accent-cyan/5"
-                      >
-                        <td className="px-4 py-3 font-medium">{item.Item || item.name}</td>
-                        <td className="px-4 py-3 text-text-secondary">
-                          {typeof item.From === 'object' ? item.From.name : item.From}
-                        </td>
-                        <td className="px-4 py-3 text-text-secondary">
-                          {typeof item['Take To'] === 'object' ? item['Take To'].name : item['Take To']}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono">
-                          {formatNumber(item.Quantity || item.quantity, 0)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-accent-gold font-mono font-bold">
-                          {formatISK(item.Profit || item.profit, false)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-accent-purple font-mono">
-                          {formatISK(item['Profit per Jump'] || item.profitPerJump, false)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-accent-cyan font-mono">
-                          {formatPercent((item.ROI || item.roi) / 100, 1)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono">
-                          {item.Jumps || item.jumps || 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <TradingTable
+                data={data}
+                columns={tableColumns}
+                onRowClick={handleRowClick}
+                defaultSort={{ column: 'Profit', direction: 'desc' }}
+                emptyMessage="No trades found matching your criteria"
+              />
             )}
-          </GlassmorphicCard>
+          </>
         )}
       </div>
     </PageLayout>

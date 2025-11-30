@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { getApiEndpoint, RESOURCE_ENDPOINT } from '../utils/constants';
-import { isSupabaseConfigured, fetchFromSupabase } from '../lib/supabase';
 
 /**
  * Create axios instance with custom configuration
@@ -14,7 +13,7 @@ const apiClient = axios.create({
 });
 
 /**
- * Create resource client for S3 resources (fallback)
+ * Create resource client for S3 resources
  */
 const resourceClient = axios.create({
   baseURL: RESOURCE_ENDPOINT,
@@ -115,22 +114,11 @@ export async function fetchWithRetry(url, options = {}, maxRetries = 3) {
 }
 
 /**
- * Fetch resource from Supabase (primary) or S3 (fallback)
+ * Fetch resource from S3
  * @param {string} filename - Resource filename (without .json extension)
  * @returns {Promise} Resource data
  */
 export async function fetchResource(filename) {
-  // Try Supabase first if configured
-  if (isSupabaseConfigured) {
-    try {
-      const data = await fetchFromSupabase(filename);
-      return data;
-    } catch (error) {
-      console.warn(`Supabase fetch failed for ${filename}, falling back to S3:`, error.message);
-    }
-  }
-
-  // Fallback to S3
   try {
     const response = await resourceClient.get(`${filename}.json`);
     return response.data;
