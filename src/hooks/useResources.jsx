@@ -3,6 +3,7 @@ import { getCached, setCached } from './useCache';
 import { fetchResource } from '../api/client';
 import { RESOURCE_FILES } from '../utils/constants';
 import { getStationData, getRegionData } from '../utils/stations';
+import { ErrorBoundary, ResourceErrorFallback } from '../components/common/ErrorBoundary';
 
 /**
  * Resource Context
@@ -98,7 +99,7 @@ export function ResourceProvider({ children }) {
       if (loaded.structureList && loaded.stationList) {
         loaded.stationList = [
           ...loaded.stationList,
-          ...loaded.structureList.map((s) => `${s}*`),
+          ...loaded.structureList.map((s) => \`\${s}*\`),
         ];
       }
 
@@ -165,10 +166,27 @@ export function ResourceProvider({ children }) {
     loadInvTypes,
   };
 
+  // Show error fallback if resource loading failed
+  if (error && !loading) {
+    return (
+      <ResourceErrorFallback
+        error={error}
+        resetError={loadResources}
+        loadingProgress={loadingProgress}
+      />
+    );
+  }
+
   return (
-    <ResourceContext.Provider value={value}>
-      {children}
-    </ResourceContext.Provider>
+    <ErrorBoundary
+      title="Resource Loading Error"
+      message="Failed to load game resources. Please try again."
+      onReset={loadResources}
+    >
+      <ResourceContext.Provider value={value}>
+        {children}
+      </ResourceContext.Provider>
+    </ErrorBoundary>
   );
 }
 
