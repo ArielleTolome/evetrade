@@ -19,6 +19,15 @@ import {
 import { getRegionData } from '../utils/stations';
 
 /**
+ * Static option arrays for dropdowns (moved outside component to avoid re-creation)
+ */
+const TAX_SELECT_OPTIONS = TAX_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
+const ROUTE_SELECT_OPTIONS = ROUTE_SAFETY_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
+const SECURITY_SELECT_OPTIONS = SYSTEM_SECURITY_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
+const STRUCTURE_SELECT_OPTIONS = STRUCTURE_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
+const PREFERENCE_SELECT_OPTIONS = TRADE_PREFERENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label }));
+
+/**
  * Region Hauling Page Component
  */
 export function RegionHaulingPage() {
@@ -116,13 +125,6 @@ export function RegionHaulingPage() {
     [form, getRegionId, execute]
   );
 
-  // Option arrays for dropdowns
-  const taxOptions = useMemo(() => TAX_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const routeOptions = useMemo(() => ROUTE_SAFETY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const securityOptions = useMemo(() => SYSTEM_SECURITY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const structureOptions = useMemo(() => STRUCTURE_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const prefOptions = useMemo(() => TRADE_PREFERENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-
   // Table columns configuration
   const tableColumns = useMemo(
     () => [
@@ -214,7 +216,7 @@ export function RegionHaulingPage() {
                   label="Trade Preference"
                   value={form.fromPreference}
                   onChange={(v) => updateForm('fromPreference', v)}
-                  options={prefOptions}
+                  options={PREFERENCE_SELECT_OPTIONS}
                 />
               </div>
 
@@ -270,7 +272,7 @@ export function RegionHaulingPage() {
                   label="Trade Preference"
                   value={form.toPreference}
                   onChange={(v) => updateForm('toPreference', v)}
-                  options={prefOptions}
+                  options={PREFERENCE_SELECT_OPTIONS}
                 />
               </div>
             </div>
@@ -312,25 +314,25 @@ export function RegionHaulingPage() {
                 label="Sales Tax Level"
                 value={form.tax}
                 onChange={(v) => updateForm('tax', parseFloat(v))}
-                options={taxOptions}
+                options={TAX_SELECT_OPTIONS}
               />
               <FormSelect
                 label="System Security"
                 value={form.systemSecurity}
                 onChange={(v) => updateForm('systemSecurity', v)}
-                options={securityOptions}
+                options={SECURITY_SELECT_OPTIONS}
               />
               <FormSelect
                 label="Structure Type"
                 value={form.structureType}
                 onChange={(v) => updateForm('structureType', v)}
-                options={structureOptions}
+                options={STRUCTURE_SELECT_OPTIONS}
               />
               <FormSelect
                 label="Route Safety"
                 value={form.routeSafety}
                 onChange={(v) => updateForm('routeSafety', v)}
-                options={routeOptions}
+                options={ROUTE_SELECT_OPTIONS}
               />
             </div>
 
