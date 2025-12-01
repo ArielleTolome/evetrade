@@ -17,8 +17,6 @@ export function useApiCall(apiFunction) {
 
       try {
         const result = await apiFunction(params);
-        console.log('[useApiCall] Raw result:', result);
-        console.log('[useApiCall] Type:', typeof result, 'IsArray:', Array.isArray(result), 'Length:', result?.length);
         setData(result);
         return result;
       } catch (err) {

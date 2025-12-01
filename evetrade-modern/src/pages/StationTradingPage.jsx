@@ -290,20 +290,12 @@ export function StationTradingPage() {
         )}
 
         {/* Results */}
-        {data && !loading && (
-          <>
-            {(() => {
-              // Debug logging
-              console.log('[StationTradingPage] data:', data);
-              console.log('[StationTradingPage] typeof data:', typeof data);
-              console.log('[StationTradingPage] Array.isArray(data):', Array.isArray(data));
-              console.log('[StationTradingPage] data?.length:', data?.length);
-              if (data && typeof data === 'object') {
-                console.log('[StationTradingPage] Object.keys(data):', Object.keys(data));
-              }
-              return null;
-            })()}
-            {(!Array.isArray(data) || data.length === 0) ? (
+        {data !== null && !loading && (() => {
+          // Normalize data to array
+          const trades = Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : []);
+
+          if (trades.length === 0) {
+            return (
               <GlassmorphicCard className="text-center py-12">
                 <p className="text-text-secondary text-lg">
                   No trades found matching your criteria.
@@ -312,17 +304,19 @@ export function StationTradingPage() {
                   Try lowering your minimum profit or adjusting margin ranges.
                 </p>
               </GlassmorphicCard>
-            ) : (
-              <TradingTable
-                data={data}
-                columns={tableColumns}
-                onRowClick={handleRowClick}
-                defaultSort={{ column: 'Net Profit', direction: 'desc' }}
-                emptyMessage="No trades found matching your criteria"
-              />
-            )}
-          </>
-        )}
+            );
+          }
+
+          return (
+            <TradingTable
+              data={trades}
+              columns={tableColumns}
+              onRowClick={handleRowClick}
+              defaultSort={{ column: 'Net Profit', direction: 'desc' }}
+              emptyMessage="No trades found matching your criteria"
+            />
+          );
+        })()}
       </div>
     </PageLayout>
   );
