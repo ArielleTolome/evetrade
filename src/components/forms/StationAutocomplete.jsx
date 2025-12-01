@@ -27,6 +27,7 @@ export function StationAutocomplete({
 
   const inputRef = useRef(null);
   const listRef = useRef(null);
+  const blurTimeoutRef = useRef(null);
 
   // Generate unique IDs for ARIA attributes
   const listboxId = useId();
@@ -118,6 +119,16 @@ export function StationAutocomplete({
     }
   }, [highlightedIndex]);
 
+
+  // Cleanup blur timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className={`relative ${className}`}>
       {label && (
@@ -139,7 +150,14 @@ export function StationAutocomplete({
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => inputValue && setIsOpen(true)}
-          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          onBlur={() => {
+            // Clear any existing timeout
+            if (blurTimeoutRef.current) {
+              clearTimeout(blurTimeoutRef.current);
+            }
+            // Set new timeout and store reference
+            blurTimeoutRef.current = setTimeout(() => setIsOpen(false), 200);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={resourcesLoading ? 'Loading stations...' : placeholder}
           disabled={disabled || resourcesLoading}
