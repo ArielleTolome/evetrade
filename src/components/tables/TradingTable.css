@@ -1,0 +1,186 @@
+/* Trading Table Styles */
+
+.trading-table-wrapper {
+  background: rgba(26, 26, 46, 0.3);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  overflow: hidden;
+}
+
+.dt-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: rgba(22, 33, 62, 0.5);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.dt-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: rgba(22, 33, 62, 0.3);
+  border-top: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.dt-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.dt-search input {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: rgba(10, 10, 15, 0.5);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  min-width: 200px;
+}
+
+.dt-search input:focus {
+  outline: none;
+  border-color: #00d4ff;
+  box-shadow: 0 0 0 1px #00d4ff;
+}
+
+.dt-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dt-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dt-button:hover {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: rgba(0, 212, 255, 0.5);
+}
+
+.table-scroll-wrapper {
+  overflow-x: auto;
+}
+
+table.trading-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+table.trading-table thead th {
+  background: rgba(22, 33, 62, 0.8);
+  color: #00d4ff;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+table.trading-table thead th:hover {
+  background: rgba(22, 33, 62, 1);
+}
+
+table.trading-table thead th .sort-indicator {
+  color: #ffd700;
+}
+
+table.trading-table tbody td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.05);
+  color: #e2e8f0;
+}
+
+table.trading-table tbody tr:hover td {
+  background: rgba(0, 212, 255, 0.05);
+}
+
+table.trading-table tbody tr.clickable {
+  cursor: pointer;
+}
+
+.dt-info {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.dt-length {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.dt-length select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  background: rgba(10, 10, 15, 0.5);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  color: #e2e8f0;
+  margin: 0 0.25rem;
+}
+
+.dt-paging {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dt-paging button {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  color: #00d4ff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dt-paging button:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.2);
+}
+
+.dt-paging button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  padding: 0 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dt-top,
+  .dt-bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dt-search input {
+    width: 100%;
+  }
+
+  .dt-controls {
+    justify-content: space-between;
+  }
+}
