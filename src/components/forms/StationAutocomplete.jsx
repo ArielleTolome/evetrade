@@ -42,18 +42,60 @@ export function StationAutocomplete({
     }
   }, [inputValue, stationList, searchStations, maxResults]);
 
-  // Get security level for a station
+  // Get security level for a station with comprehensive error handling
   const getSecurityLevel = useCallback(
     (stationName) => {
-      if (!universeList || !stationName) return 0;
-      // Try exact match first
-      let data = universeList[stationName];
-      // If not found, try lowercase with spaces (keys are lowercase)
-      if (!data) {
-        const normalizedKey = stationName.toLowerCase().replace(/\*/g, '');
-        data = universeList[normalizedKey];
+      try {
+        // Handle invalid inputs
+        if (!stationName || typeof stationName !== 'string') {
+          if (import.meta.env.DEV) {
+            console.warn('[StationAutocomplete] Invalid station name provided:', stationName);
+          }
+          return 0;
+        }
+
+        // Handle missing or malformed universeList
+        if (!universeList || typeof universeList !== 'object') {
+          if (import.meta.env.DEV) {
+            console.warn('[StationAutocomplete] universeList is not available or malformed');
+          }
+          return 0;
+        }
+
+        // Try exact match first
+        let data = universeList[stationName];
+
+        // If not found, try lowercase with spaces (keys are lowercase)
+        if (!data) {
+          const normalizedKey = stationName.toLowerCase().replace(/\*/g, '');
+          data = universeList[normalizedKey];
+        }
+
+        // Handle missing data for station
+        if (!data) {
+          if (import.meta.env.DEV) {
+            console.warn('[StationAutocomplete] No data found for station:', stationName);
+          }
+          return 0;
+        }
+
+        // Validate security value
+        const security = data.security;
+        if (security === null || security === undefined || typeof security !== 'number' || isNaN(security)) {
+          if (import.meta.env.DEV) {
+            console.warn('[StationAutocomplete] Invalid security value for station:', stationName, security);
+          }
+          return 0;
+        }
+
+        return security;
+      } catch (error) {
+        // Catch any unexpected errors
+        if (import.meta.env.DEV) {
+          console.error('[StationAutocomplete] Error getting security level:', error, { stationName });
+        }
+        return 0;
       }
-      return data?.security ?? 0;
     },
     [universeList]
   );
