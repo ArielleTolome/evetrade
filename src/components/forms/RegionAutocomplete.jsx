@@ -32,21 +32,23 @@ export function RegionAutocomplete({
     setInputValue(value || '');
   }, [value]);
 
-  // Memoize excludeRegions to prevent infinite loops
+  // Create a stable string representation of excludeRegions for dependency tracking
   const excludeRegionsKey = useMemo(() => excludeRegions.join(','), [excludeRegions]);
 
-  // Filter regions based on input
-  useEffect(() => {
+  // Memoize filtered regions to prevent unnecessary recalculations
+  const filteredRegions = useMemo(() => {
     if (inputValue && regionList) {
-      const results = searchRegions(inputValue, maxResults + excludeRegions.length)
+      return searchRegions(inputValue, maxResults + excludeRegions.length)
         .filter((region) => !excludeRegions.includes(region))
         .slice(0, maxResults);
-      setFiltered(results);
-    } else {
-      setFiltered([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue, regionList, searchRegions, maxResults, excludeRegionsKey]);
+    return [];
+  }, [inputValue, regionList, searchRegions, maxResults, excludeRegionsKey, excludeRegions]);
+
+  // Update filtered state when memoized value changes
+  useEffect(() => {
+    setFiltered(filteredRegions);
+  }, [filteredRegions]);
 
   // Handle input change
   const handleInputChange = (e) => {
