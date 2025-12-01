@@ -66,3 +66,6 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 
 // Suppress console warnings in tests
 vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+// Mock scrollIntoView for autocomplete tests
+Element.prototype.scrollIntoView = vi.fn();
