@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
@@ -7,6 +7,7 @@ import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
+import { useTradeForm } from '../hooks/useTradeForm';
 import { fetchStationTrading } from '../api/trading';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 import { TAX_OPTIONS } from '../utils/constants';
@@ -14,93 +15,69 @@ import { getStationData } from '../utils/stations';
 
 /**
  * Station Trading Page Component
+ * Refactored to use the useTradeForm hook for reduced duplication
  */
 export function StationTradingPage() {
   const navigate = useNavigate();
   const { universeList, loading: resourcesLoading } = useResources();
   const { data, loading, error, execute } = useApiCall(fetchStationTrading);
 
-  // Form state
-  const [form, setForm] = useState({
-    station: '',
-    profit: 1000000,
-    tax: 0.0375,
-    minVolume: 100,
-    brokerFee: 3,
-    marginAbove: 10,
-    marginBelow: 50,
-  });
+  // Custom validation for station-specific fields
+  const customValidation = useCallback((formData) => {
+    const errors = {};
 
-  // Form validation
-  const [errors, setErrors] = useState({});
-
-  // Update form field
-  const updateForm = useCallback((key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) {
-      setErrors((prev) => ({ ...prev, [key]: null }));
-    }
-  }, [errors]);
-
-  // Validate form
-  const validateForm = useCallback(() => {
-    const newErrors = {};
-
-    if (!form.station) {
-      newErrors.station = 'Please select a station';
-    } else if (!getStationData(form.station, universeList)) {
-      newErrors.station = 'Invalid station selected';
+    if (!formData.station) {
+      errors.station = 'Please select a station';
+    } else if (!getStationData(formData.station, universeList)) {
+      errors.station = 'Invalid station selected';
     }
 
-    if (form.profit < 0) {
-      newErrors.profit = 'Minimum profit must be positive';
-    }
+    return errors;
+  }, [universeList]);
 
-    if (form.minVolume < 0) {
-      newErrors.minVolume = 'Minimum volume must be positive';
-    }
+  // Transform form data to API format
+  const transformData = useCallback((formData) => {
+    const stationData = getStationData(formData.station, universeList);
+    if (!stationData) return null;
 
-    if (form.brokerFee < 0 || form.brokerFee > 100) {
-      newErrors.brokerFee = 'Broker fee must be between 0 and 100';
-    }
-
-    if (form.marginAbove < 0 || form.marginAbove > 100) {
-      newErrors.marginAbove = 'Margin must be between 0 and 100';
-    }
-
-    if (form.marginBelow < 0 || form.marginBelow > 100) {
-      newErrors.marginBelow = 'Margin must be between 0 and 100';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [form, universeList]);
+    return {
+      stationId: stationData.station,
+      minProfit: formData.profit,
+      tax: formData.tax,
+      minVolume: formData.minVolume,
+      brokerFee: formData.brokerFee / 100,
+      marginAbove: formData.marginAbove / 100,
+      marginBelow: formData.marginBelow / 100,
+    };
+  }, [universeList]);
 
   // Handle form submission
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
+  const onSubmit = useCallback(async (transformedData) => {
+    if (!transformedData) return;
+    await execute(transformedData);
+  }, [execute]);
 
-      if (!validateForm()) return;
-
-      const stationData = getStationData(form.station, universeList);
-      if (!stationData) return;
-
-      try {
-        await execute({
-          stationId: stationData.station,
-          minProfit: form.profit,
-          tax: form.tax,
-          minVolume: form.minVolume,
-          brokerFee: form.brokerFee / 100,
-          marginAbove: form.marginAbove / 100,
-          marginBelow: form.marginBelow / 100,
-        });
-      } catch (err) {
-        console.error('Trading request failed:', err);
-      }
+  // Use the reusable trade form hook
+  const {
+    form,
+    errors,
+    updateForm,
+    handleSubmit,
+  } = useTradeForm(
+    {
+      station: '',
+      profit: 1000000,
+      tax: 0.0375,
+      minVolume: 100,
+      brokerFee: 3,
+      marginAbove: 10,
+      marginBelow: 50,
     },
-    [form, universeList, validateForm, execute]
+    {
+      customValidation,
+      transformData,
+      onSubmit,
+    }
   );
 
   // Handle row click to view orders
