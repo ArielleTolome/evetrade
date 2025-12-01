@@ -105,6 +105,9 @@ apiClient.interceptors.response.use(
 export async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   try {
     const response = await apiClient.get(url, options);
+    console.log('[fetchWithRetry] URL:', url);
+    console.log('[fetchWithRetry] Response status:', response.status);
+    console.log('[fetchWithRetry] Response data type:', typeof response.data, 'IsArray:', Array.isArray(response.data));
     return response.data;
   } catch (error) {
     if (error.response) {

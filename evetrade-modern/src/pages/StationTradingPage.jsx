@@ -292,7 +292,17 @@ export function StationTradingPage() {
         {/* Results */}
         {data && !loading && (
           <>
-            {console.log('Data received:', data, 'isArray:', Array.isArray(data), 'length:', data?.length)}
+            {(() => {
+              // Debug logging
+              console.log('[StationTradingPage] data:', data);
+              console.log('[StationTradingPage] typeof data:', typeof data);
+              console.log('[StationTradingPage] Array.isArray(data):', Array.isArray(data));
+              console.log('[StationTradingPage] data?.length:', data?.length);
+              if (data && typeof data === 'object') {
+                console.log('[StationTradingPage] Object.keys(data):', Object.keys(data));
+              }
+              return null;
+            })()}
             {(!Array.isArray(data) || data.length === 0) ? (
               <GlassmorphicCard className="text-center py-12">
                 <p className="text-text-secondary text-lg">
