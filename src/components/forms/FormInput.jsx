@@ -30,7 +30,9 @@ export const FormInput = forwardRef(function FormInput(
   const inputId = id || name;
 
   const handleChange = (e) => {
-    const newValue = type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
+    const newValue = type === 'number'
+      ? (e.target.value === '' ? '' : Number(e.target.value))
+      : e.target.value;
     onChange?.(newValue);
   };
 
