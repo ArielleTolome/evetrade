@@ -1,15 +1,17 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
-import { SavedSearches } from '../components/common/SavedSearches';import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
+import { TopRecommendations } from '../components/common/TopRecommendations';
+import { TradingStats } from '../components/common/TradingStats';
+import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { useTradeForm } from '../hooks/useTradeForm';
 import { fetchStationTrading } from '../api/trading';
-import { useSavedSearches } from '../hooks/useSavedSearches';import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
+import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 import { TAX_OPTIONS } from '../utils/constants';
 import { getStationData } from '../utils/stations';
 
@@ -21,6 +23,7 @@ export function StationTradingPage() {
   const navigate = useNavigate();
   const { universeList, loading: resourcesLoading } = useResources();
   const { data, loading, error, execute } = useApiCall(fetchStationTrading);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Custom validation for station-specific fields
   const customValidation = useCallback((formData) => {
@@ -162,6 +165,7 @@ export function StationTradingPage() {
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Primary Fields */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <StationAutocomplete
                 label="Station"
@@ -182,13 +186,6 @@ export function StationTradingPage() {
                 min={0}
               />
 
-              <FormSelect
-                label="Sales Tax Level"
-                value={form.tax}
-                onChange={(v) => updateForm('tax', parseFloat(v))}
-                options={taxOptions}
-              />
-
               <FormInput
                 label="Minimum Volume"
                 type="number"
@@ -198,20 +195,49 @@ export function StationTradingPage() {
                 error={errors.minVolume}
                 min={0}
               />
+            </div>
 
-              <FormInput
-                label="Broker Fee"
-                type="number"
-                value={form.brokerFee}
-                onChange={(v) => updateForm('brokerFee', v)}
-                suffix="%"
-                step={0.01}
-                error={errors.brokerFee}
-                min={0}
-                max={100}
-              />
+            {/* Advanced Filters Toggle */}
+            <div className="border-t border-accent-cyan/10 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 text-sm text-accent-cyan hover:text-accent-cyan/80 transition-colors"
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                {showAdvanced ? 'Hide' : 'Show'} Advanced Filters
+              </button>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
+            {/* Advanced Filters (Collapsible) */}
+            {showAdvanced && (
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fadeIn">
+                <FormSelect
+                  label="Sales Tax Level"
+                  value={form.tax}
+                  onChange={(v) => updateForm('tax', parseFloat(v))}
+                  options={taxOptions}
+                />
+
+                <FormInput
+                  label="Broker Fee"
+                  type="number"
+                  value={form.brokerFee}
+                  onChange={(v) => updateForm('brokerFee', v)}
+                  suffix="%"
+                  step={0.01}
+                  error={errors.brokerFee}
+                  min={0}
+                  max={100}
+                />
+
                 <FormInput
                   label="Margin Above"
                   type="number"
@@ -222,6 +248,7 @@ export function StationTradingPage() {
                   min={0}
                   max={100}
                 />
+
                 <FormInput
                   label="Margin Below"
                   type="number"
@@ -233,7 +260,7 @@ export function StationTradingPage() {
                   max={100}
                 />
               </div>
-            </div>
+            )}
 
             <button
               type="submit"
@@ -285,13 +312,44 @@ export function StationTradingPage() {
           }
 
           return (
-            <TradingTable
-              data={trades}
-              columns={tableColumns}
-              onRowClick={handleRowClick}
-              defaultSort={{ column: 'Net Profit', direction: 'desc' }}
-              emptyMessage="No trades found matching your criteria"
-            />
+            <>
+              {/* Top 10 Recommendations */}
+              <TopRecommendations
+                data={trades}
+                onItemClick={handleRowClick}
+                maxItems={10}
+              />
+
+              {/* Statistics Summary */}
+              <TradingStats data={trades} />
+
+              {/* Quality Legend */}
+              <div className="mb-4 flex flex-wrap items-center gap-4 text-xs text-text-secondary">
+                <span className="font-medium">Trade Quality:</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-yellow-400/30 border-l-2 border-yellow-400"></span>
+                  Excellent
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-green-400/20 border-l-2 border-green-400"></span>
+                  Good
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-cyan-400/15 border-l-2 border-cyan-400"></span>
+                  Fair
+                </span>
+              </div>
+
+              {/* Full Results Table */}
+              <TradingTable
+                data={trades}
+                columns={tableColumns}
+                onRowClick={handleRowClick}
+                defaultSort={{ column: 'Net Profit', direction: 'desc' }}
+                emptyMessage="No trades found matching your criteria"
+                showQualityIndicators={true}
+              />
+            </>
           );
         })()}
       </div>
