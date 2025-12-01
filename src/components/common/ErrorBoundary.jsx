@@ -15,7 +15,7 @@ export class ErrorBoundary extends Component {
     };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     // Update state so the next render will show the fallback UI
     return { hasError: true };
   }
@@ -85,7 +85,7 @@ export class ErrorBoundary extends Component {
                   'An unexpected error occurred. Please try reloading the page or contact support if the problem persists.'}
               </p>
 
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="mb-6 text-left bg-space-black/50 rounded-lg p-4 border border-red-500/20">
                   <summary className="cursor-pointer text-red-400 font-semibold mb-2">
                     Error Details (Development Only)
@@ -172,7 +172,7 @@ export function ResourceErrorFallback({ error, resetError, loadingProgress }) {
             </div>
           )}
 
-          {process.env.NODE_ENV === 'development' && error && (
+          {import.meta.env.DEV && error && (
             <details className="mb-6 text-left bg-space-black/50 rounded-lg p-4 border border-red-500/20">
               <summary className="cursor-pointer text-red-400 font-semibold mb-2">
                 Error Details (Development Only)

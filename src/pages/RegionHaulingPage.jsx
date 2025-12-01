@@ -5,7 +5,7 @@ import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { FormInput, FormSelect, RegionAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
-import { useResources } from '../hooks/useResources';
+import { useResources } from '../hooks/index';
 import { useApiCall } from '../hooks/useApiCall';
 import { fetchRegionHauling } from '../api/trading';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';

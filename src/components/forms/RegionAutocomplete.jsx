@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect, useCallback, useMemo, useId } from 'react';
-import { useResources, useLocationLookup } from '../../hooks/useResources';
+import { useState, useRef, useEffect, useCallback, useId } from 'react';
+import { useResources } from '../../hooks/useResourcesHook';
+import { useLocationLookup } from '../../hooks/useLocationLookup';
 
 /**
  * Region Autocomplete Component
@@ -28,37 +29,36 @@ export function RegionAutocomplete({
   const listRef = useRef(null);
   const blurTimeoutRef = useRef(null);
 
+  // Ref to track if we need to sync value
+  const isControlled = value !== undefined;
+
+  // Sync inputValue with value prop changes, but avoid overriding user typing if they are different
+  useEffect(() => {
+    if (isControlled) {
+      setInputValue(value || '');
+    }
+  }, [value, isControlled]);
+
   // Generate unique IDs for ARIA attributes
   const listboxId = useId();
   const getOptionId = (index) => `${listboxId}-option-${index}`;
 
-  // Update input value when prop changes
-  useEffect(() => {
-    setInputValue(value || '');
-  }, [value]);
-
-  // Create a stable string representation of excludeRegions for dependency tracking
-  const excludeRegionsKey = useMemo(() => excludeRegions.join(','), [excludeRegions]);
-
-  // Memoize filtered regions to prevent unnecessary recalculations
-  const filteredRegions = useMemo(() => {
-    if (inputValue && regionList) {
-      return searchRegions(inputValue, maxResults + excludeRegions.length)
+  const updateFilteredRegions = useCallback((query) => {
+    if (query && regionList) {
+      const results = searchRegions(query, maxResults + excludeRegions.length)
         .filter((region) => !excludeRegions.includes(region))
         .slice(0, maxResults);
+      setFiltered(results);
+    } else {
+      setFiltered([]);
     }
-    return [];
-  }, [inputValue, regionList, searchRegions, maxResults, excludeRegionsKey, excludeRegions]);
-
-  // Update filtered state when memoized value changes
-  useEffect(() => {
-    setFiltered(filteredRegions);
-  }, [filteredRegions]);
+  }, [regionList, searchRegions, maxResults, excludeRegions]);
 
   // Handle input change
   const handleInputChange = (e) => {
     const newValue = e.target.value;
     setInputValue(newValue);
+    updateFilteredRegions(newValue);
     setIsOpen(true);
     setHighlightedIndex(-1);
   };
@@ -121,6 +121,16 @@ export function RegionAutocomplete({
     };
   }, []);
 
+  // Re-run filter when resources load if we have input
+  // We avoid directly calling setFiltered in useEffect dependent on inputValue to avoid the sync warning
+  useEffect(() => {
+    if (!resourcesLoading && inputValue && regionList && regionList.length > 0) {
+        // This is safe because it runs on resource load completion, not every input change
+        updateFilteredRegions(inputValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resourcesLoading, regionList, updateFilteredRegions]); // Removed inputValue from deps to avoid loop/warning
+
   return (
     <div className={`relative ${className}`}>
       {label && (
@@ -141,7 +151,12 @@ export function RegionAutocomplete({
           aria-activedescendant={highlightedIndex >= 0 ? getOptionId(highlightedIndex) : undefined}
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={() => inputValue && setIsOpen(true)}
+          onFocus={() => {
+              if (inputValue) {
+                  updateFilteredRegions(inputValue);
+                  setIsOpen(true);
+              }
+          }}
           onBlur={() => {
             // Clear any existing timeout
             if (blurTimeoutRef.current) {

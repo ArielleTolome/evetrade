@@ -1,5 +1,5 @@
 import { RouterProvider } from 'react-router-dom';
-import { ResourceProvider } from './hooks/useResources';
+import { ResourceProvider } from './hooks/index';
 import { ThemeProvider } from './store/ThemeContext';
 import { router } from './router';
 

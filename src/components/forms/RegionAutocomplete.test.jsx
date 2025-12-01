@@ -2,11 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RegionAutocomplete } from './RegionAutocomplete';
-import { useResources, useLocationLookup } from '../../hooks/useResources';
+import { useResources } from '../../hooks/useResourcesHook';
+import { useLocationLookup } from '../../hooks/useLocationLookup';
 
 // Mock the hooks
 vi.mock('../../hooks/useResources', () => ({
   useResources: vi.fn(),
+}));
+
+vi.mock('../../hooks/useLocationLookup', () => ({
   useLocationLookup: vi.fn(),
 }));
 

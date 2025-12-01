@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
-import { useResources } from '../hooks/useResources';
+import { useResources } from '../hooks/index';
 
 const tradingModes = [
   {

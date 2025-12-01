@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useTheme } from '../../store/ThemeContext';
+import { useTheme } from '../../store/index';
 
 /**
  * Generate random star positions

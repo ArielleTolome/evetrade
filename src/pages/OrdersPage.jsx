@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
-import { useResources } from '../hooks/useResources';
+import { useResources } from '../hooks/index';
 import { useApiCall } from '../hooks/useApiCall';
 import { fetchOrders } from '../api/trading';
 import { formatISK, formatNumber } from '../utils/formatters';
@@ -18,8 +18,6 @@ export function OrdersPage() {
   const { data, loading, error, execute } = useApiCall(fetchOrders);
 
   const [itemName, setItemName] = useState('Loading...');
-  const [fromStation, setFromStation] = useState('');
-  const [toStation, setToStation] = useState('');
 
   // Parse query parameters
   const itemId = searchParams.get('itemId');
@@ -41,7 +39,7 @@ export function OrdersPage() {
         } else {
           setItemName(`Item #${itemId}`);
         }
-      } catch (err) {
+      } catch {
         setItemName(`Item #${itemId}`);
       }
     }
@@ -62,30 +60,26 @@ export function OrdersPage() {
     return map;
   }, [universeList]);
 
-  // Parse station names from location strings
-  useEffect(() => {
-    if (!stationIdToNameMap.size || !from || !to) return;
+  // Derive station names from props/state directly instead of syncing to state in effect
+  const fromStation = useMemo(() => {
+     if (!stationIdToNameMap.size || !from) return '';
+     const fromParts = from.replace(/^(buy|sell)-/, '').split(':');
+     if (fromParts.length >= 2) {
+       const stationId = fromParts[1];
+       return stationIdToNameMap.get(stationId) || '';
+     }
+     return '';
+  }, [stationIdToNameMap, from]);
 
-    // Parse from location
-    const fromParts = from.replace(/^(buy|sell)-/, '').split(':');
-    if (fromParts.length >= 2) {
-      const stationId = fromParts[1];
-      const stationName = stationIdToNameMap.get(stationId);
-      if (stationName) {
-        setFromStation(stationName);
+  const toStation = useMemo(() => {
+      if (!stationIdToNameMap.size || !to) return '';
+      const toParts = to.replace(/^(buy|sell)-/, '').split(':');
+      if (toParts.length >= 2) {
+        const stationId = toParts[1];
+        return stationIdToNameMap.get(stationId) || '';
       }
-    }
-
-    // Parse to location
-    const toParts = to.replace(/^(buy|sell)-/, '').split(':');
-    if (toParts.length >= 2) {
-      const stationId = toParts[1];
-      const stationName = stationIdToNameMap.get(stationId);
-      if (stationName) {
-        setToStation(stationName);
-      }
-    }
-  }, [stationIdToNameMap, from, to]);
+      return '';
+  }, [stationIdToNameMap, to]);
 
   // Fetch orders when parameters are available
   useEffect(() => {

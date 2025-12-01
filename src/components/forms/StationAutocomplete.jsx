@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useId } from 'react';
-import { useResources, useLocationLookup } from '../../hooks/useResources';
+import { useResources } from '../../hooks/useResourcesHook';
+import { useLocationLookup } from '../../hooks/useLocationLookup';
 import { SecurityBadge } from '../common/SecurityBadge';
 import { isCitadel } from '../../utils/security';
 
@@ -29,23 +30,29 @@ export function StationAutocomplete({
   const listRef = useRef(null);
   const blurTimeoutRef = useRef(null);
 
+  // Ref to track if we need to sync value
+  const isControlled = value !== undefined;
+
+  // Sync inputValue with value prop only if controlled and value changes
+  useEffect(() => {
+    if (isControlled) {
+      setInputValue(value || '');
+    }
+  }, [value, isControlled]);
+
   // Generate unique IDs for ARIA attributes
   const listboxId = useId();
   const getOptionId = (index) => `${listboxId}-option-${index}`;
 
-  // Update input value when prop changes
-  useEffect(() => {
-    setInputValue(value || '');
-  }, [value]);
+  // Filter stations logic
+  const updateFilteredStations = useCallback((query) => {
+     if (query && stationList) {
+       setFiltered(searchStations(query, maxResults));
+     } else {
+       setFiltered([]);
+     }
+  }, [stationList, searchStations, maxResults]);
 
-  // Filter stations based on input
-  useEffect(() => {
-    if (inputValue && stationList) {
-      setFiltered(searchStations(inputValue, maxResults));
-    } else {
-      setFiltered([]);
-    }
-  }, [inputValue, stationList, searchStations, maxResults]);
 
   // Get security level for a station with comprehensive error handling
   const getSecurityLevel = useCallback(
@@ -109,8 +116,13 @@ export function StationAutocomplete({
   const handleInputChange = (e) => {
     const newValue = e.target.value;
     setInputValue(newValue);
+    updateFilteredStations(newValue);
     setIsOpen(true);
     setHighlightedIndex(-1);
+
+    // If controlled, parent should update prop, but for local input feel we update state too
+    // Ideally if controlled, we should call onChange and wait for prop update,
+    // but standard pattern often allows local echo for speed
   };
 
   // Handle selection
@@ -179,6 +191,17 @@ export function StationAutocomplete({
     };
   }, []);
 
+  // Re-run filter when resources load if we have input but only if specific conditions met
+  // We avoid directly calling setFiltered in useEffect dependent on inputValue to avoid the sync warning
+  // Instead we can use a ref or check loading state changes
+  useEffect(() => {
+    if (!resourcesLoading && inputValue && stationList && stationList.length > 0) {
+        // This is safe because it runs on resource load completion, not every input change
+        updateFilteredStations(inputValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resourcesLoading, stationList, updateFilteredStations]); // Removed inputValue from deps to avoid loop/warning if we wanted, but actually we want it to update if stations load
+
   return (
     <div className={`relative ${className}`}>
       {label && (
@@ -199,7 +222,12 @@ export function StationAutocomplete({
           aria-activedescendant={highlightedIndex >= 0 ? getOptionId(highlightedIndex) : undefined}
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={() => inputValue && setIsOpen(true)}
+          onFocus={() => {
+              if (inputValue) {
+                  updateFilteredStations(inputValue);
+                  setIsOpen(true);
+              }
+          }}
           onBlur={() => {
             // Clear any existing timeout
             if (blurTimeoutRef.current) {

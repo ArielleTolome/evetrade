@@ -1,6 +1,6 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
-import { SkeletonPage } from './components/common/SkeletonLoader';
+import { LazyPage } from './components/common/LazyPage';
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -9,17 +9,6 @@ const StationHaulingPage = lazy(() => import('./pages/StationHaulingPage'));
 const RegionHaulingPage = lazy(() => import('./pages/RegionHaulingPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
-
-/**
- * Lazy page wrapper with loading fallback
- */
-function LazyPage({ children }) {
-  return (
-    <Suspense fallback={<SkeletonPage />}>
-      {children}
-    </Suspense>
-  );
-}
 
 /**
  * Application Router Configuration
