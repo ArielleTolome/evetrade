@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getApiEndpoint, RESOURCE_ENDPOINT } from '../utils/constants';
 import { isSupabaseConfigured, fetchFromSupabase } from '../lib/supabase';
+import { getUserFriendlyErrorMessage } from '../utils/errorMessages';
 
 /**
  * Create axios instance with custom configuration
@@ -107,10 +108,8 @@ export async function fetchWithRetry(url, options = {}, maxRetries = 3) {
     const response = await apiClient.get(url, options);
     return response.data;
   } catch (error) {
-    if (error.response) {
-      throw new Error(error.response.data?.message || `API Error: ${error.response.status}`);
-    }
-    throw error;
+    const userFriendlyMessage = getUserFriendlyErrorMessage(error);
+    throw new Error(userFriendlyMessage);
   }
 }
 
@@ -136,7 +135,8 @@ export async function fetchResource(filename) {
     return response.data;
   } catch (error) {
     console.error(`Failed to fetch resource: ${filename}`, error);
-    throw error;
+    const userFriendlyMessage = getUserFriendlyErrorMessage(error, `Failed to load ${filename}. Please refresh the page.`);
+    throw new Error(userFriendlyMessage);
   }
 }
 
