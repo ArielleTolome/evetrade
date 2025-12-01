@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCached, setCached } from './useCache';
 import { fetchResource } from '../api/client';
 import { RESOURCE_FILES } from '../utils/constants';
 import { getStationData, getRegionData } from '../utils/stations';
+import { ErrorBoundary, ResourceErrorFallback } from '../components/common/ErrorBoundary';
 
 /**
  * Resource Context
@@ -47,14 +48,6 @@ export function ResourceProvider({ children }) {
   const [error, setError] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: RESOURCE_FILES.length });
 
-  // Ref to access current resources without triggering re-renders or causing stale closures
-  const resourcesRef = useRef(resources);
-
-  // Keep ref in sync with state
-  useEffect(() => {
-    resourcesRef.current = resources;
-  }, [resources]);
-
   /**
    * Load a single resource with caching
    */
@@ -98,7 +91,7 @@ export function ResourceProvider({ children }) {
       if (loaded.structureList && loaded.stationList) {
         loaded.stationList = [
           ...loaded.stationList,
-          ...loaded.structureList.map((s) => `${s}*`),
+          ...loaded.structureList.map((s) => \`\${s}*\`),
         ];
       }
 
@@ -130,10 +123,7 @@ export function ResourceProvider({ children }) {
    * Load invTypes on demand (for orders page)
    */
   const loadInvTypes = useCallback(async () => {
-    // Check current state via ref to avoid stale closure
-    if (resourcesRef.current.invTypes) {
-      return resourcesRef.current.invTypes;
-    }
+    if (resources.invTypes) return resources.invTypes;
 
     try {
       let data = await getCached('invTypes');
@@ -149,7 +139,7 @@ export function ResourceProvider({ children }) {
       console.error('Failed to load invTypes:', err);
       throw err;
     }
-  }, []); // Empty dependency array - uses ref to avoid stale closure
+  }, [resources.invTypes]);
 
   // Load resources on mount
   useEffect(() => {
@@ -165,10 +155,27 @@ export function ResourceProvider({ children }) {
     loadInvTypes,
   };
 
+  // Show error fallback if resource loading failed
+  if (error && !loading) {
+    return (
+      <ResourceErrorFallback
+        error={error}
+        resetError={loadResources}
+        loadingProgress={loadingProgress}
+      />
+    );
+  }
+
   return (
-    <ResourceContext.Provider value={value}>
-      {children}
-    </ResourceContext.Provider>
+    <ErrorBoundary
+      title="Resource Loading Error"
+      message="Failed to load game resources. Please try again."
+      onReset={loadResources}
+    >
+      <ResourceContext.Provider value={value}>
+        {children}
+      </ResourceContext.Provider>
+    </ErrorBoundary>
   );
 }
 
