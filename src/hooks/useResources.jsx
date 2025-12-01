@@ -46,13 +46,13 @@ export function ResourceProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: RESOURCE_FILES.length });
-
   /**
    * Load a single resource with caching
    */
   const loadResource = async (name) => {
     // Check cache first
     let data = await getCached(name);
+
 
     if (!data) {
       // Fetch from S3
