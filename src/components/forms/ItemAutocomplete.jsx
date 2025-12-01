@@ -189,7 +189,14 @@ export function ItemAutocomplete({
           aria-activedescendant={highlightedIndex >= 0 ? getOptionId(highlightedIndex) : undefined}
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={() => inputValue && setIsOpen(true)}
+          onFocus={() => {
+            // Clear any pending blur timeout to prevent race conditions
+            if (blurTimeoutRef.current) {
+              clearTimeout(blurTimeoutRef.current);
+              blurTimeoutRef.current = null;
+            }
+            if (inputValue) setIsOpen(true);
+          }}
           onBlur={() => {
             if (blurTimeoutRef.current) {
               clearTimeout(blurTimeoutRef.current);

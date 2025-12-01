@@ -51,12 +51,14 @@ export function RegionHaulingPage() {
 
   // Update form field
   const updateForm = useCallback((key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-
-    // Reset toRegion when switching to nearby
-    if (key === 'useNearby' && value) {
-      setForm((prev) => ({ ...prev, toRegion: 'Nearby Regions' }));
-    }
+    setForm((prev) => {
+      const updated = { ...prev, [key]: value };
+      // Reset toRegion when switching to nearby (in single state update)
+      if (key === 'useNearby' && value) {
+        updated.toRegion = 'Nearby Regions';
+      }
+      return updated;
+    });
   }, []);
 
   // Get region ID from name

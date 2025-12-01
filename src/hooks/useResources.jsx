@@ -50,11 +50,12 @@ export function ResourceProvider({ children }) {
 
   // Ref to access current resources without triggering re-renders or causing stale closures
   const resourcesRef = useRef(resources);
+  // Ref to track pending loadInvTypes promise to prevent race conditions
+  const loadInvTypesPromiseRef = useRef(null);
 
   // Keep ref in sync with state
   useEffect(() => {
     resourcesRef.current = resources;
-
   }, [resources]);
   /**
    * Load a single resource with caching
@@ -82,14 +83,16 @@ export function ResourceProvider({ children }) {
 
     try {
       const loaded = {};
-      let progress = 0;
+      // Use ref for atomic progress counter to avoid race conditions
+      const progressRef = { current: 0 };
 
       // Load resources in parallel
       const promises = RESOURCE_FILES.map(async (name) => {
         const data = await loadResource(name);
         loaded[name] = data;
-        progress++;
-        setLoadingProgress({ current: progress, total: RESOURCE_FILES.length });
+        // Increment atomically and update state
+        progressRef.current++;
+        setLoadingProgress({ current: progressRef.current, total: RESOURCE_FILES.length });
         return { name, data };
       });
 
@@ -129,6 +132,7 @@ export function ResourceProvider({ children }) {
 
   /**
    * Load invTypes on demand (for orders page)
+   * Uses promise caching to prevent race conditions when called multiple times
    */
   const loadInvTypes = useCallback(async () => {
     // Check current state via ref to avoid stale closure
@@ -136,20 +140,33 @@ export function ResourceProvider({ children }) {
       return resourcesRef.current.invTypes;
     }
 
-    try {
-      let data = await getCached('invTypes');
-
-      if (!data) {
-        data = await fetchResource('invTypes');
-        await setCached('invTypes', data);
-      }
-
-      setResources((prev) => ({ ...prev, invTypes: data }));
-      return data;
-    } catch (err) {
-      console.error('Failed to load invTypes:', err);
-      throw err;
+    // Return existing promise if one is already in flight (prevents race conditions)
+    if (loadInvTypesPromiseRef.current) {
+      return loadInvTypesPromiseRef.current;
     }
+
+    // Create and cache the promise
+    loadInvTypesPromiseRef.current = (async () => {
+      try {
+        let data = await getCached('invTypes');
+
+        if (!data) {
+          data = await fetchResource('invTypes');
+          await setCached('invTypes', data);
+        }
+
+        setResources((prev) => ({ ...prev, invTypes: data }));
+        return data;
+      } catch (err) {
+        console.error('Failed to load invTypes:', err);
+        throw err;
+      } finally {
+        // Clear the promise ref after completion
+        loadInvTypesPromiseRef.current = null;
+      }
+    })();
+
+    return loadInvTypesPromiseRef.current;
   }, []); // Empty dependency array - uses ref to avoid stale closure
 
   // Load resources on mount

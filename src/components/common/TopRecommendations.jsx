@@ -43,10 +43,15 @@ export function TopRecommendations({ data, onItemClick, maxItems = 10 }) {
   const stats = useMemo(() => {
     if (!data || data.length === 0) return { maxProfit: 0, maxVolume: 0, maxMargin: 0 };
 
+    // Extract values with defaults, handling empty arrays safely
+    const profits = data.map(t => t['Net Profit'] || 0);
+    const volumes = data.map(t => t['Volume'] || 0);
+    const margins = data.map(t => t['Gross Margin'] || 0);
+
     return {
-      maxProfit: Math.max(...data.map(t => t['Net Profit'] || 0)),
-      maxVolume: Math.max(...data.map(t => t['Volume'] || 0)),
-      maxMargin: Math.max(...data.map(t => t['Gross Margin'] || 0)),
+      maxProfit: profits.length > 0 ? Math.max(...profits) : 0,
+      maxVolume: volumes.length > 0 ? Math.max(...volumes) : 0,
+      maxMargin: margins.length > 0 ? Math.max(...margins) : 0,
     };
   }, [data]);
 
