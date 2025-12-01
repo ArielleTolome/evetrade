@@ -2,11 +2,13 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { SavedSearches } from '../components/common/SavedSearches';
 import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
+import { useSavedSearches } from '../hooks/useSavedSearches';
 import { useTradeForm } from '../hooks/useTradeForm';
 import { fetchStationTrading } from '../api/trading';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
@@ -21,6 +23,16 @@ export function StationTradingPage() {
   const navigate = useNavigate();
   const { universeList, loading: resourcesLoading } = useResources();
   const { data, loading, error, execute } = useApiCall(fetchStationTrading);
+  // Saved searches hook
+  const {
+    savedSearches,
+    saveSearch,
+    deleteSearch,
+    loadSearch,
+    isAtLimit,
+    maxSearches,
+  } = useSavedSearches('station-trading');
+
 
   // Custom validation for station-specific fields
   const customValidation = useCallback((formData) => {
@@ -62,6 +74,7 @@ export function StationTradingPage() {
     form,
     errors,
     updateForm,
+    updateFormFields,
     handleSubmit,
   } = useTradeForm(
     {
@@ -92,6 +105,26 @@ export function StationTradingPage() {
       navigate(`/orders?itemId=${itemId}&from=${fromLocation}&to=${fromLocation}`);
     },
     [form.station, universeList, navigate]
+  );
+
+
+  // Handle saving current search
+  const handleSaveSearch = useCallback(
+    (name) => {
+      return saveSearch(name, form);
+    },
+    [saveSearch, form]
+  );
+
+  // Handle loading a saved search
+  const handleLoadSearch = useCallback(
+    (id) => {
+      const parameters = loadSearch(id);
+      if (parameters) {
+        updateFormFields(parameters);
+      }
+    },
+    [loadSearch, updateFormFields]
   );
 
   // Tax options for dropdown
@@ -162,6 +195,18 @@ export function StationTradingPage() {
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* Saved Searches */}
+            <SavedSearches
+              savedSearches={savedSearches}
+              onSave={handleSaveSearch}
+              onLoad={handleLoadSearch}
+              onDelete={deleteSearch}
+              isAtLimit={isAtLimit}
+              maxSearches={maxSearches}
+            />
+
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <StationAutocomplete
                 label="Station"
