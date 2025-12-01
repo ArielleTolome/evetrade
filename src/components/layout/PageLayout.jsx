@@ -1,12 +1,15 @@
 import { Navbar } from '../common/Navbar';
 import { Footer } from '../common/Footer';
 import { AnimatedBackground } from './AnimatedBackground';
+import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../../hooks/useKeyboardShortcuts.jsx';
 
 /**
  * Page Layout Component
  * Wraps pages with common layout elements
  */
 export function PageLayout({ children, title, subtitle }) {
+  const { showHelp, setShowHelp } = useKeyboardShortcuts();
+
   return (
     <div className="min-h-screen flex flex-col">
       <AnimatedBackground />
@@ -31,6 +34,9 @@ export function PageLayout({ children, title, subtitle }) {
       </main>
 
       <Footer />
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <KeyboardShortcutsHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   );
 }
