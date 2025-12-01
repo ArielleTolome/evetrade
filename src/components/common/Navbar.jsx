@@ -12,6 +12,7 @@ const navItems = [
   { path: '/saved-routes', label: 'Saved Routes', icon: '⭐' },
   { path: '/portfolio', label: 'Portfolio', icon: '📈' },
   { path: '/calculator', label: 'Calculator', icon: '🧮' },
+  { path: '/notes', label: 'Notes', icon: '📝' },
   { path: '/help', label: 'Help', icon: '❓' },
 ];
 
