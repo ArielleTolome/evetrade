@@ -1,6 +1,30 @@
 import { useState, useMemo, useCallback } from 'react';
 
 /**
+ * Get quality tier based on row data stats
+ * Used to color-code rows based on trade quality
+ */
+function getRowQualityTier(row, stats) {
+  if (!stats || !row) return null;
+
+  const profit = row['Net Profit'] || 0;
+  const volume = row['Volume'] || 0;
+  const margin = (row['Gross Margin'] || 0) / 100;
+
+  // Calculate a simple quality score
+  const profitScore = stats.maxProfit > 0 ? profit / stats.maxProfit : 0;
+  const volumeScore = stats.maxVolume > 0 ? Math.log10(volume + 1) / Math.log10(stats.maxVolume + 1) : 0;
+  const marginScore = margin / 0.5; // Cap at 50% margin for scoring
+
+  const score = (profitScore * 0.5) + (volumeScore * 0.3) + (Math.min(marginScore, 1) * 0.2);
+
+  if (score >= 0.7) return 'excellent';
+  if (score >= 0.4) return 'good';
+  if (score >= 0.2) return 'fair';
+  return null;
+}
+
+/**
  * Trading Table Component
  * Custom React table with sorting, pagination, and search
  */
@@ -12,6 +36,7 @@ export function TradingTable({
   pageLength = 25,
   className = '',
   emptyMessage = 'No data available',
+  showQualityIndicators = false,
 }) {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -28,6 +53,16 @@ export function TradingTable({
     const defaultCol = columns.find(c => c.defaultSort);
     return defaultCol ? { key: defaultCol.key, direction: 'desc' } : null;
   });
+
+  // Calculate stats for quality indicators
+  const qualityStats = useMemo(() => {
+    if (!showQualityIndicators || !data || data.length === 0) return null;
+
+    return {
+      maxProfit: Math.max(...data.map(t => t['Net Profit'] || 0)),
+      maxVolume: Math.max(...data.map(t => t['Volume'] || 0)),
+    };
+  }, [data, showQualityIndicators]);
 
   // Filter data by search term
   const filteredData = useMemo(() => {
@@ -209,22 +244,34 @@ export function TradingTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-accent-cyan/5">
-            {paginatedData.map((row, idx) => (
-              <tr
-                key={row['Item ID'] || idx}
-                onClick={() => onRowClick?.(row, idx)}
-                className={`
-                  transition-colors hover:bg-accent-cyan/5
-                  ${onRowClick ? 'cursor-pointer' : ''}
-                `}
-              >
-                {columns.filter(c => c.visible !== false).map(col => (
-                  <td key={col.key} className={`px-4 py-3 text-text-primary ${col.className || ''}`}>
-                    {renderCell(row, col)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {paginatedData.map((row, idx) => {
+              const qualityTier = showQualityIndicators ? getRowQualityTier(row, qualityStats) : null;
+
+              // Tailwind classes for quality tiers
+              const qualityClasses = {
+                excellent: 'bg-yellow-400/10 border-l-2 border-yellow-400/60 hover:bg-yellow-400/15',
+                good: 'bg-green-400/8 border-l-2 border-green-400/50 hover:bg-green-400/12',
+                fair: 'bg-cyan-400/5 border-l-2 border-cyan-400/30 hover:bg-cyan-400/10',
+              };
+
+              return (
+                <tr
+                  key={row['Item ID'] || idx}
+                  onClick={() => onRowClick?.(row, idx)}
+                  className={`
+                    transition-colors
+                    ${qualityTier ? qualityClasses[qualityTier] : 'hover:bg-accent-cyan/5'}
+                    ${onRowClick ? 'cursor-pointer' : ''}
+                  `}
+                >
+                  {columns.filter(c => c.visible !== false).map(col => (
+                    <td key={col.key} className={`px-4 py-3 text-text-primary ${col.className || ''}`}>
+                      {renderCell(row, col)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

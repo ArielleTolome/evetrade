@@ -212,6 +212,10 @@ body {
   animation: var(--animate-slide-up);
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
 /* Loading shimmer */
 .shimmer {
   background: linear-gradient(
