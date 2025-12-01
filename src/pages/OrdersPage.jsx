@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
@@ -46,20 +46,30 @@ export function OrdersPage() {
     loadItemName();
   }, [itemId, loadInvTypes]);
 
+  // Create memoized lookup map from station ID to station name
+  const stationIdToNameMap = useMemo(() => {
+    if (!universeList) return new Map();
+
+    const map = new Map();
+    for (const [name, data] of Object.entries(universeList)) {
+      if (data.station) {
+        map.set(String(data.station), name);
+      }
+    }
+    return map;
+  }, [universeList]);
+
   // Parse station names from location strings
   useEffect(() => {
-    if (!universeList || !from || !to) return;
+    if (!stationIdToNameMap.size || !from || !to) return;
 
     // Parse from location
     const fromParts = from.replace(/^(buy|sell)-/, '').split(':');
     if (fromParts.length >= 2) {
       const stationId = fromParts[1];
-      // Find station by ID
-      for (const [name, data] of Object.entries(universeList)) {
-        if (String(data.station) === stationId) {
-          setFromStation(name);
-          break;
-        }
+      const stationName = stationIdToNameMap.get(stationId);
+      if (stationName) {
+        setFromStation(stationName);
       }
     }
 
@@ -67,14 +77,12 @@ export function OrdersPage() {
     const toParts = to.replace(/^(buy|sell)-/, '').split(':');
     if (toParts.length >= 2) {
       const stationId = toParts[1];
-      for (const [name, data] of Object.entries(universeList)) {
-        if (String(data.station) === stationId) {
-          setToStation(name);
-          break;
-        }
+      const stationName = stationIdToNameMap.get(stationId);
+      if (stationName) {
+        setToStation(stationName);
       }
     }
-  }, [universeList, from, to]);
+  }, [stationIdToNameMap, from, to]);
 
   // Fetch orders when parameters are available
   useEffect(() => {
