@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
 import 'datatables.net-buttons-dt';
@@ -16,6 +16,11 @@ pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
 
 // Make JSZip available globally for Excel export
 window.JSZip = JSZip;
+
+// Suppress DataTables reinitialisation warning - we handle this with React keys
+if (typeof window !== 'undefined' && window.$ && window.$.fn && window.$.fn.dataTable) {
+  window.$.fn.dataTable.ext.errMode = 'none';
+}
 
 /**
  * Trading Table Component
@@ -48,8 +53,17 @@ export function TradingTable({
     : columns.findIndex((c) => c.defaultSort);
   const sortDirection = defaultSort?.direction || 'desc';
 
+  // Generate a unique key based on data to force re-render
+  const tableKey = useMemo(() => {
+    if (!data || data.length === 0) return 'empty';
+    // Create a hash based on first few items to detect data changes
+    const sample = data.slice(0, 3).map(item => JSON.stringify(item)).join('');
+    return `table-${data.length}-${sample.length}`;
+  }, [data]);
+
   // DataTables options
   const options = {
+    destroy: true, // Allow table to be re-initialized
     dom: '<"dt-top"Bf>rt<"dt-bottom"lip>',
     buttons: [
       {
@@ -174,7 +188,7 @@ export function TradingTable({
   );
 
   return (
-    <div className={`trading-table-wrapper ${className}`}>
+    <div className={`trading-table-wrapper ${className}`} key={tableKey}>
       <DataTable
         ref={tableRef}
         data={data}
