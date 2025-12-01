@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../store/ThemeContext';
 
@@ -38,12 +38,15 @@ function ThemeToggle() {
 /**
  * Mobile Menu Button
  */
-function MobileMenuButton({ isOpen, onClick }) {
+function MobileMenuButton({ isOpen, onClick, buttonRef }) {
   return (
     <button
+      ref={buttonRef}
       onClick={onClick}
       className="md:hidden p-2 text-text-secondary hover:text-text-primary"
       aria-label="Toggle menu"
+      aria-expanded={isOpen}
+      aria-controls="mobile-menu"
     >
       {isOpen ? (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,6 +67,69 @@ function MobileMenuButton({ isOpen, onClick }) {
 export function Navbar() {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const menuButtonRef = useRef(null);
+  const menuRef = useRef(null);
+
+  // Close menu on Escape key
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+        // Return focus to menu button
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isMobileMenuOpen]);
+
+  // Focus trap implementation
+  useEffect(() => {
+    if (!isMobileMenuOpen || !menuRef.current) return;
+
+    const focusableElements = menuRef.current.querySelectorAll(
+      'a[href], button, textarea, input, select'
+    );
+
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    const handleTabKey = (event) => {
+      if (event.key !== 'Tab') return;
+
+      if (event.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+
+    // Focus first element when menu opens
+    firstElement.focus();
+
+    document.addEventListener('keydown', handleTabKey);
+    return () => document.removeEventListener('keydown', handleTabKey);
+  }, [isMobileMenuOpen]);
+
+  // Handle menu close and return focus
+  const handleMenuClose = () => {
+    setIsMobileMenuOpen(false);
+    // Return focus to menu button after state update
+    setTimeout(() => {
+      menuButtonRef.current?.focus();
+    }, 0);
+  };
 
   return (
     <nav className="sticky top-0 z-[100] bg-space-dark/70 dark:bg-space-dark/70 bg-white/70 backdrop-blur-lg border-b border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-200">
@@ -106,36 +172,42 @@ export function Navbar() {
             <MobileMenuButton
               isOpen={isMobileMenuOpen}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              buttonRef={menuButtonRef}
             />
           </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-accent-cyan/20 bg-space-dark/95 backdrop-blur-lg">
-          <div className="px-4 py-3 space-y-1">
-            {navItems.map(({ path, label, icon }) => (
-              <Link
-                key={path}
-                to={path}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
-                  transition-all duration-200
-                  ${location.pathname === path
-                    ? 'bg-accent-cyan/20 text-accent-cyan'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
-                  }
-                `}
-              >
-                <span>{icon}</span>
-                {label}
-              </Link>
-            ))}
-          </div>
+      <div
+        id="mobile-menu"
+        ref={menuRef}
+        className={`md:hidden border-t border-accent-cyan/20 bg-space-dark/95 backdrop-blur-lg ${
+          isMobileMenuOpen ? '' : 'hidden'
+        }`}
+        aria-hidden={!isMobileMenuOpen}
+      >
+        <div className="px-4 py-3 space-y-1">
+          {navItems.map(({ path, label, icon }) => (
+            <Link
+              key={path}
+              to={path}
+              onClick={handleMenuClose}
+              className={`
+                flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
+                transition-all duration-200
+                ${location.pathname === path
+                  ? 'bg-accent-cyan/20 text-accent-cyan'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                }
+              `}
+            >
+              <span>{icon}</span>
+              {label}
+            </Link>
+          ))}
         </div>
-      )}
+      </div>
     </nav>
   );
 }
