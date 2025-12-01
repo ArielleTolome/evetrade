@@ -150,10 +150,10 @@ export function TradingTable({
       {/* Top Controls */}
       <div className="dt-top">
         <div className="dt-buttons">
-          <button onClick={copyToClipboard} className="dt-button">
+          <button type="button" onClick={copyToClipboard} className="dt-button">
             Copy
           </button>
-          <button onClick={exportCSV} className="dt-button">
+          <button type="button" onClick={exportCSV} className="dt-button">
             CSV
           </button>
         </div>
@@ -233,12 +233,14 @@ export function TradingTable({
           </label>
           <div className="dt-paging">
             <button
+              type="button"
               onClick={() => goToPage(0)}
               disabled={currentPage === 0}
             >
               «
             </button>
             <button
+              type="button"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 0}
             >
@@ -248,12 +250,14 @@ export function TradingTable({
               Page {currentPage + 1} of {totalPages}
             </span>
             <button
+              type="button"
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
             >
               ›
             </button>
             <button
+              type="button"
               onClick={() => goToPage(totalPages - 1)}
               disabled={currentPage >= totalPages - 1}
             >
