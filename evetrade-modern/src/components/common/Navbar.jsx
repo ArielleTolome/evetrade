@@ -86,6 +86,7 @@ export function Navbar() {
               <Link
                 key={path}
                 to={path}
+                onClick={() => console.log('Nav clicked:', path)}
                 className={`
                   px-4 py-2 rounded-lg text-sm font-medium
                   transition-all duration-200
