@@ -137,7 +137,7 @@ export function TradingTable({
 
   if (!data || data.length === 0) {
     return (
-      <div className="trading-table-wrapper">
+      <div className="bg-space-dark/30 rounded-xl border border-accent-cyan/10 overflow-hidden">
         <div className="text-center py-12 text-text-secondary">
           {emptyMessage}
         </div>
@@ -146,18 +146,26 @@ export function TradingTable({
   }
 
   return (
-    <div className={`trading-table-wrapper ${className}`}>
+    <div className={`bg-space-dark/30 rounded-xl border border-accent-cyan/10 overflow-hidden flex flex-col ${className}`}>
       {/* Top Controls */}
-      <div className="dt-top">
-        <div className="dt-buttons">
-          <button type="button" onClick={copyToClipboard} className="dt-button">
+      <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 bg-space-mid/50 border-b border-accent-cyan/10">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={copyToClipboard}
+            className="px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50 focus:outline-none focus:ring-2 focus:ring-accent-cyan/50"
+          >
             Copy
           </button>
-          <button type="button" onClick={exportCSV} className="dt-button">
+          <button
+            type="button"
+            onClick={exportCSV}
+            className="px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50 focus:outline-none focus:ring-2 focus:ring-accent-cyan/50"
+          >
             CSV
           </button>
         </div>
-        <div className="dt-search">
+        <div className="w-full sm:w-auto">
           <input
             type="text"
             placeholder="Search results..."
@@ -166,40 +174,52 @@ export function TradingTable({
               setSearchTerm(e.target.value);
               setCurrentPage(0);
             }}
+            className="w-full sm:min-w-[240px] px-4 py-2 rounded-lg bg-space-black/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan placeholder-text-secondary/50"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="table-scroll-wrapper">
-        <table className="trading-table">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm text-left">
           <thead>
             <tr>
               {columns.filter(c => c.visible !== false).map(col => (
                 <th
                   key={col.key}
                   onClick={() => handleSort(col.key)}
-                  className={`sortable ${sortConfig?.key === col.key ? `sorting_${sortConfig.direction}` : ''}`}
+                  className={`
+                    bg-space-mid/80 text-accent-cyan font-display font-semibold
+                    px-4 py-3 border-b border-accent-cyan/20
+                    whitespace-nowrap cursor-pointer select-none
+                    hover:bg-space-mid transition-colors
+                    ${sortConfig?.key === col.key ? 'text-accent-cyan' : 'text-accent-cyan/80'}
+                  `}
                 >
-                  {col.label}
-                  {sortConfig?.key === col.key && (
-                    <span className="sort-indicator">
-                      {sortConfig.direction === 'asc' ? ' ↑' : ' ↓'}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {col.label}
+                    {sortConfig?.key === col.key && (
+                      <span className="text-accent-gold text-xs">
+                        {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                      </span>
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-accent-cyan/5">
             {paginatedData.map((row, idx) => (
               <tr
                 key={row['Item ID'] || idx}
                 onClick={() => onRowClick?.(row, idx)}
-                className={onRowClick ? 'clickable' : ''}
+                className={`
+                  transition-colors hover:bg-accent-cyan/5
+                  ${onRowClick ? 'cursor-pointer' : ''}
+                `}
               >
                 {columns.filter(c => c.visible !== false).map(col => (
-                  <td key={col.key} className={col.className || ''}>
+                  <td key={col.key} className={`px-4 py-3 text-text-primary ${col.className || ''}`}>
                     {renderCell(row, col)}
                   </td>
                 ))}
@@ -210,20 +230,21 @@ export function TradingTable({
       </div>
 
       {/* Bottom Controls */}
-      <div className="dt-bottom">
-        <div className="dt-info">
-          Showing {currentPage * itemsPerPage + 1} to {Math.min((currentPage + 1) * itemsPerPage, sortedData.length)} of {sortedData.length} entries
+      <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 bg-space-mid/30 border-t border-accent-cyan/10 text-sm text-text-secondary">
+        <div>
+          Showing <span className="text-text-primary font-medium">{sortedData.length > 0 ? currentPage * itemsPerPage + 1 : 0}</span> to <span className="text-text-primary font-medium">{Math.min((currentPage + 1) * itemsPerPage, sortedData.length)}</span> of <span className="text-text-primary font-medium">{sortedData.length}</span> entries
           {searchTerm && ` (filtered from ${data.length} total)`}
         </div>
-        <div className="dt-controls">
-          <label className="dt-length">
-            Show{' '}
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="flex items-center gap-2">
+            Show
             <select
               value={itemsPerPage}
               onChange={(e) => {
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(0);
               }}
+              className="px-2 py-1 rounded bg-space-black/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan cursor-pointer"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -231,11 +252,13 @@ export function TradingTable({
               <option value={100}>100</option>
             </select>
           </label>
-          <div className="dt-paging">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => goToPage(0)}
               disabled={currentPage === 0}
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="First page"
             >
               «
             </button>
@@ -243,16 +266,20 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 0}
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Previous page"
             >
               ‹
             </button>
-            <span className="page-info">
-              Page {currentPage + 1} of {totalPages}
+            <span className="px-2 text-text-primary">
+              Page {currentPage + 1} of {totalPages || 1}
             </span>
             <button
               type="button"
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Next page"
             >
               ›
             </button>
@@ -260,199 +287,14 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(totalPages - 1)}
               disabled={currentPage >= totalPages - 1}
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Last page"
             >
               »
             </button>
           </div>
         </div>
       </div>
-
-      <style>{`
-        .trading-table-wrapper {
-          background: rgba(26, 26, 46, 0.3);
-          border-radius: 0.75rem;
-          border: 1px solid rgba(0, 212, 255, 0.1);
-          overflow: hidden;
-        }
-
-        .dt-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 1rem;
-          gap: 1rem;
-          flex-wrap: wrap;
-          background: rgba(22, 33, 62, 0.5);
-          border-bottom: 1px solid rgba(0, 212, 255, 0.1);
-        }
-
-        .dt-bottom {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 1rem;
-          gap: 1rem;
-          flex-wrap: wrap;
-          background: rgba(22, 33, 62, 0.3);
-          border-top: 1px solid rgba(0, 212, 255, 0.1);
-        }
-
-        .dt-controls {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-
-        .dt-search input {
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          background: rgba(10, 10, 15, 0.5);
-          border: 1px solid rgba(0, 212, 255, 0.2);
-          color: #e2e8f0;
-          font-size: 0.875rem;
-          min-width: 200px;
-        }
-
-        .dt-search input:focus {
-          outline: none;
-          border-color: #00d4ff;
-          box-shadow: 0 0 0 1px #00d4ff;
-        }
-
-        .dt-buttons {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .dt-button {
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          background: rgba(0, 212, 255, 0.1);
-          border: 1px solid rgba(0, 212, 255, 0.3);
-          color: #00d4ff;
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .dt-button:hover {
-          background: rgba(0, 212, 255, 0.2);
-          border-color: rgba(0, 212, 255, 0.5);
-        }
-
-        .table-scroll-wrapper {
-          overflow-x: auto;
-        }
-
-        table.trading-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 0.875rem;
-        }
-
-        table.trading-table thead th {
-          background: rgba(22, 33, 62, 0.8);
-          color: #00d4ff;
-          font-family: 'Orbitron', sans-serif;
-          font-weight: 600;
-          padding: 0.75rem 1rem;
-          text-align: left;
-          border-bottom: 1px solid rgba(0, 212, 255, 0.2);
-          white-space: nowrap;
-          cursor: pointer;
-          user-select: none;
-        }
-
-        table.trading-table thead th:hover {
-          background: rgba(22, 33, 62, 1);
-        }
-
-        table.trading-table thead th .sort-indicator {
-          color: #ffd700;
-        }
-
-        table.trading-table tbody td {
-          padding: 0.75rem 1rem;
-          border-bottom: 1px solid rgba(0, 212, 255, 0.05);
-          color: #e2e8f0;
-        }
-
-        table.trading-table tbody tr:hover td {
-          background: rgba(0, 212, 255, 0.05);
-        }
-
-        table.trading-table tbody tr.clickable {
-          cursor: pointer;
-        }
-
-        .dt-info {
-          color: #94a3b8;
-          font-size: 0.875rem;
-        }
-
-        .dt-length {
-          color: #94a3b8;
-          font-size: 0.875rem;
-        }
-
-        .dt-length select {
-          padding: 0.25rem 0.5rem;
-          border-radius: 0.25rem;
-          background: rgba(10, 10, 15, 0.5);
-          border: 1px solid rgba(0, 212, 255, 0.2);
-          color: #e2e8f0;
-          margin: 0 0.25rem;
-        }
-
-        .dt-paging {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
-
-        .dt-paging button {
-          padding: 0.25rem 0.75rem;
-          border-radius: 0.25rem;
-          background: rgba(0, 212, 255, 0.1);
-          border: 1px solid rgba(0, 212, 255, 0.2);
-          color: #00d4ff;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .dt-paging button:hover:not(:disabled) {
-          background: rgba(0, 212, 255, 0.2);
-        }
-
-        .dt-paging button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .page-info {
-          color: #94a3b8;
-          font-size: 0.875rem;
-          padding: 0 0.5rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          .dt-top,
-          .dt-bottom {
-            flex-direction: column;
-            align-items: stretch;
-          }
-
-          .dt-search input {
-            width: 100%;
-          }
-
-          .dt-controls {
-            justify-content: space-between;
-          }
-        }
-      `}</style>
     </div>
   );
 }
