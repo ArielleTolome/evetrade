@@ -123,7 +123,15 @@ export function StationAutocomplete({
 
   // Handle keyboard navigation
   const handleKeyDown = (e) => {
-    if (!isOpen || filtered.length === 0) return;
+    if (!isOpen) return;
+
+    if (filtered.length === 0) {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        setHighlightedIndex(-1);
+      }
+      return;
+    }
 
     switch (e.key) {
       case 'ArrowDown':
@@ -226,52 +234,70 @@ export function StationAutocomplete({
       </div>
 
       {/* Dropdown */}
-      {isOpen && filtered.length > 0 && (
-        <ul
-          id={listboxId}
-          role="listbox"
-          ref={listRef}
-          className="
+      {isOpen && (
+        <div
+           className="
             absolute z-50 w-full mt-1
             bg-space-dark dark:bg-space-dark bg-white
             border border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-200
             rounded-lg shadow-xl shadow-black/50
-            max-h-60 overflow-auto
+            max-h-60 overflow-hidden flex flex-col
           "
         >
-          {filtered.map((station, index) => {
-            const security = getSecurityLevel(station);
-            const citadel = isCitadel(station);
+          {filtered.length > 0 ? (
+            <ul
+              id={listboxId}
+              role="listbox"
+              ref={listRef}
+              className="overflow-auto max-h-60"
+            >
+              {filtered.map((station, index) => {
+                const security = getSecurityLevel(station);
+                const citadel = isCitadel(station);
 
-            return (
-              <li
-                key={station}
-                id={getOptionId(index)}
-                role="option"
-                aria-selected={index === highlightedIndex}
-                onClick={() => handleSelect(station)}
-                className={`
-                  flex items-center justify-between
-                  px-4 py-2.5 cursor-pointer
-                  transition-colors
-                  ${index === highlightedIndex
-                    ? 'bg-accent-cyan/20'
-                    : 'hover:bg-accent-cyan/10'
-                  }
-                `}
-              >
-                <span className={`truncate mr-2 ${citadel ? 'text-accent-gold' : 'text-text-primary'}`}>
-                  {station}
-                </span>
-                <SecurityBadge
-                  security={security}
-                  isCitadel={citadel}
-                  size="xs"
-                />
-              </li>
-            );
-          })}
-        </ul>
+                return (
+                  <li
+                    key={station}
+                    id={getOptionId(index)}
+                    role="option"
+                    aria-selected={index === highlightedIndex}
+                    onClick={() => handleSelect(station)}
+                    className={`
+                      flex items-center justify-between
+                      px-4 py-3 cursor-pointer border-b border-white/5 last:border-0
+                      transition-colors
+                      ${index === highlightedIndex
+                        ? 'bg-accent-cyan/20'
+                        : 'hover:bg-accent-cyan/10'
+                      }
+                    `}
+                  >
+                    <div className="flex flex-col overflow-hidden mr-2">
+                       <span className={`truncate font-medium ${citadel ? 'text-accent-gold' : 'text-text-primary'}`}>
+                        {station}
+                      </span>
+                      {citadel && (
+                        <span className="text-[10px] text-accent-gold/80 uppercase tracking-wider">
+                          Player Structure
+                        </span>
+                      )}
+                    </div>
+
+                    <SecurityBadge
+                      security={security}
+                      isCitadel={citadel}
+                      size="xs"
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="px-4 py-3 text-text-secondary text-sm text-center italic">
+              No stations found
+            </div>
+          )}
+        </div>
       )}
 
       {error && (
