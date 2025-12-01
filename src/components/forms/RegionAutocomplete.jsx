@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, useId } from 'react';
 import { useResources, useLocationLookup } from '../../hooks/useResources';
 
 /**
@@ -26,6 +26,10 @@ export function RegionAutocomplete({
 
   const inputRef = useRef(null);
   const listRef = useRef(null);
+
+  // Generate unique IDs for ARIA attributes
+  const listboxId = useId();
+  const getOptionId = (index) => `${listboxId}-option-${index}`;
 
   // Update input value when prop changes
   useEffect(() => {
@@ -117,6 +121,11 @@ export function RegionAutocomplete({
         <input
           ref={inputRef}
           type="text"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={isOpen && filtered.length > 0}
+          aria-controls={listboxId}
+          aria-activedescendant={highlightedIndex >= 0 ? getOptionId(highlightedIndex) : undefined}
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => inputValue && setIsOpen(true)}
@@ -149,6 +158,8 @@ export function RegionAutocomplete({
       {/* Dropdown */}
       {isOpen && filtered.length > 0 && (
         <ul
+          id={listboxId}
+          role="listbox"
           ref={listRef}
           className="
             absolute z-50 w-full mt-1
@@ -161,6 +172,9 @@ export function RegionAutocomplete({
           {filtered.map((region, index) => (
             <li
               key={region}
+              id={getOptionId(index)}
+              role="option"
+              aria-selected={index === highlightedIndex}
               onClick={() => handleSelect(region)}
               className={`
                 flex items-center justify-between
