@@ -19,16 +19,6 @@ export default defineConfig({
         manualChunks: {
           // Core React dependencies
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // DataTables core
-          'vendor-datatables': [
-            'datatables.net',
-            'datatables.net-dt',
-            'datatables.net-react',
-            'datatables.net-buttons-dt',
-            'datatables.net-buttons',
-          ],
-          // Export libraries (large)
-          'vendor-export': ['jszip', 'pdfmake'],
           // UI libraries
           'vendor-ui': ['@headlessui/react'],
           // Markdown rendering

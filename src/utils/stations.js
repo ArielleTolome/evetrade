@@ -1,13 +1,25 @@
 /**
  * Roman numeral pattern for system name detection
+ * @description Regular expression that matches valid Roman numerals from I to MMMCMXCIX (1-3999)
+ * Used to identify planet/moon designations in EVE Online station names
+ * @type {RegExp}
+ * @private
  */
 const ROMAN_NUMERAL_PATTERN = /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/i;
 
 /**
  * Normalize a station name to match universeList keys
- * The universeList uses lowercase station names as keys
- * @param {string} stationName - Station name to normalize
- * @returns {string} Normalized key for universeList lookup
+ * @description Converts station names to lowercase and removes citadel markers (*)
+ * to ensure consistent lookups in the universeList object. The universeList uses
+ * lowercase station names as keys.
+ * @param {string} stationName - Station name to normalize (may include citadel marker)
+ * @returns {string} Normalized key for universeList lookup (lowercase, no asterisk)
+ * @example
+ * normalizeStationKey('Jita IV - Moon 4 - Caldari Navy Assembly Plant')
+ * // returns 'jita iv - moon 4 - caldari navy assembly plant'
+ * @example
+ * normalizeStationKey('My Citadel*')
+ * // returns 'my citadel'
  */
 export function normalizeStationKey(stationName) {
   if (!stationName) return '';
@@ -17,9 +29,15 @@ export function normalizeStationKey(stationName) {
 
 /**
  * Look up station data from universeList with normalized key
+ * @description Attempts to find station data using exact match first, then falls back
+ * to normalized (lowercase) key lookup. Returns station metadata including region,
+ * station, and system IDs.
  * @param {string} stationName - Station name to look up
- * @param {object} universeList - Universe data
- * @returns {object|null} Station data or null if not found
+ * @param {Object.<string, {region: number, station: number, system: number, security: number}>} universeList - Universe data mapping station names to IDs
+ * @returns {{region: number, station: number, system: number, security: number}|null} Station data object or null if not found
+ * @example
+ * getStationData('Jita IV - Moon 4 - Caldari Navy Assembly Plant', universeList)
+ * // returns { region: 10000002, station: 60003760, system: 30000142, security: 0.95 }
  */
 export function getStationData(stationName, universeList) {
   if (!stationName || !universeList) return null;
@@ -38,10 +56,17 @@ export function getStationData(stationName, universeList) {
 
 /**
  * Get region data from universeList by region name
- * Regions are stored in universeList with the region name (lowercase) as key
- * @param {string} regionName - Region name to look up
- * @param {object} universeList - Universe data
- * @returns {object|null} Region data with region ID, or null if not found
+ * @description Performs multiple lookup strategies to find region data:
+ * 1. Exact match on region name
+ * 2. Lowercase normalized match
+ * 3. Searches all entries for matching regionName property
+ * 4. Searches for key matching region name (case-insensitive)
+ * @param {string} regionName - Region name to look up (e.g., 'The Forge', 'Metropolis')
+ * @param {Object.<string, {region?: number, regionName?: string}>} universeList - Universe data
+ * @returns {{region: number, regionName: string}|null} Region data with region ID, or null if not found
+ * @example
+ * getRegionData('The Forge', universeList)
+ * // returns { region: 10000002, regionName: 'The Forge' }
  */
 export function getRegionData(regionName, universeList) {
   if (!regionName || !universeList) return null;
@@ -75,8 +100,14 @@ export function getRegionData(regionName, universeList) {
 
 /**
  * Check if a string is a Roman numeral
+ * @description Tests whether a string represents a valid Roman numeral (I-MMMCMXCIX).
+ * Used to identify planet/moon designations in EVE Online station names.
  * @param {string} str - String to check
- * @returns {boolean}
+ * @returns {boolean} True if the string is a valid Roman numeral, false otherwise
+ * @example
+ * isRomanNumeral('IV')  // returns true
+ * isRomanNumeral('42')  // returns false
+ * isRomanNumeral('XL')  // returns true
  */
 export function isRomanNumeral(str) {
   if (!str) return false;
@@ -85,10 +116,23 @@ export function isRomanNumeral(str) {
 
 /**
  * Extract system name from a station name
- * EVE station names typically follow format: "System Name - Station Type - Specific Name"
- * or "System Name Planet Moon - Station Type"
- * @param {string} stationName - Full station name
- * @returns {string} System name
+ * @description Parses EVE Online station names to extract the solar system name.
+ * Station names typically follow these formats:
+ * - "System Name - Station Type - Specific Name"
+ * - "System Name Planet Moon - Station Type"
+ * The function removes planet/moon designations (Roman numerals and numbers) to isolate
+ * the system name.
+ * @param {string} stationName - Full station name to parse
+ * @returns {string} Extracted system name without planet/moon designations
+ * @example
+ * getSystemFromStation('Jita IV - Moon 4 - Caldari Navy Assembly Plant')
+ * // returns 'Jita'
+ * @example
+ * getSystemFromStation('Amarr VIII (Oris) - Emperor Family Academy')
+ * // returns 'Amarr'
+ * @example
+ * getSystemFromStation('Perimeter - IChooseYou Market and Industry')
+ * // returns 'Perimeter'
  */
 export function getSystemFromStation(stationName) {
   if (!stationName) return '';
@@ -127,9 +171,15 @@ export function getSystemFromStation(stationName) {
 
 /**
  * Parse station/system selection into API format
+ * @description Converts a location name (station or system) into structured data
+ * required for API calls. Looks up the location in the universe data and returns
+ * region, station, system IDs, and security status.
  * @param {string} location - Location name (station or system)
- * @param {object} universeList - Universe data with region/station IDs
- * @returns {object|null} Object with regionId and stationId, or null if not found
+ * @param {Object.<string, {region: number, station: number, system: number, security: number}>} universeList - Universe data with region/station IDs
+ * @returns {{regionId: number, stationId: number, systemId: number, security: number}|null} Parsed location data or null if not found
+ * @example
+ * parseLocation('Jita IV - Moon 4 - Caldari Navy Assembly Plant', universeList)
+ * // returns { regionId: 10000002, stationId: 60003760, systemId: 30000142, security: 0.95 }
  */
 export function parseLocation(location, universeList) {
   if (!location || !universeList) return null;
@@ -147,10 +197,19 @@ export function parseLocation(location, universeList) {
 
 /**
  * Build location string for API query
- * @param {number} regionId - Region ID
- * @param {number} stationId - Station ID
- * @param {string} preference - Trade preference ('buy' or 'sell')
- * @returns {string} Location string for API
+ * @description Constructs a location string in the format used by the EVETrade API.
+ * Format: "[preference-]regionId:stationId"
+ * The preference prefix ('buy' or 'sell') is optional.
+ * @param {number} regionId - Region ID from EVE Online universe data
+ * @param {number} stationId - Station ID from EVE Online universe data
+ * @param {string} [preference=''] - Trade preference ('buy' or 'sell'), optional
+ * @returns {string} Formatted location string for API query
+ * @example
+ * buildLocationString(10000002, 60003760, 'buy')
+ * // returns 'buy-10000002:60003760'
+ * @example
+ * buildLocationString(10000002, 60003760)
+ * // returns '10000002:60003760'
  */
 export function buildLocationString(regionId, stationId, preference = '') {
   const prefix = preference ? `${preference}-` : '';
@@ -159,8 +218,16 @@ export function buildLocationString(regionId, stationId, preference = '') {
 
 /**
  * Parse location string from API format
- * @param {string} locationStr - Location string (e.g., "buy-10000002:60003760")
- * @returns {object} Parsed location with preference, regionId, stationId
+ * @description Deconstructs a location string from the API format back into its components.
+ * Handles strings with or without preference prefix.
+ * @param {string} locationStr - Location string in format "[preference-]regionId:stationId"
+ * @returns {{preference: string, regionId: number, stationId: number}|null} Parsed components or null if invalid
+ * @example
+ * parseLocationString('buy-10000002:60003760')
+ * // returns { preference: 'buy', regionId: 10000002, stationId: 60003760 }
+ * @example
+ * parseLocationString('10000002:60003760')
+ * // returns { preference: '', regionId: 10000002, stationId: 60003760 }
  */
 export function parseLocationString(locationStr) {
   if (!locationStr) return null;
@@ -188,10 +255,15 @@ export function parseLocationString(locationStr) {
 
 /**
  * Get all stations in a system
- * @param {string} systemName - Name of the system
- * @param {object} universeList - Universe data
- * @param {array} stationList - List of all stations
- * @returns {array} Array of station names in the system
+ * @description Filters the complete station list to return only stations located in
+ * the specified solar system.
+ * @param {string} systemName - Name of the solar system
+ * @param {Object.<string, {region: number, station: number, system: number}>} universeList - Universe data
+ * @param {string[]} stationList - Complete list of all station names
+ * @returns {string[]} Array of station names in the specified system
+ * @example
+ * getStationsInSystem('Jita', universeList, stationList)
+ * // returns ['Jita IV - Moon 4 - Caldari Navy Assembly Plant', 'Jita IV - Moon 5 - ...', ...]
  */
 export function getStationsInSystem(systemName, universeList, stationList) {
   if (!systemName || !universeList || !stationList) return [];
@@ -204,11 +276,17 @@ export function getStationsInSystem(systemName, universeList, stationList) {
 
 /**
  * Check if all stations in a system are selected
- * @param {array} selectedStations - Currently selected station names
+ * @description Determines whether every station in a given system is present in the
+ * selected stations array. Useful for UI optimization where entire systems can be
+ * represented as a single entity.
+ * @param {string[]} selectedStations - Currently selected station names
  * @param {string} systemName - System name to check
- * @param {object} universeList - Universe data
- * @param {array} stationList - List of all stations
- * @returns {boolean}
+ * @param {Object.<string, {region: number, station: number, system: number}>} universeList - Universe data
+ * @param {string[]} stationList - Complete list of all station names
+ * @returns {boolean} True if all stations in the system are selected, false otherwise
+ * @example
+ * isEntireSystemSelected(['Jita IV - Moon 4 - ...', 'Jita IV - Moon 5 - ...'], 'Jita', universeList, stationList)
+ * // returns true if these are all stations in Jita, false otherwise
  */
 export function isEntireSystemSelected(selectedStations, systemName, universeList, stationList) {
   const systemStations = getStationsInSystem(systemName, universeList, stationList);
@@ -219,10 +297,29 @@ export function isEntireSystemSelected(selectedStations, systemName, universeLis
 
 /**
  * Collapse individual stations to system if all are selected
- * @param {array} locations - Array of selected locations
- * @param {object} universeList - Universe data
- * @param {array} stationList - List of all stations
- * @returns {array} Optimized array with systems replacing full station sets
+ * @description Optimizes a list of selected locations by replacing complete sets of
+ * stations with their parent system. This reduces API query complexity and improves
+ * performance when users select all stations in a system.
+ *
+ * The function:
+ * 1. Groups stations by their parent system
+ * 2. Checks if all stations in each system are selected
+ * 3. Replaces complete station sets with a single system entry
+ * 4. Preserves individual stations for incomplete selections
+ * @param {string[]} locations - Array of selected location names (stations)
+ * @param {Object.<string, {region: number, station: number, system: number}>} universeList - Universe data
+ * @param {string[]} stationList - Complete list of all station names
+ * @returns {Array<{type: 'system'|'station', name: string, regionId: number, systemId?: number, stationId?: number}>} Optimized array with systems replacing complete station sets
+ * @example
+ * collapseToSystems(
+ *   ['Jita IV - Moon 4 - ...', 'Jita IV - Moon 5 - ...', 'Amarr VIII - ...'],
+ *   universeList,
+ *   stationList
+ * )
+ * // returns [
+ * //   { type: 'system', name: 'Jita', regionId: 10000002, systemId: 30000142 },
+ * //   { type: 'station', name: 'Amarr VIII - ...', regionId: 10000043, stationId: 60008494 }
+ * // ]
  */
 export function collapseToSystems(locations, universeList, stationList) {
   // Group by system
