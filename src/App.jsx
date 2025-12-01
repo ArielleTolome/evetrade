@@ -1,7 +1,7 @@
 import { RouterProvider } from 'react-router-dom';
-import { ResourceProvider } from './hooks/useResources';
-import { ThemeProvider } from './store/ThemeContext';
-import { router } from './router';
+import { ResourceProvider } from '@hooks/useResources';
+import { ThemeProvider } from '@store/ThemeContext';
+import { router } from '@/router';
 
 /**
  * Main App Component

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useResources, useLocationLookup } from '../../hooks/useResources';
+import { useResources, useLocationLookup } from '@hooks/useResources';
 import { SecurityBadge } from '../common/SecurityBadge';
-import { isCitadel } from '../../utils/security';
+import { isCitadel } from '@utils/security';
 
 /**
  * Station Autocomplete Component

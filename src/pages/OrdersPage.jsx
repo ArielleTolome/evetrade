@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PageLayout } from '../components/layout/PageLayout';
-import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
-import { SkeletonTable } from '../components/common/SkeletonLoader';
-import { useResources } from '../hooks/useResources';
-import { useApiCall } from '../hooks/useApiCall';
-import { fetchOrders } from '../api/trading';
-import { formatISK, formatNumber } from '../utils/formatters';
+import { PageLayout } from '@components/layout/PageLayout';
+import { GlassmorphicCard } from '@components/common/GlassmorphicCard';
+import { SkeletonTable } from '@components/common/SkeletonLoader';
+import { useResources } from '@hooks/useResources';
+import { useApiCall } from '@hooks/useApiCall';
+import { fetchOrders } from '@api/trading';
+import { formatISK, formatNumber } from '@utils/formatters';
 
 /**
  * Orders Page Component

@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { getApiEndpoint, RESOURCE_ENDPOINT } from '../utils/constants';
-import { isSupabaseConfigured, fetchFromSupabase } from '../lib/supabase';
+import { getApiEndpoint, RESOURCE_ENDPOINT } from '@utils/constants';
+import { isSupabaseConfigured, fetchFromSupabase } from '@lib/supabase';
 
 /**
  * Create axios instance with custom configuration

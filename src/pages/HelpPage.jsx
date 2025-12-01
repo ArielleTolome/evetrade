@@ -1,7 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { PageLayout } from '../components/layout/PageLayout';
-import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { PageLayout } from '@components/layout/PageLayout';
+import { GlassmorphicCard } from '@components/common/GlassmorphicCard';
 
 const helpContent = `
 # EVETrade Help

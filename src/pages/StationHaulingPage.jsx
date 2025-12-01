@@ -1,22 +1,22 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '../components/layout/PageLayout';
-import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
-import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
-import { TradingTable } from '../components/tables';
-import { SkeletonTable } from '../components/common/SkeletonLoader';
-import { useResources } from '../hooks/useResources';
-import { useApiCall } from '../hooks/useApiCall';
-import { fetchStationHauling } from '../api/trading';
-import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
-import { isCitadel } from '../utils/security';
+import { PageLayout } from '@components/layout/PageLayout';
+import { GlassmorphicCard } from '@components/common/GlassmorphicCard';
+import { FormInput, FormSelect, StationAutocomplete } from '@components/forms';
+import { TradingTable } from '@components/tables';
+import { SkeletonTable } from '@components/common/SkeletonLoader';
+import { useResources } from '@hooks/useResources';
+import { useApiCall } from '@hooks/useApiCall';
+import { fetchStationHauling } from '@api/trading';
+import { formatISK, formatNumber, formatPercent } from '@utils/formatters';
+import { isCitadel } from '@utils/security';
 import {
   TAX_OPTIONS,
   ROUTE_SAFETY_OPTIONS,
   SYSTEM_SECURITY_OPTIONS,
   TRADE_PREFERENCE_OPTIONS,
-} from '../utils/constants';
-import { getStationData } from '../utils/stations';
+} from '@utils/constants';
+import { getStationData } from '@utils/stations';
 
 /**
  * Station Hauling Page Component
@@ -119,12 +119,6 @@ export function StationHaulingPage() {
     },
     [form, buildLocationString, execute]
   );
-
-  // Option arrays for dropdowns
-  const taxOptions = useMemo(() => TAX_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const routeOptions = useMemo(() => ROUTE_SAFETY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const securityOptions = useMemo(() => SYSTEM_SECURITY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const prefOptions = useMemo(() => TRADE_PREFERENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
 
   // Table columns configuration
   const tableColumns = useMemo(
@@ -244,7 +238,7 @@ export function StationHaulingPage() {
                   label="Trade Preference"
                   value={form.fromPreference}
                   onChange={(v) => updateForm('fromPreference', v)}
-                  options={prefOptions}
+                  options={PREFERENCE_SELECT_OPTIONS}
                 />
               </div>
 
@@ -293,7 +287,7 @@ export function StationHaulingPage() {
                   label="Trade Preference"
                   value={form.toPreference}
                   onChange={(v) => updateForm('toPreference', v)}
-                  options={prefOptions}
+                  options={PREFERENCE_SELECT_OPTIONS}
                 />
               </div>
             </div>
@@ -335,19 +329,19 @@ export function StationHaulingPage() {
                 label="Sales Tax Level"
                 value={form.tax}
                 onChange={(v) => updateForm('tax', parseFloat(v))}
-                options={taxOptions}
+                options={TAX_SELECT_OPTIONS}
               />
               <FormSelect
                 label="System Security"
                 value={form.systemSecurity}
                 onChange={(v) => updateForm('systemSecurity', v)}
-                options={securityOptions}
+                options={SECURITY_SELECT_OPTIONS}
               />
               <FormSelect
                 label="Route Safety"
                 value={form.routeSafety}
                 onChange={(v) => updateForm('routeSafety', v)}
-                options={routeOptions}
+                options={ROUTE_SELECT_OPTIONS}
               />
             </div>
 

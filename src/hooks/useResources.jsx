@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCached, setCached } from './useCache';
-import { fetchResource } from '../api/client';
-import { RESOURCE_FILES } from '../utils/constants';
-import { getStationData, getRegionData } from '../utils/stations';
+import { fetchResource } from '@api/client';
+import { RESOURCE_FILES } from '@utils/constants';
+import { getStationData, getRegionData } from '@utils/stations';
 
 /**
  * Resource Context

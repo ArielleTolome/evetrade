@@ -1,5 +1,5 @@
-import { getSecurityLevel, formatSecurityStatus } from '../../utils/security';
-import { SECURITY_COLORS } from '../../utils/constants';
+import { getSecurityLevel, formatSecurityStatus } from '@utils/security';
+import { SECURITY_COLORS } from '@utils/constants';
 
 /**
  * Security Badge Component

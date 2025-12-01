@@ -1,4 +1,4 @@
-import { CACHE_CONFIG } from '../utils/constants';
+import { CACHE_CONFIG } from '@utils/constants';
 
 const { dbName, storeName, duration } = CACHE_CONFIG;
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { useResources, useLocationLookup } from '../../hooks/useResources';
+import { useResources, useLocationLookup } from '@hooks/useResources';
 
 /**
  * Region Autocomplete Component

@@ -1,4 +1,93 @@
 /**
+ * Environment variable definitions
+ */
+const ENV_VARS = {
+  // Required variables - app will throw error if missing in development
+  required: [],
+
+  // Optional variables - will log warning if missing
+  optional: [
+    {
+      name: 'VITE_SUPABASE_URL',
+      description: 'Supabase project URL (falls back to S3 if not set)',
+    },
+    {
+      name: 'VITE_SUPABASE_ANON_KEY',
+      description: 'Supabase anonymous key (falls back to S3 if not set)',
+    },
+    {
+      name: 'VITE_GA_TRACKING_ID',
+      description: 'Google Analytics tracking ID',
+    },
+    {
+      name: 'VITE_ADSENSE_CLIENT_ID',
+      description: 'Google AdSense client ID',
+    },
+    {
+      name: 'VITE_API_ENDPOINT',
+      description: 'Custom API endpoint URL (defaults to /api)',
+    },
+  ],
+};
+
+/**
+ * Validates environment variables at app startup
+ * @throws {Error} If required variables are missing in development mode
+ */
+export function validateEnvironmentVariables() {
+  const isDevelopment = import.meta.env.DEV;
+  const missingRequired = [];
+  const missingOptional = [];
+
+  // Check required variables
+  ENV_VARS.required.forEach((varConfig) => {
+    const value = import.meta.env[varConfig.name];
+    if (!value) {
+      missingRequired.push(varConfig);
+    }
+  });
+
+  // Check optional variables
+  ENV_VARS.optional.forEach((varConfig) => {
+    const value = import.meta.env[varConfig.name];
+    if (!value) {
+      missingOptional.push(varConfig);
+    }
+  });
+
+  // Log missing optional variables
+  if (missingOptional.length > 0 && isDevelopment) {
+    console.warn('Missing optional environment variables:');
+    missingOptional.forEach((varConfig) => {
+      console.warn(`  - ${varConfig.name}: ${varConfig.description}`);
+    });
+    console.warn('The app will continue with default values.');
+  }
+
+  // Throw error for missing required variables in development
+  if (missingRequired.length > 0 && isDevelopment) {
+    const errorMessage = [
+      'Missing required environment variables:',
+      ...missingRequired.map((v) => `  - ${v.name}: ${v.description}`),
+      '\nPlease create a .env file based on .env.example',
+    ].join('\n');
+
+    throw new Error(errorMessage);
+  }
+
+  // Log success in development
+  if (isDevelopment && missingRequired.length === 0) {
+    console.log('Environment variables validated successfully');
+  }
+
+  return {
+    isValid: missingRequired.length === 0,
+    missingRequired,
+    missingOptional,
+  };
+}
+
+/**
  * API Endpoints Configuration
  */
 export const API_ENDPOINTS = {
@@ -10,10 +99,17 @@ export const API_ENDPOINTS = {
 export const RESOURCE_ENDPOINT = 'https://evetrade.s3.amazonaws.com/resources/';
 
 /**
- * Determine API endpoint based on hostname
- * Now using Vercel serverless functions for all environments
+ * Determine API endpoint based on environment variable or default
+ * Now using Vercel serverless functions for all environments by default
+ * Can be overridden with VITE_API_ENDPOINT environment variable
  */
 export function getApiEndpoint() {
+  const customEndpoint = import.meta.env.VITE_API_ENDPOINT;
+
+  if (customEndpoint) {
+    return customEndpoint;
+  }
+
   return API_ENDPOINTS.production;
 }
 
