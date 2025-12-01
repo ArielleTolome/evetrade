@@ -7,6 +7,7 @@ const navItems = [
   { path: '/station-trading', label: 'Station Trading', icon: '📊' },
   { path: '/station-hauling', label: 'Station Hauling', icon: '🚀' },
   { path: '/region-hauling', label: 'Region Hauling', icon: '🌌' },
+  { path: '/price-compare', label: 'Price Compare', icon: '💹' },
   { path: '/help', label: 'Help', icon: '❓' },
 ];
 
