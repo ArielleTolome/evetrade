@@ -1,30 +1,8 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
-import DataTable from 'datatables.net-react';
-import DT from 'datatables.net-dt';
-import 'datatables.net-buttons-dt';
-import 'datatables.net-buttons/js/buttons.html5.mjs';
-import 'datatables.net-buttons/js/buttons.print.mjs';
-import JSZip from 'jszip';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
-
-// Initialize DataTables
-DataTable.use(DT);
-
-// Set up pdfMake fonts
-pdfMake.vfs = pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
-
-// Make JSZip available globally for Excel export
-window.JSZip = JSZip;
-
-// Suppress DataTables reinitialisation warning - we handle this with React keys
-if (typeof window !== 'undefined' && window.$ && window.$.fn && window.$.fn.dataTable) {
-  window.$.fn.dataTable.ext.errMode = 'none';
-}
+import { useState, useMemo, useCallback } from 'react';
 
 /**
  * Trading Table Component
- * Full-featured DataTable with export buttons
+ * Custom React table with sorting, pagination, and search
  */
 export function TradingTable({
   data = [],
@@ -35,168 +13,255 @@ export function TradingTable({
   className = '',
   emptyMessage = 'No data available',
 }) {
-  const tableRef = useRef(null);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(pageLength);
 
-  // Build DataTables column configuration
-  const tableColumns = columns.map((col) => ({
-    data: col.key,
-    title: col.label,
-    className: col.className || '',
-    visible: col.visible !== false,
-    render: col.render || null,
-    type: col.type || 'string',
-  }));
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Find default sort column index
-  const sortColumnIndex = defaultSort
-    ? columns.findIndex((c) => c.key === defaultSort.column)
-    : columns.findIndex((c) => c.defaultSort);
-  const sortDirection = defaultSort?.direction || 'desc';
+  // Sort state
+  const [sortConfig, setSortConfig] = useState(() => {
+    if (defaultSort) {
+      return { key: defaultSort.column, direction: defaultSort.direction };
+    }
+    const defaultCol = columns.find(c => c.defaultSort);
+    return defaultCol ? { key: defaultCol.key, direction: 'desc' } : null;
+  });
 
-  // Generate a unique key based on data to force re-render
-  const tableKey = useMemo(() => {
-    if (!data || data.length === 0) return 'empty';
-    // Create a hash based on first few items to detect data changes
-    const sample = data.slice(0, 3).map(item => JSON.stringify(item)).join('');
-    return `table-${data.length}-${sample.length}`;
-  }, [data]);
+  // Filter data by search term
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return data;
+    const term = searchTerm.toLowerCase();
+    return data.filter(row =>
+      columns.some(col => {
+        const value = row[col.key];
+        if (value == null) return false;
+        return String(value).toLowerCase().includes(term);
+      })
+    );
+  }, [data, searchTerm, columns]);
 
-  // DataTables options
-  const options = {
-    destroy: true, // Allow table to be re-initialized
-    dom: '<"dt-top"Bf>rt<"dt-bottom"lip>',
-    buttons: [
-      {
-        extend: 'collection',
-        text: '📥 Export',
-        className: 'dt-button-export',
-        buttons: [
-          {
-            extend: 'copy',
-            text: '📋 Copy',
-            className: 'dt-button-copy',
-            exportOptions: {
-              columns: ':visible',
-            },
-          },
-          {
-            extend: 'csv',
-            text: '📄 CSV',
-            className: 'dt-button-csv',
-            exportOptions: {
-              columns: ':visible',
-            },
-          },
-          {
-            extend: 'excel',
-            text: '📊 Excel',
-            className: 'dt-button-excel',
-            exportOptions: {
-              columns: ':visible',
-            },
-          },
-          {
-            extend: 'pdf',
-            text: '📕 PDF',
-            className: 'dt-button-pdf',
-            orientation: 'landscape',
-            pageSize: 'A4',
-            exportOptions: {
-              columns: ':visible',
-            },
-          },
-          {
-            extend: 'print',
-            text: '🖨️ Print',
-            className: 'dt-button-print',
-            exportOptions: {
-              columns: ':visible',
-            },
-          },
-        ],
-      },
-      {
-        extend: 'colvis',
-        text: '👁️ Columns',
-        className: 'dt-button-colvis',
-      },
-    ],
-    order: sortColumnIndex >= 0 ? [[sortColumnIndex, sortDirection]] : [],
-    pageLength,
-    lengthMenu: [10, 25, 50, 100],
-    scrollX: true,
-    responsive: false,
-    language: {
-      search: '',
-      searchPlaceholder: 'Search results...',
-      emptyTable: emptyMessage,
-      info: 'Showing _START_ to _END_ of _TOTAL_ entries',
-      infoEmpty: 'No entries',
-      infoFiltered: '(filtered from _MAX_)',
-      lengthMenu: 'Show _MENU_',
-      paginate: {
-        first: '«',
-        last: '»',
-        next: '›',
-        previous: '‹',
-      },
-    },
-    drawCallback: function () {
-      // Apply custom styling after draw
-      const wrapper = tableRef.current?.dt?.table()?.container();
-      if (wrapper) {
-        wrapper.classList.add('dt-styled');
-      }
-    },
-  };
+  // Sort data
+  const sortedData = useMemo(() => {
+    if (!sortConfig) return filteredData;
 
-  // Handle row click - only on tbody rows, not on buttons/pagination
-  const handleRowClick = useCallback(
-    (e) => {
-      if (!onRowClick) return;
+    return [...filteredData].sort((a, b) => {
+      const aVal = a[sortConfig.key];
+      const bVal = b[sortConfig.key];
 
-      // Ignore clicks on buttons, inputs, selects, and pagination elements
-      const target = e.target;
-      if (
-        target.tagName === 'BUTTON' ||
-        target.tagName === 'INPUT' ||
-        target.tagName === 'SELECT' ||
-        target.tagName === 'A' ||
-        target.closest('button') ||
-        target.closest('.dt-paging') ||
-        target.closest('.dt-buttons') ||
-        target.closest('.dt-search') ||
-        target.closest('.dt-length') ||
-        target.closest('.dt-top') ||
-        target.closest('.dt-bottom')
-      ) {
-        return;
+      // Handle null/undefined
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+
+      // Numeric comparison
+      const col = columns.find(c => c.key === sortConfig.key);
+      if (col?.type === 'num' || typeof aVal === 'number') {
+        const diff = Number(aVal) - Number(bVal);
+        return sortConfig.direction === 'asc' ? diff : -diff;
       }
 
-      const row = e.target.closest('tr');
-      if (!row || row.parentElement.tagName === 'THEAD') return;
+      // String comparison
+      const comparison = String(aVal).localeCompare(String(bVal));
+      return sortConfig.direction === 'asc' ? comparison : -comparison;
+    });
+  }, [filteredData, sortConfig, columns]);
 
-      // Only handle clicks on tbody
-      if (row.parentElement.tagName !== 'TBODY') return;
+  // Paginate data
+  const paginatedData = useMemo(() => {
+    const start = currentPage * itemsPerPage;
+    return sortedData.slice(start, start + itemsPerPage);
+  }, [sortedData, currentPage, itemsPerPage]);
 
-      const rowIndex = row.rowIndex - 1; // Subtract 1 for header
-      if (rowIndex >= 0 && data[rowIndex]) {
-        onRowClick(data[rowIndex], rowIndex);
+  // Total pages
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+
+  // Handle sort click
+  const handleSort = useCallback((key) => {
+    setSortConfig(prev => {
+      if (prev?.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
       }
-    },
-    [data, onRowClick]
-  );
+      return { key, direction: 'desc' };
+    });
+    setCurrentPage(0);
+  }, []);
+
+  // Handle page change
+  const goToPage = useCallback((page) => {
+    setCurrentPage(Math.max(0, Math.min(page, totalPages - 1)));
+  }, [totalPages]);
+
+  // Export to CSV
+  const exportCSV = useCallback(() => {
+    const headers = columns.map(c => c.label).join(',');
+    const rows = sortedData.map(row =>
+      columns.map(col => {
+        const val = row[col.key];
+        // Escape quotes and wrap in quotes if contains comma
+        const str = String(val ?? '');
+        return str.includes(',') || str.includes('"')
+          ? `"${str.replace(/"/g, '""')}"`
+          : str;
+      }).join(',')
+    );
+    const csv = [headers, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'trading-data.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [sortedData, columns]);
+
+  // Copy to clipboard
+  const copyToClipboard = useCallback(() => {
+    const headers = columns.map(c => c.label).join('\t');
+    const rows = sortedData.map(row =>
+      columns.map(col => String(row[col.key] ?? '')).join('\t')
+    );
+    const text = [headers, ...rows].join('\n');
+    navigator.clipboard.writeText(text);
+  }, [sortedData, columns]);
+
+  // Render cell value
+  const renderCell = useCallback((row, col) => {
+    const value = row[col.key];
+    if (col.render) {
+      return col.render(value, row);
+    }
+    return value ?? '';
+  }, []);
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="trading-table-wrapper">
+        <div className="text-center py-12 text-text-secondary">
+          {emptyMessage}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`trading-table-wrapper ${className}`} key={tableKey}>
-      <DataTable
-        ref={tableRef}
-        data={data}
-        columns={tableColumns}
-        options={options}
-        className="trading-table display nowrap"
-        onClick={handleRowClick}
-      />
+    <div className={`trading-table-wrapper ${className}`}>
+      {/* Top Controls */}
+      <div className="dt-top">
+        <div className="dt-buttons">
+          <button onClick={copyToClipboard} className="dt-button">
+            Copy
+          </button>
+          <button onClick={exportCSV} className="dt-button">
+            CSV
+          </button>
+        </div>
+        <div className="dt-search">
+          <input
+            type="text"
+            placeholder="Search results..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(0);
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="table-scroll-wrapper">
+        <table className="trading-table">
+          <thead>
+            <tr>
+              {columns.filter(c => c.visible !== false).map(col => (
+                <th
+                  key={col.key}
+                  onClick={() => handleSort(col.key)}
+                  className={`sortable ${sortConfig?.key === col.key ? `sorting_${sortConfig.direction}` : ''}`}
+                >
+                  {col.label}
+                  {sortConfig?.key === col.key && (
+                    <span className="sort-indicator">
+                      {sortConfig.direction === 'asc' ? ' ↑' : ' ↓'}
+                    </span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedData.map((row, idx) => (
+              <tr
+                key={row['Item ID'] || idx}
+                onClick={() => onRowClick?.(row, idx)}
+                className={onRowClick ? 'clickable' : ''}
+              >
+                {columns.filter(c => c.visible !== false).map(col => (
+                  <td key={col.key} className={col.className || ''}>
+                    {renderCell(row, col)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Bottom Controls */}
+      <div className="dt-bottom">
+        <div className="dt-info">
+          Showing {currentPage * itemsPerPage + 1} to {Math.min((currentPage + 1) * itemsPerPage, sortedData.length)} of {sortedData.length} entries
+          {searchTerm && ` (filtered from ${data.length} total)`}
+        </div>
+        <div className="dt-controls">
+          <label className="dt-length">
+            Show{' '}
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(0);
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </label>
+          <div className="dt-paging">
+            <button
+              onClick={() => goToPage(0)}
+              disabled={currentPage === 0}
+            >
+              «
+            </button>
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 0}
+            >
+              ‹
+            </button>
+            <span className="page-info">
+              Page {currentPage + 1} of {totalPages}
+            </span>
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage >= totalPages - 1}
+            >
+              ›
+            </button>
+            <button
+              onClick={() => goToPage(totalPages - 1)}
+              disabled={currentPage >= totalPages - 1}
+            >
+              »
+            </button>
+          </div>
+        </div>
+      </div>
 
       <style>{`
         .trading-table-wrapper {
@@ -206,7 +271,7 @@ export function TradingTable({
           overflow: hidden;
         }
 
-        .trading-table-wrapper .dt-top {
+        .dt-top {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -217,7 +282,7 @@ export function TradingTable({
           border-bottom: 1px solid rgba(0, 212, 255, 0.1);
         }
 
-        .trading-table-wrapper .dt-bottom {
+        .dt-bottom {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -228,12 +293,14 @@ export function TradingTable({
           border-top: 1px solid rgba(0, 212, 255, 0.1);
         }
 
-        .trading-table-wrapper .dt-search {
+        .dt-controls {
           display: flex;
           align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
         }
 
-        .trading-table-wrapper .dt-search input {
+        .dt-search input {
           padding: 0.5rem 1rem;
           border-radius: 0.5rem;
           background: rgba(10, 10, 15, 0.5);
@@ -243,18 +310,18 @@ export function TradingTable({
           min-width: 200px;
         }
 
-        .trading-table-wrapper .dt-search input:focus {
+        .dt-search input:focus {
           outline: none;
           border-color: #00d4ff;
           box-shadow: 0 0 0 1px #00d4ff;
         }
 
-        .trading-table-wrapper .dt-buttons {
+        .dt-buttons {
           display: flex;
           gap: 0.5rem;
         }
 
-        .trading-table-wrapper .dt-button {
+        .dt-button {
           padding: 0.5rem 1rem;
           border-radius: 0.5rem;
           background: rgba(0, 212, 255, 0.1);
@@ -265,42 +332,22 @@ export function TradingTable({
           transition: all 0.2s;
         }
 
-        .trading-table-wrapper .dt-button:hover {
+        .dt-button:hover {
           background: rgba(0, 212, 255, 0.2);
           border-color: rgba(0, 212, 255, 0.5);
         }
 
-        .trading-table-wrapper .dt-button-collection {
-          position: relative;
+        .table-scroll-wrapper {
+          overflow-x: auto;
         }
 
-        .trading-table-wrapper .dt-button-collection .dt-button-collection-items {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          z-index: 50;
-          background: #1a1a2e;
-          border: 1px solid rgba(0, 212, 255, 0.2);
-          border-radius: 0.5rem;
-          padding: 0.5rem;
-          min-width: 150px;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-        }
-
-        .trading-table-wrapper .dt-button-collection .dt-button-collection-items .dt-button {
-          display: block;
-          width: 100%;
-          text-align: left;
-          margin-bottom: 0.25rem;
-        }
-
-        .trading-table-wrapper table.trading-table {
+        table.trading-table {
           width: 100%;
           border-collapse: collapse;
           font-size: 0.875rem;
         }
 
-        .trading-table-wrapper table.trading-table thead th {
+        table.trading-table thead th {
           background: rgba(22, 33, 62, 0.8);
           color: #00d4ff;
           font-family: 'Orbitron', sans-serif;
@@ -309,44 +356,43 @@ export function TradingTable({
           text-align: left;
           border-bottom: 1px solid rgba(0, 212, 255, 0.2);
           white-space: nowrap;
-        }
-
-        .trading-table-wrapper table.trading-table thead th.sorting,
-        .trading-table-wrapper table.trading-table thead th.sorting_asc,
-        .trading-table-wrapper table.trading-table thead th.sorting_desc {
           cursor: pointer;
+          user-select: none;
         }
 
-        .trading-table-wrapper table.trading-table thead th.sorting_asc::after {
-          content: ' ↑';
+        table.trading-table thead th:hover {
+          background: rgba(22, 33, 62, 1);
+        }
+
+        table.trading-table thead th .sort-indicator {
           color: #ffd700;
         }
 
-        .trading-table-wrapper table.trading-table thead th.sorting_desc::after {
-          content: ' ↓';
-          color: #ffd700;
-        }
-
-        .trading-table-wrapper table.trading-table tbody td {
+        table.trading-table tbody td {
           padding: 0.75rem 1rem;
           border-bottom: 1px solid rgba(0, 212, 255, 0.05);
           color: #e2e8f0;
         }
 
-        .trading-table-wrapper table.trading-table tbody tr:hover td {
+        table.trading-table tbody tr:hover td {
           background: rgba(0, 212, 255, 0.05);
         }
 
-        .trading-table-wrapper table.trading-table tbody tr {
-          cursor: ${onRowClick ? 'pointer' : 'default'};
+        table.trading-table tbody tr.clickable {
+          cursor: pointer;
         }
 
-        .trading-table-wrapper .dt-info {
+        .dt-info {
           color: #94a3b8;
           font-size: 0.875rem;
         }
 
-        .trading-table-wrapper .dt-length select {
+        .dt-length {
+          color: #94a3b8;
+          font-size: 0.875rem;
+        }
+
+        .dt-length select {
           padding: 0.25rem 0.5rem;
           border-radius: 0.25rem;
           background: rgba(10, 10, 15, 0.5);
@@ -355,12 +401,13 @@ export function TradingTable({
           margin: 0 0.25rem;
         }
 
-        .trading-table-wrapper .dt-paging {
+        .dt-paging {
           display: flex;
+          align-items: center;
           gap: 0.25rem;
         }
 
-        .trading-table-wrapper .dt-paging button {
+        .dt-paging button {
           padding: 0.25rem 0.75rem;
           border-radius: 0.25rem;
           background: rgba(0, 212, 255, 0.1);
@@ -370,30 +417,35 @@ export function TradingTable({
           transition: all 0.2s;
         }
 
-        .trading-table-wrapper .dt-paging button:hover:not(:disabled) {
+        .dt-paging button:hover:not(:disabled) {
           background: rgba(0, 212, 255, 0.2);
         }
 
-        .trading-table-wrapper .dt-paging button:disabled {
+        .dt-paging button:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
 
-        .trading-table-wrapper .dt-paging button.current {
-          background: #00d4ff;
-          color: #0a0a0f;
+        .page-info {
+          color: #94a3b8;
+          font-size: 0.875rem;
+          padding: 0 0.5rem;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-          .trading-table-wrapper .dt-top,
-          .trading-table-wrapper .dt-bottom {
+          .dt-top,
+          .dt-bottom {
             flex-direction: column;
             align-items: stretch;
           }
 
-          .trading-table-wrapper .dt-search input {
+          .dt-search input {
             width: 100%;
+          }
+
+          .dt-controls {
+            justify-content: space-between;
           }
         }
       `}</style>
