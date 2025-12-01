@@ -34,7 +34,10 @@ export function OrdersPage() {
       try {
         const invTypes = await loadInvTypes();
         if (invTypes && invTypes[itemId]) {
-          setItemName(invTypes[itemId]);
+          // invTypes entries can be objects with typeName or just strings
+          const typeData = invTypes[itemId];
+          const name = typeof typeData === 'object' ? typeData.typeName : typeData;
+          setItemName(name || `Item #${itemId}`);
         } else {
           setItemName(`Item #${itemId}`);
         }
