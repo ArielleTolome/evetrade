@@ -7,6 +7,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const StationTradingPage = lazy(() => import('./pages/StationTradingPage'));
 const StationHaulingPage = lazy(() => import('./pages/StationHaulingPage'));
 const RegionHaulingPage = lazy(() => import('./pages/RegionHaulingPage'));
+const PriceComparisonPage = lazy(() => import('./pages/PriceComparisonPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
 
@@ -54,6 +55,14 @@ export const router = createBrowserRouter([
     element: (
       <LazyPage>
         <RegionHaulingPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/price-compare',
+    element: (
+      <LazyPage>
+        <PriceComparisonPage />
       </LazyPage>
     ),
   },

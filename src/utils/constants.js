@@ -103,3 +103,45 @@ export const RESOURCE_FILES = [
   'structureInfo',
   'functionDurations',
 ];
+
+/**
+ * Major EVE Online Trade Hubs
+ * Used for price comparison across hubs
+ */
+export const TRADE_HUBS = [
+  {
+    name: 'Jita IV - Moon 4 - Caldari Navy Assembly Plant',
+    shortName: 'Jita',
+    stationId: 60003760,
+    regionId: 10000002,
+    regionName: 'The Forge',
+  },
+  {
+    name: 'Amarr VIII (Oris) - Emperor Family Academy',
+    shortName: 'Amarr',
+    stationId: 60008494,
+    regionId: 10000043,
+    regionName: 'Domain',
+  },
+  {
+    name: 'Dodixie IX - Moon 20 - Federation Navy Assembly Plant',
+    shortName: 'Dodixie',
+    stationId: 60011866,
+    regionId: 10000032,
+    regionName: 'Sinq Laison',
+  },
+  {
+    name: 'Rens VI - Moon 8 - Brutor Tribe Treasury',
+    shortName: 'Rens',
+    stationId: 60004588,
+    regionId: 10000030,
+    regionName: 'Heimatar',
+  },
+  {
+    name: 'Hek VIII - Moon 12 - Boundless Creation Factory',
+    shortName: 'Hek',
+    stationId: 60005686,
+    regionId: 10000042,
+    regionName: 'Metropolis',
+  },
+];

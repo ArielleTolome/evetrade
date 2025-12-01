@@ -99,7 +99,7 @@ export function ResourceProvider({ children }) {
       if (loaded.structureList && loaded.stationList) {
         loaded.stationList = [
           ...loaded.stationList,
-          ...loaded.structureList.map((s) => \`\${s}*\`),
+          ...loaded.structureList.map((s) => `${s}*`),
         ];
       }
 

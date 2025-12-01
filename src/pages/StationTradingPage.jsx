@@ -2,14 +2,14 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
-import { SavedSearches } from '../components/common/SavedSearches';import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
+import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { useTradeForm } from '../hooks/useTradeForm';
 import { fetchStationTrading } from '../api/trading';
-import { useSavedSearches } from '../hooks/useSavedSearches';import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
+import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 import { TAX_OPTIONS } from '../utils/constants';
 import { getStationData } from '../utils/stations';
 
