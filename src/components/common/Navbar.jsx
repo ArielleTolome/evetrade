@@ -8,6 +8,10 @@ const navItems = [
   { path: '/station-hauling', label: 'Station Hauling', icon: '🚀' },
   { path: '/region-hauling', label: 'Region Hauling', icon: '🌌' },
   { path: '/price-compare', label: 'Price Compare', icon: '💹' },
+  { path: '/watchlist', label: 'Watchlist', icon: '👁' },
+  { path: '/saved-routes', label: 'Saved Routes', icon: '⭐' },
+  { path: '/portfolio', label: 'Portfolio', icon: '📈' },
+  { path: '/calculator', label: 'Calculator', icon: '🧮' },
   { path: '/help', label: 'Help', icon: '❓' },
 ];
 

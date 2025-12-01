@@ -2,11 +2,15 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { TopRecommendations } from '../components/common/TopRecommendations';
+import { TradingStats } from '../components/common/TradingStats';
+import { ProfitDistribution } from '../components/common/ProfitDistribution';
 import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
+import { usePortfolio } from '../hooks/usePortfolio';
 import { fetchStationHauling } from '../api/trading';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 import { isCitadel } from '../utils/security';
@@ -25,6 +29,9 @@ export function StationHaulingPage() {
   const navigate = useNavigate();
   const { universeList, loading: resourcesLoading } = useResources();
   const { data, loading, error, execute } = useApiCall(fetchStationHauling);
+  const { saveRoute } = usePortfolio();
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [routeName, setRouteName] = useState('');
 
   // Form state
   const [form, setForm] = useState({
@@ -187,6 +194,21 @@ export function StationHaulingPage() {
     },
     [navigate]
   );
+
+  // Handle save route
+  const handleSaveRoute = useCallback(() => {
+    const fromNames = form.fromStations.join(', ');
+    const toNames = form.toStations.join(', ');
+    saveRoute({
+      name: routeName || `${fromNames} -> ${toNames}`,
+      type: 'station-hauling',
+      from: form.fromStations,
+      to: form.toStations,
+      params: { ...form },
+    });
+    setShowSaveModal(false);
+    setRouteName('');
+  }, [form, routeName, saveRoute]);
 
   return (
     <PageLayout
@@ -388,17 +410,81 @@ export function StationHaulingPage() {
                 </p>
               </GlassmorphicCard>
             ) : (
-              <TradingTable
-                data={data}
-                columns={tableColumns}
-                onRowClick={handleRowClick}
-                defaultSort={{ column: 'Profit', direction: 'desc' }}
-                emptyMessage="No trades found matching your criteria"
-              />
+              <>
+                {/* Action Bar */}
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                  <div className="text-text-secondary">
+                    Found <span className="text-accent-cyan font-medium">{data.length}</span> profitable trades
+                  </div>
+                  <button
+                    onClick={() => setShowSaveModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    Save Route
+                  </button>
+                </div>
+
+                {/* Top Recommendations */}
+                <TopRecommendations
+                  data={data}
+                  onItemClick={handleRowClick}
+                  maxItems={10}
+                  profitKey="Profit"
+                />
+
+                {/* Statistics Summary */}
+                <TradingStats data={data} profitKey="Profit" />
+
+                {/* Profit Distribution */}
+                <ProfitDistribution data={data} profitKey="Profit" className="mb-8" />
+
+                {/* Full Results Table */}
+                <TradingTable
+                  data={data}
+                  columns={tableColumns}
+                  onRowClick={handleRowClick}
+                  defaultSort={{ column: 'Profit', direction: 'desc' }}
+                  emptyMessage="No trades found matching your criteria"
+                />
+              </>
             )}
           </>
         )}
       </div>
+
+      {/* Save Route Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-space-dark border border-accent-cyan/20 rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 className="font-display text-xl text-text-primary mb-4">Save Route</h3>
+            <input
+              type="text"
+              value={routeName}
+              onChange={(e) => setRouteName(e.target.value)}
+              placeholder={`${form.fromStations.join(', ')} -> ${form.toStations.join(', ')}`}
+              className="w-full px-4 py-3 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary placeholder-text-secondary/50 focus:outline-none focus:border-accent-cyan mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveRoute}
+                className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 }

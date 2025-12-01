@@ -57,14 +57,14 @@ describe('StationAutocomplete', () => {
   describe('Rendering', () => {
     it('renders with default props', () => {
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toBeInTheDocument();
       expect(input).toHaveAttribute('placeholder', 'Search stations...');
     });
 
     it('renders with custom placeholder', () => {
       render(<StationAutocomplete value="" onChange={vi.fn()} placeholder="Select a station" />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toHaveAttribute('placeholder', 'Select a station');
     });
 
@@ -82,14 +82,14 @@ describe('StationAutocomplete', () => {
     it('shows loading placeholder when resources are loading', () => {
       useResources.mockReturnValue({ stationList: null, universeList: null, loading: true });
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toHaveAttribute('placeholder', 'Loading stations...');
       expect(input).toBeDisabled();
     });
 
     it('displays initial value when provided', () => {
       render(<StationAutocomplete value="Jita IV - Moon 4 - Caldari Navy Assembly Plant" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toHaveValue('Jita IV - Moon 4 - Caldari Navy Assembly Plant');
     });
   });
@@ -98,7 +98,7 @@ describe('StationAutocomplete', () => {
     it('filters stations based on input', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Jita');
       await waitFor(() => {
         expect(screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant')).toBeInTheDocument();
@@ -108,7 +108,7 @@ describe('StationAutocomplete', () => {
     it('finds citadels marked with asterisk', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Perimeter');
       await waitFor(() => {
         expect(screen.getByText('Perimeter - IChooseYou Trade Hub*')).toBeInTheDocument();
@@ -118,10 +118,10 @@ describe('StationAutocomplete', () => {
     it('respects maxResults limit', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} maxResults={2} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'i');
       await waitFor(() => {
-        const listItems = screen.getAllByRole('listitem');
+        const listItems = screen.getAllByRole('option');
         expect(listItems.length).toBeLessThanOrEqual(2);
       });
     });
@@ -129,10 +129,10 @@ describe('StationAutocomplete', () => {
     it('handles no matches gracefully', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'NonExistent');
       await waitFor(() => {
-        expect(screen.queryByRole('list')).not.toBeInTheDocument();
+        expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
       });
     });
   });
@@ -142,7 +142,7 @@ describe('StationAutocomplete', () => {
       const handleChange = vi.fn();
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={handleChange} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Jita');
       await waitFor(() => expect(screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant')).toBeInTheDocument());
       await user.click(screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant'));
@@ -152,12 +152,12 @@ describe('StationAutocomplete', () => {
     it('closes dropdown after selection', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Amarr');
       await waitFor(() => expect(screen.getByText('Amarr VIII (Oris) - Emperor Family Academy')).toBeInTheDocument());
       await user.click(screen.getByText('Amarr VIII (Oris) - Emperor Family Academy'));
       await waitFor(() => {
-        expect(screen.queryByRole('list')).not.toBeInTheDocument();
+        expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
       });
     });
   });
@@ -166,7 +166,7 @@ describe('StationAutocomplete', () => {
     it('displays security badge for each station', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Jita');
       await waitFor(() => {
         const badges = screen.getAllByTestId('security-badge');
@@ -177,7 +177,7 @@ describe('StationAutocomplete', () => {
     it('marks citadels appropriately in security badge', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Perimeter');
       await waitFor(() => {
         const badges = screen.getAllByTestId('security-badge');
@@ -191,7 +191,7 @@ describe('StationAutocomplete', () => {
     it('applies gold color to citadel names', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Perimeter');
       await waitFor(() => {
         const citadelElement = screen.getByText('Perimeter - IChooseYou Trade Hub*');
@@ -202,7 +202,7 @@ describe('StationAutocomplete', () => {
     it('applies normal color to NPC stations', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Jita IV');
       await waitFor(() => {
         const stationElement = screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant');
@@ -215,12 +215,12 @@ describe('StationAutocomplete', () => {
     it('navigates down with ArrowDown key', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Jita');
       await waitFor(() => expect(screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant')).toBeInTheDocument());
       await user.keyboard('{ArrowDown}');
       await waitFor(() => {
-        const items = screen.getAllByRole('listitem');
+        const items = screen.getAllByRole('option');
         expect(items[0]).toHaveClass('bg-accent-cyan/20');
       });
     });
@@ -229,12 +229,12 @@ describe('StationAutocomplete', () => {
       const handleChange = vi.fn();
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={handleChange} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Jita');
       await waitFor(() => expect(screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant')).toBeInTheDocument());
       await user.keyboard('{ArrowDown}');
       await waitFor(() => {
-        const items = screen.getAllByRole('listitem');
+        const items = screen.getAllByRole('option');
         expect(items[0]).toHaveClass('bg-accent-cyan/20');
       });
       await user.keyboard('{Enter}');
@@ -246,12 +246,12 @@ describe('StationAutocomplete', () => {
     it('closes dropdown with Escape key', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Jita');
       await waitFor(() => expect(screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant')).toBeInTheDocument());
       await user.keyboard('{Escape}');
       await waitFor(() => {
-        expect(screen.queryByRole('list')).not.toBeInTheDocument();
+        expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
       });
     });
   });
@@ -260,14 +260,14 @@ describe('StationAutocomplete', () => {
     it('handles empty station list', () => {
       useResources.mockReturnValue({ stationList: [], universeList: mockUniverseList, loading: false });
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toBeInTheDocument();
     });
 
     it('handles onChange being undefined', async () => {
       const user = userEvent.setup();
       render(<StationAutocomplete value="" />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       await user.type(input, 'Jita');
       await waitFor(() => expect(screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant')).toBeInTheDocument());
       await user.click(screen.getByText('Jita IV - Moon 4 - Caldari Navy Assembly Plant'));
@@ -276,7 +276,7 @@ describe('StationAutocomplete', () => {
 
     it('updates when value prop changes', async () => {
       const { rerender } = render(<StationAutocomplete value="Jita IV - Moon 4 - Caldari Navy Assembly Plant" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toHaveValue('Jita IV - Moon 4 - Caldari Navy Assembly Plant');
       rerender(<StationAutocomplete value="Amarr VIII (Oris) - Emperor Family Academy" onChange={vi.fn()} />);
       await waitFor(() => {
@@ -288,13 +288,13 @@ describe('StationAutocomplete', () => {
   describe('Accessibility', () => {
     it('has proper input type', () => {
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toHaveAttribute('type', 'text');
     });
 
     it('supports required attribute', () => {
       render(<StationAutocomplete value="" onChange={vi.fn()} required={true} />);
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('combobox');
       expect(input).toBeRequired();
     });
   });

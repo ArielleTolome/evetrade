@@ -10,6 +10,10 @@ const RegionHaulingPage = lazy(() => import('./pages/RegionHaulingPage'));
 const PriceComparisonPage = lazy(() => import('./pages/PriceComparisonPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
+const SavedRoutesPage = lazy(() => import('./pages/SavedRoutesPage'));
+const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
+const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
+const WatchlistPage = lazy(() => import('./pages/WatchlistPage'));
 
 /**
  * Lazy page wrapper with loading fallback
@@ -79,6 +83,38 @@ export const router = createBrowserRouter([
     element: (
       <LazyPage>
         <HelpPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/saved-routes',
+    element: (
+      <LazyPage>
+        <SavedRoutesPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/portfolio',
+    element: (
+      <LazyPage>
+        <PortfolioPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/calculator',
+    element: (
+      <LazyPage>
+        <CalculatorPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/watchlist',
+    element: (
+      <LazyPage>
+        <WatchlistPage />
       </LazyPage>
     ),
   },
