@@ -292,7 +292,8 @@ export function StationTradingPage() {
         {/* Results */}
         {data && !loading && (
           <>
-            {data.length === 0 ? (
+            {console.log('Data received:', data, 'isArray:', Array.isArray(data), 'length:', data?.length)}
+            {(!Array.isArray(data) || data.length === 0) ? (
               <GlassmorphicCard className="text-center py-12">
                 <p className="text-text-secondary text-lg">
                   No trades found matching your criteria.

@@ -3,23 +3,17 @@
  */
 export const API_ENDPOINTS = {
   production: '/api',
-  development: '/dev',
-  local: 'https://ykojlvmo2vgjde53lye6nyst5y0irbdx.lambda-url.us-east-1.on.aws',
+  development: '/api',
+  local: '/api',
 };
 
 export const RESOURCE_ENDPOINT = 'https://evetrade.s3.amazonaws.com/resources/';
 
 /**
  * Determine API endpoint based on hostname
+ * Now using Vercel serverless functions for all environments
  */
 export function getApiEndpoint() {
-  const hostname = window.location.hostname;
-  if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-    return API_ENDPOINTS.local;
-  }
-  if (hostname.includes('dev') || hostname.includes('preview')) {
-    return API_ENDPOINTS.development;
-  }
   return API_ENDPOINTS.production;
 }
 
