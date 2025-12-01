@@ -16,6 +16,11 @@ import { TAX_OPTIONS } from '../utils/constants';
 import { getStationData } from '../utils/stations';
 
 /**
+ * Static tax options for dropdown (moved outside component to prevent re-creation)
+ */
+const TAX_SELECT_OPTIONS = TAX_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }));
+
+/**
  * Station Trading Page Component
  * Refactored to use the useTradeForm hook for reduced duplication
  */
@@ -127,16 +132,6 @@ export function StationTradingPage() {
     [loadSearch, updateFormFields]
   );
 
-  // Tax options for dropdown
-  const taxOptions = useMemo(
-    () =>
-      TAX_OPTIONS.map((opt) => ({
-        value: opt.value,
-        label: opt.label,
-      })),
-    []
-  );
-
   // Table columns configuration
   const tableColumns = useMemo(
     () => [
@@ -231,7 +226,7 @@ export function StationTradingPage() {
                 label="Sales Tax Level"
                 value={form.tax}
                 onChange={(v) => updateForm('tax', parseFloat(v))}
-                options={taxOptions}
+                options={TAX_SELECT_OPTIONS}
               />
 
               <FormInput
