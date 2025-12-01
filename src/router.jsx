@@ -14,6 +14,7 @@ const SavedRoutesPage = lazy(() => import('./pages/SavedRoutesPage'));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
 const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
 
 /**
  * Lazy page wrapper with loading fallback
@@ -115,6 +116,14 @@ export const router = createBrowserRouter([
     element: (
       <LazyPage>
         <WatchlistPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/auth/callback',
+    element: (
+      <LazyPage>
+        <AuthCallbackPage />
       </LazyPage>
     ),
   },

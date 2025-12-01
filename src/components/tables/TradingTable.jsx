@@ -25,6 +25,93 @@ function getRowQualityTier(row, stats) {
 }
 
 /**
+ * Get margin trend indicator based on margin percentage
+ * @param {number} marginPercent - Margin as percentage (e.g., 15 for 15%)
+ * @returns {object} Trend info with arrow, color, and tooltip
+ */
+function getMarginTrend(marginPercent) {
+  // Thresholds for margin quality
+  const EXCELLENT_MARGIN = 15; // >15% = excellent
+  const GOOD_MARGIN = 10;      // 10-15% = good
+  const MODERATE_MARGIN = 5;   // 5-10% = moderate
+  const THIN_MARGIN = 3;       // <3% = very thin
+
+  if (marginPercent >= EXCELLENT_MARGIN) {
+    return {
+      arrow: '▲',
+      color: 'text-green-400',
+      tooltip: `Excellent margin (${marginPercent.toFixed(1)}%)`,
+      status: 'excellent',
+    };
+  } else if (marginPercent >= GOOD_MARGIN) {
+    return {
+      arrow: '▲',
+      color: 'text-green-400',
+      tooltip: `Good margin (${marginPercent.toFixed(1)}%)`,
+      status: 'good',
+    };
+  } else if (marginPercent >= MODERATE_MARGIN) {
+    return {
+      arrow: '—',
+      color: 'text-yellow-400',
+      tooltip: `Moderate margin (${marginPercent.toFixed(1)}%)`,
+      status: 'moderate',
+    };
+  } else if (marginPercent >= THIN_MARGIN) {
+    return {
+      arrow: '▼',
+      color: 'text-red-400',
+      tooltip: `Thin margin (${marginPercent.toFixed(1)}%)`,
+      status: 'thin',
+    };
+  } else {
+    return {
+      arrow: '▼',
+      color: 'text-red-500',
+      tooltip: `Very thin margin (${marginPercent.toFixed(1)}%) - High competition`,
+      status: 'very-thin',
+    };
+  }
+}
+
+/**
+ * Calculate trading badges (Hot, Competitive)
+ * @param {object} row - Row data
+ * @param {object} stats - Overall dataset stats
+ * @returns {array} Array of badge objects
+ */
+function getTradingBadges(row, stats) {
+  const badges = [];
+  const margin = row['Gross Margin'] || 0; // Already in percentage
+  const volume = row['Volume'] || 0;
+  const profit = row['Net Profit'] || 0;
+
+  // "Hot" badge - high volume AND good margin AND good profit
+  const highVolume = stats.maxVolume > 0 && volume >= stats.maxVolume * 0.5;
+  const goodMargin = margin >= 10;
+  const goodProfit = stats.maxProfit > 0 && profit >= stats.maxProfit * 0.3;
+
+  if (highVolume && goodMargin && goodProfit) {
+    badges.push({
+      label: 'Hot',
+      color: 'bg-orange-500/20 text-orange-400 border border-orange-500/40',
+      tooltip: 'High volume with excellent profit potential',
+    });
+  }
+
+  // "Competitive" badge - very thin margins
+  if (margin < 3) {
+    badges.push({
+      label: 'Competitive',
+      color: 'bg-red-500/20 text-red-400 border border-red-500/40',
+      tooltip: 'Very thin margins - market is highly competitive',
+    });
+  }
+
+  return badges;
+}
+
+/**
  * Trading Table Component
  * Custom React table with sorting, pagination, and search
  */
@@ -37,6 +124,8 @@ export function TradingTable({
   className = '',
   emptyMessage = 'No data available',
   showQualityIndicators = false,
+  expandableRowContent = null,
+  searchInputRef = null,
 }) {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -44,6 +133,9 @@ export function TradingTable({
 
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Expanded rows state
+  const [expandedRows, setExpandedRows] = useState(new Set());
 
   // Sort state
   const [sortConfig, setSortConfig] = useState(() => {
@@ -161,14 +253,73 @@ export function TradingTable({
     navigator.clipboard.writeText(text);
   }, [sortedData, columns]);
 
-  // Render cell value
+  // Toggle row expansion
+  const toggleRowExpansion = useCallback((rowId, event) => {
+    event?.stopPropagation();
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(rowId)) {
+        newSet.delete(rowId);
+      } else {
+        newSet.add(rowId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Render cell value with special handling for margin trends and badges
   const renderCell = useCallback((row, col) => {
     const value = row[col.key];
+
+    // Special handling for Margin column - add trend indicator
+    if (col.key === 'Gross Margin') {
+      const marginPercent = value || 0;
+      const trend = getMarginTrend(marginPercent);
+      const displayValue = col.render ? col.render(value, row) : value;
+
+      return (
+        <div className="flex items-center gap-2 group relative">
+          <span>{displayValue}</span>
+          <span className={`${trend.color} text-xs`} title={trend.tooltip}>
+            {trend.arrow}
+          </span>
+          {/* Tooltip */}
+          <div className="absolute left-0 bottom-full mb-2 px-3 py-2 bg-space-black border border-accent-cyan/30 rounded-lg text-xs text-text-primary whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+            {trend.tooltip}
+            <div className="absolute top-full left-4 -mt-1 border-4 border-transparent border-t-space-black"></div>
+          </div>
+        </div>
+      );
+    }
+
+    // Special handling for Item column - add badges
+    if (col.key === 'Item' && qualityStats) {
+      const badges = getTradingBadges(row, qualityStats);
+      const displayValue = col.render ? col.render(value, row) : value;
+
+      if (badges.length > 0) {
+        return (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span>{displayValue}</span>
+            {badges.map((badge, idx) => (
+              <span
+                key={idx}
+                className={`px-2 py-0.5 text-xs rounded-full ${badge.color} font-medium`}
+                title={badge.tooltip}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        );
+      }
+    }
+
     if (col.render) {
       return col.render(value, row);
     }
     return value ?? '';
-  }, []);
+  }, [qualityStats]);
 
   if (!data || data.length === 0) {
     return (
@@ -202,6 +353,7 @@ export function TradingTable({
         </div>
         <div className="w-full sm:w-auto">
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search results..."
             value={searchTerm}
@@ -219,6 +371,9 @@ export function TradingTable({
         <table className="w-full border-collapse text-sm text-left">
           <thead>
             <tr>
+              {expandableRowContent && (
+                <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-10"></th>
+              )}
               {columns.filter(c => c.visible !== false).map(col => (
                 <th
                   key={col.key}
@@ -246,6 +401,8 @@ export function TradingTable({
           <tbody className="divide-y divide-accent-cyan/5">
             {paginatedData.map((row, idx) => {
               const qualityTier = showQualityIndicators ? getRowQualityTier(row, qualityStats) : null;
+              const rowId = row['Item ID'] || idx;
+              const isExpanded = expandedRows.has(rowId);
 
               // Tailwind classes for quality tiers
               const qualityClasses = {
@@ -255,21 +412,49 @@ export function TradingTable({
               };
 
               return (
-                <tr
-                  key={row['Item ID'] || idx}
-                  onClick={() => onRowClick?.(row, idx)}
-                  className={`
-                    transition-colors
-                    ${qualityTier ? qualityClasses[qualityTier] : 'hover:bg-accent-cyan/5'}
-                    ${onRowClick ? 'cursor-pointer' : ''}
-                  `}
-                >
-                  {columns.filter(c => c.visible !== false).map(col => (
-                    <td key={col.key} className={`px-4 py-3 text-text-primary ${col.className || ''}`}>
-                      {renderCell(row, col)}
-                    </td>
-                  ))}
-                </tr>
+                <>
+                  <tr
+                    key={rowId}
+                    onClick={() => onRowClick?.(row, idx)}
+                    className={`
+                      transition-colors
+                      ${qualityTier ? qualityClasses[qualityTier] : 'hover:bg-accent-cyan/5'}
+                      ${onRowClick ? 'cursor-pointer' : ''}
+                    `}
+                  >
+                    {expandableRowContent && (
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={(e) => toggleRowExpansion(rowId, e)}
+                          className="text-accent-cyan hover:text-accent-cyan/80 transition-colors"
+                          aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
+                        >
+                          <svg
+                            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </td>
+                    )}
+                    {columns.filter(c => c.visible !== false).map(col => (
+                      <td key={col.key} className={`px-4 py-3 text-text-primary ${col.className || ''}`}>
+                        {renderCell(row, col)}
+                      </td>
+                    ))}
+                  </tr>
+                  {expandableRowContent && isExpanded && (
+                    <tr key={`${rowId}-expanded`} className="bg-space-dark/20">
+                      <td colSpan={columns.filter(c => c.visible !== false).length + 1} className="px-4 py-3">
+                        {expandableRowContent(row, idx)}
+                      </td>
+                    </tr>
+                  )}
+                </>
               );
             })}
           </tbody>

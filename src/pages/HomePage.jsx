@@ -1,7 +1,22 @@
 import { Link } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { useResources } from '../hooks/useResources';
+
+// Test button for Sentry error tracking - remove after verification
+function SentryTestButton() {
+  return (
+    <button
+      onClick={() => {
+        throw new Error('This is your first Sentry test error!');
+      }}
+      className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm"
+    >
+      Test Sentry Error
+    </button>
+  );
+}
 
 const tradingModes = [
   {
@@ -122,6 +137,11 @@ export function HomePage() {
             <div className="text-3xl font-display font-bold text-green-400 group-hover:scale-110 transition-transform">Free</div>
             <div className="text-text-secondary text-sm mt-1">Forever</div>
           </div>
+        </div>
+
+        {/* Sentry Test Button - Remove after verification */}
+        <div className="mt-8 animate-fade-in relative z-10" style={{ animationDelay: '500ms' }}>
+          <SentryTestButton />
         </div>
       </div>
     </PageLayout>

@@ -7,6 +7,8 @@ import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { fetchOrders } from '../api/trading';
 import { formatISK, formatNumber } from '../utils/formatters';
+import { useEveAuth } from '../hooks/useEveAuth';
+import { getCharacterOrders, getCharacterAssets } from '../api/esi';
 
 /**
  * Orders Page Component
@@ -16,10 +18,14 @@ export function OrdersPage() {
   const [searchParams] = useSearchParams();
   const { universeList, loadInvTypes } = useResources();
   const { data, loading, error, execute } = useApiCall(fetchOrders);
+  const { isAuthenticated, character, getAccessToken } = useEveAuth();
 
   const [itemName, setItemName] = useState('Loading...');
   const [fromStation, setFromStation] = useState('');
   const [toStation, setToStation] = useState('');
+  const [userOrders, setUserOrders] = useState([]);
+  const [userAssets, setUserAssets] = useState([]);
+  const [loadingUserData, setLoadingUserData] = useState(false);
 
   // Parse query parameters
   const itemId = searchParams.get('itemId');
@@ -94,6 +100,83 @@ export function OrdersPage() {
     }
   }, [itemId, from, to, execute]);
 
+  // Fetch user's orders and assets if authenticated
+  useEffect(() => {
+    async function fetchUserData() {
+      if (!isAuthenticated || !character?.id || !itemId) return;
+
+      setLoadingUserData(true);
+      try {
+        const accessToken = await getAccessToken();
+        if (!accessToken) return;
+
+        // Fetch user's orders
+        const orders = await getCharacterOrders(character.id, accessToken);
+        const itemOrders = orders.filter(order => order.type_id === parseInt(itemId));
+        setUserOrders(itemOrders);
+
+        // Fetch user's assets for this item
+        let allAssets = [];
+        let page = 1;
+        let hasMorePages = true;
+
+        while (hasMorePages) {
+          const assets = await getCharacterAssets(character.id, accessToken, page);
+          if (assets && assets.length > 0) {
+            allAssets = [...allAssets, ...assets];
+            page++;
+          } else {
+            hasMorePages = false;
+          }
+        }
+
+        const itemAssets = allAssets.filter(asset => asset.type_id === parseInt(itemId));
+        setUserAssets(itemAssets);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      } finally {
+        setLoadingUserData(false);
+      }
+    }
+
+    fetchUserData();
+  }, [isAuthenticated, character?.id, itemId, getAccessToken]);
+
+  // Calculate user's position in this item
+  const userPosition = useMemo(() => {
+    if (!userOrders.length && !userAssets.length) return null;
+
+    const totalUnits = userAssets.reduce((sum, asset) => sum + (asset.quantity || 0), 0);
+    const activeOrders = userOrders.filter(order => !order.is_closed);
+    const sellOrders = activeOrders.filter(order => !order.is_buy_order);
+    const buyOrders = activeOrders.filter(order => order.is_buy_order);
+
+    const totalSellValue = sellOrders.reduce((sum, order) =>
+      sum + (order.price * order.volume_remain), 0
+    );
+    const totalBuyValue = buyOrders.reduce((sum, order) =>
+      sum + (order.price * order.volume_remain), 0
+    );
+
+    return {
+      totalUnits,
+      activeOrderCount: activeOrders.length,
+      sellOrderCount: sellOrders.length,
+      buyOrderCount: buyOrders.length,
+      totalSellValue,
+      totalBuyValue,
+    };
+  }, [userOrders, userAssets]);
+
+  // Helper to check if an order belongs to the user
+  const isUserOrder = (orderPrice, isBuyOrder) => {
+    return userOrders.some(userOrder =>
+      Math.abs(userOrder.price - orderPrice) < 0.01 &&
+      userOrder.is_buy_order === isBuyOrder &&
+      !userOrder.is_closed
+    );
+  };
+
   // Check if same station
   const isSameStation = from === to;
 
@@ -119,6 +202,39 @@ export function OrdersPage() {
             </>
           )}
         </div>
+
+        {/* User Position Summary */}
+        {isAuthenticated && userPosition && (
+          <GlassmorphicCard className="mb-8">
+            <h2 className="font-display text-xl text-accent-gold mb-4">Your Position</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="p-3 bg-accent-cyan/10 rounded-lg border border-accent-cyan/20">
+                <div className="text-text-secondary mb-1">Assets Owned</div>
+                <div className="text-2xl font-bold text-accent-cyan">
+                  {formatNumber(userPosition.totalUnits, 0)} units
+                </div>
+              </div>
+              <div className="p-3 bg-accent-gold/10 rounded-lg border border-accent-gold/20">
+                <div className="text-text-secondary mb-1">Active Orders</div>
+                <div className="text-2xl font-bold text-accent-gold">
+                  {userPosition.activeOrderCount}
+                </div>
+                <div className="text-xs text-text-secondary mt-1">
+                  {userPosition.buyOrderCount} buy, {userPosition.sellOrderCount} sell
+                </div>
+              </div>
+              <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                <div className="text-text-secondary mb-1">Total Value</div>
+                <div className="text-lg font-bold text-green-400">
+                  {formatISK(userPosition.totalSellValue + userPosition.totalBuyValue)}
+                </div>
+                <div className="text-xs text-text-secondary mt-1">
+                  Sell: {formatISK(userPosition.totalSellValue)} | Buy: {formatISK(userPosition.totalBuyValue)}
+                </div>
+              </div>
+            </div>
+          </GlassmorphicCard>
+        )}
 
         {/* Error */}
         {error && (
@@ -166,16 +282,29 @@ export function OrdersPage() {
                       {data.from
                         .sort((a, b) => b.price - a.price)
                         .slice(0, 20)
-                        .map((order, i) => (
-                          <tr key={i} className="border-b border-accent-cyan/10">
-                            <td className="py-2 font-mono text-green-400">
-                              {formatISK(order.price, false)}
-                            </td>
-                            <td className="py-2 text-right font-mono text-text-secondary">
-                              {formatNumber(order.quantity, 0)}
-                            </td>
-                          </tr>
-                        ))}
+                        .map((order, i) => {
+                          const isOwned = isAuthenticated && isUserOrder(order.price, true);
+                          return (
+                            <tr
+                              key={i}
+                              className={`border-b border-accent-cyan/10 ${isOwned ? 'bg-accent-gold/20' : ''}`}
+                            >
+                              <td className="py-2 font-mono text-green-400">
+                                <div className="flex items-center gap-2">
+                                  {formatISK(order.price, false)}
+                                  {isOwned && (
+                                    <span className="px-2 py-0.5 text-xs bg-accent-gold/30 border border-accent-gold/50 rounded text-accent-gold font-semibold">
+                                      Your Order
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-2 text-right font-mono text-text-secondary">
+                                {formatNumber(order.quantity, 0)}
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
@@ -206,16 +335,29 @@ export function OrdersPage() {
                       {data.to
                         .sort((a, b) => a.price - b.price)
                         .slice(0, 20)
-                        .map((order, i) => (
-                          <tr key={i} className="border-b border-accent-cyan/10">
-                            <td className="py-2 font-mono text-red-400">
-                              {formatISK(order.price, false)}
-                            </td>
-                            <td className="py-2 text-right font-mono text-text-secondary">
-                              {formatNumber(order.quantity, 0)}
-                            </td>
-                          </tr>
-                        ))}
+                        .map((order, i) => {
+                          const isOwned = isAuthenticated && isUserOrder(order.price, false);
+                          return (
+                            <tr
+                              key={i}
+                              className={`border-b border-accent-cyan/10 ${isOwned ? 'bg-accent-gold/20' : ''}`}
+                            >
+                              <td className="py-2 font-mono text-red-400">
+                                <div className="flex items-center gap-2">
+                                  {formatISK(order.price, false)}
+                                  {isOwned && (
+                                    <span className="px-2 py-0.5 text-xs bg-accent-gold/30 border border-accent-gold/50 rounded text-accent-gold font-semibold">
+                                      Your Order
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-2 text-right font-mono text-text-secondary">
+                                {formatNumber(order.quantity, 0)}
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>

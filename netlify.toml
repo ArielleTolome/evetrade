@@ -1,0 +1,29 @@
+[build]
+  environment = { VERSION = "7.3" }
+  command = 'echo {\"version\": \"$VERSION\", \"release_date\": \"`date "+%B %d, %Y"`\", \"years_active\": \"2016-`date +%Y`\"} > version.json'
+  base = "/"
+  publish = "/"
+
+[[headers]]
+  # Enable CORS on API
+  for = "/api/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
+    
+[[headers]]
+  # Enable CORS on API
+  for = "/dev/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://remy65obllca7kdbhp56q74l7m0ultyy.lambda-url.us-east-1.on.aws/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/dev/*"
+  to = "https://ykojlvmo2vgjde53lye6nyst5y0irbdx.lambda-url.us-east-1.on.aws/:splat"
+  status = 200
+  force = true

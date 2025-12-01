@@ -1,6 +1,7 @@
 import { RouterProvider } from 'react-router-dom';
 import { ResourceProvider } from './hooks/useResources';
 import { ThemeProvider } from './store/ThemeContext';
+import { EveAuthProvider } from './hooks/useEveAuth';
 import { router } from './router';
 
 /**
@@ -9,9 +10,11 @@ import { router } from './router';
 function App() {
   return (
     <ThemeProvider>
-      <ResourceProvider>
-        <RouterProvider router={router} />
-      </ResourceProvider>
+      <EveAuthProvider>
+        <ResourceProvider>
+          <RouterProvider router={router} />
+        </ResourceProvider>
+      </EveAuthProvider>
     </ThemeProvider>
   );
 }

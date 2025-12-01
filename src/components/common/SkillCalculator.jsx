@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { useEveAuth } from '../../hooks/useEveAuth';
+import { getCharacterSkills, getCharacterStandings, calculateTradingTaxes } from '../../api/esi';
 import { GlassmorphicCard } from './GlassmorphicCard';
 import { formatISK, formatPercent } from '../../utils/formatters';
 
@@ -108,11 +110,68 @@ function StandingSlider({ label, value, onChange }) {
  * Skill Calculator Component
  */
 export function SkillCalculator({ tradeValue = 100000000, onSettingsChange }) {
+  const { isAuthenticated, character, getAccessToken } = useEveAuth();
   const [accounting, setAccounting] = useState(5);
   const [brokerRelations, setBrokerRelations] = useState(5);
   const [corpStanding, setCorpStanding] = useState(0);
   const [factionStanding, setFactionStanding] = useState(0);
   const [customTradeValue, setCustomTradeValue] = useState(tradeValue);
+  const [usingCharacterData, setUsingCharacterData] = useState(false);
+  const [importingData, setImportingData] = useState(false);
+  const [importError, setImportError] = useState(null);
+
+  // Import character data from EVE API
+  const importCharacterData = async () => {
+    if (!isAuthenticated || !character?.id) return;
+
+    setImportingData(true);
+    setImportError(null);
+
+    try {
+      const accessToken = await getAccessToken();
+      if (!accessToken) {
+        throw new Error('Failed to get access token');
+      }
+
+      // Fetch skills and standings
+      const [skills, standings] = await Promise.all([
+        getCharacterSkills(character.id, accessToken),
+        getCharacterStandings(character.id, accessToken).catch(() => null),
+      ]);
+
+      // Calculate taxes using the same method as CharacterProfile
+      const taxInfo = calculateTradingTaxes(skills, null);
+
+      // Update skill levels
+      setAccounting(taxInfo.accountingLevel);
+      setBrokerRelations(taxInfo.brokerRelationsLevel);
+
+      // Update standings if available
+      if (standings) {
+        // Find corp and faction standings for the station/system
+        // For now, we'll just use the best positive standings
+        const corpStandings = standings.filter(s => s.from_type === 'npc_corp');
+        const factionStandings = standings.filter(s => s.from_type === 'faction');
+
+        if (corpStandings.length > 0) {
+          const bestCorpStanding = Math.max(...corpStandings.map(s => s.standing));
+          setCorpStanding(Math.max(0, bestCorpStanding));
+        }
+
+        if (factionStandings.length > 0) {
+          const bestFactionStanding = Math.max(...factionStandings.map(s => s.standing));
+          setFactionStanding(Math.max(0, bestFactionStanding));
+        }
+      }
+
+      setUsingCharacterData(true);
+    } catch (err) {
+      setImportError(err.message || 'Failed to import character data');
+      console.error('Error importing character data:', err);
+    } finally {
+      setImportingData(false);
+    }
+  };
 
   // Calculate current taxes
   const calculations = useMemo(() => {
@@ -157,7 +216,65 @@ export function SkillCalculator({ tradeValue = 100000000, onSettingsChange }) {
 
   return (
     <GlassmorphicCard>
-      <h3 className="font-display text-xl text-text-primary mb-6">Skill & Tax Calculator</h3>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h3 className="font-display text-xl text-text-primary">Skill & Tax Calculator</h3>
+          {usingCharacterData && (
+            <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-accent-cyan/20 border border-accent-cyan/40">
+              <svg className="w-4 h-4 text-accent-cyan" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-xs font-medium text-accent-cyan">Using character data</span>
+            </div>
+          )}
+        </div>
+
+        {isAuthenticated && (
+          <button
+            onClick={importCharacterData}
+            disabled={importingData}
+            className="flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {importingData ? (
+              <>
+                <div className="w-4 h-4 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+                <span className="text-sm">Importing...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span className="text-sm">Import from Character</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Import Error */}
+      {importError && (
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+          {importError}
+        </div>
+      )}
+
+      {/* Login prompt for non-authenticated users */}
+      {!isAuthenticated && (
+        <div className="mb-6 p-4 bg-accent-purple/10 border border-accent-purple/30 rounded-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-accent-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p className="text-sm text-text-primary font-medium mb-1">Import your actual skills and standings</p>
+              <p className="text-xs text-text-secondary">
+                Login with EVE Online to automatically import your Accounting and Broker Relations skill levels, plus your NPC standings for accurate tax calculations.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Trade Value Input */}
       <div className="mb-6">

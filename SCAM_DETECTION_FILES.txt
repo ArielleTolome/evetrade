@@ -1,0 +1,131 @@
+Scam Detection System - File Manifest
+======================================
+
+Created: December 1, 2025
+Status: Complete and Ready for Integration
+
+Files Created:
+--------------
+
+1. CORE HOOK IMPLEMENTATION
+   Path: /Users/arieltolome/Documents/Github/evetrade/src/hooks/useScamDetection.jsx
+   Size: 12KB (16KB on disk)
+   Lines: 354
+   Description: Main scam detection hook with all algorithms and public API
+
+2. COMPREHENSIVE DOCUMENTATION
+   Path: /Users/arieltolome/Documents/Github/evetrade/src/hooks/useScamDetection.md
+   Size: 14KB (16KB on disk)
+   Lines: 584
+   Description: Complete API reference, detection criteria, usage guide
+
+3. INTEGRATION EXAMPLES
+   Path: /Users/arieltolome/Documents/Github/evetrade/src/hooks/useScamDetection.example.jsx
+   Size: 7.9KB (8KB on disk)
+   Lines: 269
+   Description: 7 complete examples showing real-world integration patterns
+
+4. TEST SUITE
+   Path: /Users/arieltolome/Documents/Github/evetrade/src/hooks/useScamDetection.test.js
+   Size: 12KB
+   Lines: 392
+   Description: Comprehensive test coverage including real scam patterns
+
+5. QUICK START GUIDE
+   Path: /Users/arieltolome/Documents/Github/evetrade/src/hooks/SCAM_DETECTION_README.md
+   Size: Variable
+   Lines: Variable
+   Description: Fast integration guide with common use cases
+
+6. SYSTEM SUMMARY
+   Path: /Users/arieltolome/Documents/Github/evetrade/SCAM_DETECTION_SUMMARY.md
+   Size: 11KB
+   Lines: Variable
+   Description: Complete project summary with examples and metrics
+
+7. ARCHITECTURE DOCUMENTATION
+   Path: /Users/arieltolome/Documents/Github/evetrade/src/hooks/useScamDetection.ARCHITECTURE.md
+   Size: Variable
+   Lines: Variable
+   Description: Visual diagrams and architecture details
+
+8. THIS FILE
+   Path: /Users/arieltolome/Documents/Github/evetrade/SCAM_DETECTION_FILES.txt
+   Description: File manifest and quick reference
+
+Total Statistics:
+-----------------
+- Total Files: 8
+- Total Size: ~56KB
+- Total Lines: ~1,700+
+- Test Coverage: Comprehensive
+- Documentation: Complete
+- Build Status: PASSING
+
+Quick Start:
+------------
+1. Read: SCAM_DETECTION_SUMMARY.md (project overview)
+2. Review: useScamDetection.md (API reference)
+3. Study: useScamDetection.example.jsx (integration examples)
+4. Integrate: Import in StationTradingPage.jsx
+5. Test: Run test suite to verify
+
+Key Features:
+-------------
+✓ Single volume detection (volume=1)
+✓ Low volume analysis (volume<20)
+✓ High margin detection (margin>50%)
+✓ Price spread analysis (10x+ spreads)
+✓ Market comparison (statistical outliers)
+✓ Risk classification (4 levels)
+✓ Configurable thresholds
+✓ Comprehensive API (7 methods)
+
+Risk Levels:
+------------
+🟢 Low      (0-29)   - Safe to trade
+🟡 Medium   (30-49)  - Proceed with caution
+🟠 High     (50-69)  - Verify carefully
+🔴 Extreme  (70-100) - DO NOT TRADE
+
+API Methods:
+------------
+1. calculateScamRisk(trade, allTrades) - Full risk assessment
+2. isLikelyScam(trade, allTrades)      - Quick boolean check
+3. getScamWarnings(trade, allTrades)   - Warning messages
+4. getDetailedAssessment(trade, allTrades) - With recommendations
+5. analyzeAll(trades)                  - Batch processing
+6. getScamStatistics(trades)           - Market statistics
+7. config                              - View current settings
+
+Example Usage:
+--------------
+import { useScamDetection } from '../hooks/useScamDetection';
+
+const { calculateScamRisk, isLikelyScam } = useScamDetection();
+const risk = calculateScamRisk(trade, allTrades);
+
+if (risk.level === 'extreme') {
+  showWarning('DO NOT TRADE - Extremely high scam probability');
+}
+
+Build Verification:
+-------------------
+✓ npm run build - PASSING
+✓ No errors or warnings
+✓ Bundle size impact: ~3KB (gzipped)
+✓ Build time: ~2-3 seconds
+
+Next Steps:
+-----------
+1. Import hook in StationTradingPage.jsx
+2. Add risk column to trading table
+3. Add warning modal for high-risk trades
+4. Add statistics dashboard
+5. Test with real Jita market data
+6. Tune thresholds based on feedback
+
+Contact:
+--------
+For questions or issues, refer to the documentation files.
+

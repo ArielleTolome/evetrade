@@ -1,0 +1,11 @@
+{
+    "disabled": false,
+    "announcements": [
+      {
+        "header": "<a href=\"./announcements.html\" target=\"_blank\">Impending Site Closure Notice</a>",
+        "content": [],
+        "known_issues": [
+        ]
+      }
+    ]
+}

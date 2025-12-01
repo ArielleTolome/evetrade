@@ -1,7 +1,16 @@
 import { useState, useCallback, useMemo } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { CharacterProfile } from '../components/common/CharacterProfile';
+import { WalletTransactions } from '../components/common/WalletTransactions';
+import { MarketOrders } from '../components/common/MarketOrders';
+import { AssetsInventory } from '../components/common/AssetsInventory';
+import { WalletJournal } from '../components/common/WalletJournal';
+import { OrderHistory } from '../components/common/OrderHistory';
+import { StandingsDisplay } from '../components/common/StandingsDisplay';
+import { ProfitLossCalculator } from '../components/common/ProfitLossCalculator';
 import { usePortfolio } from '../hooks/usePortfolio';
+import { useEveAuth } from '../hooks/useEveAuth';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 
 /**
@@ -251,10 +260,30 @@ function AddTradeModal({ onAdd, onClose }) {
  */
 export function PortfolioPage() {
   const { tradeHistory, addTrade, deleteTrade, getStatistics, clearAllData, isLoaded } = usePortfolio();
+  const { isAuthenticated } = useEveAuth();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview'); // overview, transactions, orders
 
   const stats = useMemo(() => getStatistics(), [getStatistics]);
+
+  // Handle importing transactions from ESI
+  const handleImportTransactions = useCallback((transactions) => {
+    transactions.forEach((txn) => {
+      addTrade({
+        itemName: txn.item,
+        itemId: txn.itemId,
+        route: txn.isBuy ? 'Buy Order' : 'Sell Order',
+        quantity: txn.quantity,
+        buyPrice: txn.isBuy ? txn.unitPrice : 0,
+        sellPrice: txn.isBuy ? 0 : txn.unitPrice,
+        profit: txn.isBuy ? -txn.totalPrice : txn.totalPrice,
+        volume: txn.quantity,
+        importedFrom: 'ESI',
+        transactionId: txn.transactionId,
+      });
+    });
+  }, [addTrade]);
 
   if (!isLoaded) {
     return (
@@ -272,7 +301,77 @@ export function PortfolioPage() {
       subtitle="Track your trading performance and history"
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Stats Grid */}
+        {/* EVE Online Character Profile */}
+        <CharacterProfile />
+
+        {/* Tabs for authenticated users */}
+        {isAuthenticated && (
+          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+            {[
+              { id: 'overview', label: 'Overview', icon: '📊' },
+              { id: 'profit-loss', label: 'P&L Calculator', icon: '💹' },
+              { id: 'transactions', label: 'Transactions', icon: '💰' },
+              { id: 'journal', label: 'Journal', icon: '📒' },
+              { id: 'orders', label: 'Orders', icon: '📈' },
+              { id: 'history', label: 'Order History', icon: '📜' },
+              { id: 'assets', label: 'Assets', icon: '📦' },
+              { id: 'standings', label: 'Standings', icon: '⭐' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-accent-cyan/20 text-accent-cyan'
+                    : 'bg-white/5 text-text-secondary hover:bg-white/10'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* P&L Calculator Tab */}
+        {isAuthenticated && activeTab === 'profit-loss' && (
+          <ProfitLossCalculator />
+        )}
+
+        {/* Wallet Transactions Tab */}
+        {isAuthenticated && activeTab === 'transactions' && (
+          <WalletTransactions onImport={handleImportTransactions} />
+        )}
+
+        {/* Wallet Journal Tab */}
+        {isAuthenticated && activeTab === 'journal' && (
+          <WalletJournal />
+        )}
+
+        {/* Market Orders Tab */}
+        {isAuthenticated && activeTab === 'orders' && (
+          <MarketOrders />
+        )}
+
+        {/* Order History Tab */}
+        {isAuthenticated && activeTab === 'history' && (
+          <OrderHistory />
+        )}
+
+        {/* Assets Inventory Tab */}
+        {isAuthenticated && activeTab === 'assets' && (
+          <AssetsInventory />
+        )}
+
+        {/* Standings Tab */}
+        {isAuthenticated && activeTab === 'standings' && (
+          <StandingsDisplay />
+        )}
+
+        {/* Overview Tab (default) */}
+        {(!isAuthenticated || activeTab === 'overview') && (
+          <>
+            {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard
             label="Total Profit"
@@ -427,6 +526,8 @@ export function PortfolioPage() {
             </div>
           )}
         </GlassmorphicCard>
+          </>
+        )}
 
         {/* Clear Confirmation */}
         {showClearConfirm && (
