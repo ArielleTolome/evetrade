@@ -1,6 +1,30 @@
 import { useState, useMemo, useCallback } from 'react';
 
 /**
+ * Get quality tier based on row data stats
+ * Used to color-code rows based on trade quality
+ */
+function getRowQualityTier(row, stats) {
+  if (!stats || !row) return null;
+
+  const profit = row['Net Profit'] || 0;
+  const volume = row['Volume'] || 0;
+  const margin = (row['Gross Margin'] || 0) / 100;
+
+  // Calculate a simple quality score
+  const profitScore = stats.maxProfit > 0 ? profit / stats.maxProfit : 0;
+  const volumeScore = stats.maxVolume > 0 ? Math.log10(volume + 1) / Math.log10(stats.maxVolume + 1) : 0;
+  const marginScore = margin / 0.5; // Cap at 50% margin for scoring
+
+  const score = (profitScore * 0.5) + (volumeScore * 0.3) + (Math.min(marginScore, 1) * 0.2);
+
+  if (score >= 0.7) return 'excellent';
+  if (score >= 0.4) return 'good';
+  if (score >= 0.2) return 'fair';
+  return null;
+}
+
+/**
  * Trading Table Component
  * Custom React table with sorting, pagination, and search
  */
@@ -12,6 +36,7 @@ export function TradingTable({
   pageLength = 25,
   className = '',
   emptyMessage = 'No data available',
+  showQualityIndicators = false,
 }) {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -28,6 +53,16 @@ export function TradingTable({
     const defaultCol = columns.find(c => c.defaultSort);
     return defaultCol ? { key: defaultCol.key, direction: 'desc' } : null;
   });
+
+  // Calculate stats for quality indicators
+  const qualityStats = useMemo(() => {
+    if (!showQualityIndicators || !data || data.length === 0) return null;
+
+    return {
+      maxProfit: Math.max(...data.map(t => t['Net Profit'] || 0)),
+      maxVolume: Math.max(...data.map(t => t['Volume'] || 0)),
+    };
+  }, [data, showQualityIndicators]);
 
   // Filter data by search term
   const filteredData = useMemo(() => {
@@ -192,19 +227,24 @@ export function TradingTable({
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((row, idx) => (
-              <tr
-                key={row['Item ID'] || idx}
-                onClick={() => onRowClick?.(row, idx)}
-                className={onRowClick ? 'clickable' : ''}
-              >
-                {columns.filter(c => c.visible !== false).map(col => (
-                  <td key={col.key} className={col.className || ''}>
-                    {renderCell(row, col)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {paginatedData.map((row, idx) => {
+              const qualityTier = showQualityIndicators ? getRowQualityTier(row, qualityStats) : null;
+              const qualityClass = qualityTier ? `quality-${qualityTier}` : '';
+
+              return (
+                <tr
+                  key={row['Item ID'] || idx}
+                  onClick={() => onRowClick?.(row, idx)}
+                  className={`${onRowClick ? 'clickable' : ''} ${qualityClass}`}
+                >
+                  {columns.filter(c => c.visible !== false).map(col => (
+                    <td key={col.key} className={col.className || ''}>
+                      {renderCell(row, col)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -384,6 +424,38 @@ export function TradingTable({
 
         table.trading-table tbody tr.clickable {
           cursor: pointer;
+        }
+
+        /* Quality Indicator Styles */
+        table.trading-table tbody tr.quality-excellent td {
+          background: rgba(250, 204, 21, 0.08);
+          border-left: 3px solid rgba(250, 204, 21, 0.6);
+        }
+
+        table.trading-table tbody tr.quality-excellent:hover td {
+          background: rgba(250, 204, 21, 0.15);
+        }
+
+        table.trading-table tbody tr.quality-good td {
+          background: rgba(74, 222, 128, 0.06);
+          border-left: 3px solid rgba(74, 222, 128, 0.5);
+        }
+
+        table.trading-table tbody tr.quality-good:hover td {
+          background: rgba(74, 222, 128, 0.12);
+        }
+
+        table.trading-table tbody tr.quality-fair td {
+          background: rgba(0, 212, 255, 0.04);
+          border-left: 3px solid rgba(0, 212, 255, 0.3);
+        }
+
+        table.trading-table tbody tr.quality-fair:hover td {
+          background: rgba(0, 212, 255, 0.08);
+        }
+
+        table.trading-table tbody tr td:first-child {
+          border-left: 3px solid transparent;
         }
 
         .dt-info {

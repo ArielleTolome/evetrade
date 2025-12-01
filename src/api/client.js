@@ -63,7 +63,7 @@ apiClient.interceptors.response.use(
     if (status === 429 && config._retryCount < 3) {
       config._retryCount++;
       const delay = getRetryDelay(config._retryCount);
-      console.log(\`Rate limited. Retrying in \${delay}ms (attempt \${config._retryCount}/3)\`);
+      console.log(`Rate limited. Retrying in ${delay}ms (attempt ${config._retryCount}/3)`);
       await sleep(delay);
       return apiClient(config);
     }
@@ -82,7 +82,7 @@ apiClient.interceptors.response.use(
     if (status >= 500 && config._retryCount < 2) {
       config._retryCount++;
       const delay = getRetryDelay(config._retryCount);
-      console.log(\`Server error. Retrying in \${delay}ms (attempt \${config._retryCount}/2)\`);
+      console.log(`Server error. Retrying in ${delay}ms (attempt ${config._retryCount}/2)`);
       await sleep(delay);
       return apiClient(config);
     }
@@ -91,7 +91,7 @@ apiClient.interceptors.response.use(
     if (!error.response && config._retryCount < 2) {
       config._retryCount++;
       const delay = getRetryDelay(config._retryCount);
-      console.log(\`Network error. Retrying in \${delay}ms (attempt \${config._retryCount}/2)\`);
+      console.log(`Network error. Retrying in ${delay}ms (attempt ${config._retryCount}/2)`);
       await sleep(delay);
       return apiClient(config);
     }
@@ -118,7 +118,7 @@ export async function fetchWithRetry(url, options = {}, maxRetries = 3) {
     }
 
     if (error.response) {
-      throw new Error(error.response.data?.message || \`API Error: \${error.response.status}\`);
+      throw new Error(error.response.data?.message || `API Error: ${error.response.status}`);
     }
     throw error;
   }
@@ -136,16 +136,16 @@ export async function fetchResource(filename) {
       const data = await fetchFromSupabase(filename);
       return data;
     } catch (error) {
-      console.warn(\`Supabase fetch failed for \${filename}, falling back to S3:\`, error.message);
+      console.warn(`Supabase fetch failed for ${filename}, falling back to S3:`, error.message);
     }
   }
 
   // Fallback to S3
   try {
-    const response = await resourceClient.get(\`\${filename}.json\`);
+    const response = await resourceClient.get(`${filename}.json`);
     return response.data;
   } catch (error) {
-    console.error(\`Failed to fetch resource: \${filename}\`, error);
+    console.error(`Failed to fetch resource: ${filename}`, error);
     throw error;
   }
 }
