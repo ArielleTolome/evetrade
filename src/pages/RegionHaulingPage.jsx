@@ -1,22 +1,23 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
-import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { GlassmorphicCard} from '../components/common/GlassmorphicCard';
+import { EmptyState } from '../components/common/EmptyState';
 import { FormInput, FormSelect, RegionAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
-import { useResources } from '../hooks/useResources';
-import { useApiCall } from '../hooks/useApiCall';
-import { fetchRegionHauling } from '../api/trading';
-import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
+import { useResources } from '@hooks/useResources';
+import { useApiCall } from '@hooks/useApiCall';
+import { fetchRegionHauling } from '@api/trading';
+import { formatISK, formatNumber, formatPercent } from '@utils/formatters';
 import {
   TAX_OPTIONS,
   ROUTE_SAFETY_OPTIONS,
   SYSTEM_SECURITY_OPTIONS,
   STRUCTURE_TYPE_OPTIONS,
   TRADE_PREFERENCE_OPTIONS,
-} from '../utils/constants';
-import { getRegionData } from '../utils/stations';
+} from '@utils/constants';
+import { getRegionData } from '@utils/stations';
 
 /**
  * Region Hauling Page Component
@@ -362,13 +363,18 @@ export function RegionHaulingPage() {
         {data && !loading && (
           <>
             {data.length === 0 ? (
-              <GlassmorphicCard className="text-center py-12">
-                <p className="text-text-secondary text-lg">
-                  No trades found matching your criteria.
-                </p>
-                <p className="text-text-secondary/70 mt-2">
-                  Try adjusting your parameters or selecting different regions.
-                </p>
+              <GlassmorphicCard>
+                <EmptyState
+                  mode="region-hauling"
+                  suggestions={[
+                    'Try expanding to nearby regions if not already enabled',
+                    'Lower the minimum profit or ROI thresholds',
+                    'Increase your cargo capacity or budget limits',
+                    'Select different origin/destination regions with higher market volume',
+                    'Adjust system security or structure type filters',
+                    'Change route safety settings to see more opportunities',
+                  ]}
+                />
               </GlassmorphicCard>
             ) : (
               <TradingTable

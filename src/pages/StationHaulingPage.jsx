@@ -2,21 +2,22 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { EmptyState } from '../components/common/EmptyState';
 import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
-import { useResources } from '../hooks/useResources';
-import { useApiCall } from '../hooks/useApiCall';
-import { fetchStationHauling } from '../api/trading';
-import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
-import { isCitadel } from '../utils/security';
+import { useResources } from '@hooks/useResources';
+import { useApiCall } from '@hooks/useApiCall';
+import { fetchStationHauling } from '@api/trading';
+import { formatISK, formatNumber, formatPercent } from '@utils/formatters';
+import { isCitadel } from '@utils/security';
 import {
   TAX_OPTIONS,
   ROUTE_SAFETY_OPTIONS,
   SYSTEM_SECURITY_OPTIONS,
   TRADE_PREFERENCE_OPTIONS,
-} from '../utils/constants';
-import { getStationData } from '../utils/stations';
+} from '@utils/constants';
+import { getStationData } from '@utils/stations';
 
 /**
  * Station Hauling Page Component
@@ -379,13 +380,18 @@ export function StationHaulingPage() {
         {data && !loading && (
           <>
             {data.length === 0 ? (
-              <GlassmorphicCard className="text-center py-12">
-                <p className="text-text-secondary text-lg">
-                  No trades found matching your criteria.
-                </p>
-                <p className="text-text-secondary/70 mt-2">
-                  Try adjusting your parameters or adding more stations.
-                </p>
+              <GlassmorphicCard>
+                <EmptyState
+                  mode="station-hauling"
+                  suggestions={[
+                    'Add more origin or destination stations to expand your trading options',
+                    'Lower the minimum profit or ROI thresholds',
+                    'Increase your cargo capacity limit to include bulkier items',
+                    'Increase your budget limit to see higher-value opportunities',
+                    'Try different stations with higher market activity',
+                    'Adjust route safety or system security settings to include more paths',
+                  ]}
+                />
               </GlassmorphicCard>
             ) : (
               <TradingTable

@@ -2,16 +2,17 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { EmptyState } from '../components/common/EmptyState';
 import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
-import { useResources } from '../hooks/useResources';
-import { useApiCall } from '../hooks/useApiCall';
-import { useTradeForm } from '../hooks/useTradeForm';
-import { fetchStationTrading } from '../api/trading';
-import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
-import { TAX_OPTIONS } from '../utils/constants';
-import { getStationData } from '../utils/stations';
+import { useResources } from '@hooks/useResources';
+import { useApiCall } from '@hooks/useApiCall';
+import { useTradeForm } from '@hooks/useTradeForm';
+import { fetchStationTrading } from '@api/trading';
+import { formatISK, formatNumber, formatPercent } from '@utils/formatters';
+import { TAX_OPTIONS } from '@utils/constants';
+import { getStationData } from '@utils/stations';
 
 /**
  * Station Trading Page Component
@@ -272,14 +273,20 @@ export function StationTradingPage() {
           const trades = Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : []);
 
           if (trades.length === 0) {
+            const suggestions = [
+              'Lower the minimum profit threshold to see more opportunities',
+              'Reduce the minimum volume requirement to include less-traded items',
+              'Adjust the margin above/below percentages to capture more spreads',
+              'Try a different station with higher trading volume (e.g., Jita, Amarr, Dodixie)',
+              'Increase your broker fee percentage if you have lower standings',
+            ];
+
             return (
-              <GlassmorphicCard className="text-center py-12">
-                <p className="text-text-secondary text-lg">
-                  No trades found matching your criteria.
-                </p>
-                <p className="text-text-secondary/70 mt-2">
-                  Try lowering your minimum profit or adjusting margin ranges.
-                </p>
+              <GlassmorphicCard>
+                <EmptyState
+                  mode="station-trading"
+                  suggestions={suggestions}
+                />
               </GlassmorphicCard>
             );
           }
