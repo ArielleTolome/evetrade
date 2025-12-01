@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { getCached, setCached } from './useCache';
 import { fetchResource } from '../api/client';
 import { RESOURCE_FILES } from '../utils/constants';
@@ -47,6 +47,14 @@ export function ResourceProvider({ children }) {
   const [error, setError] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: RESOURCE_FILES.length });
 
+  // Ref to access current resources without triggering re-renders or causing stale closures
+  const resourcesRef = useRef(resources);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    resourcesRef.current = resources;
+
+  }, [resources]);
   /**
    * Load a single resource with caching
    */
@@ -122,7 +130,10 @@ export function ResourceProvider({ children }) {
    * Load invTypes on demand (for orders page)
    */
   const loadInvTypes = useCallback(async () => {
-    if (resources.invTypes) return resources.invTypes;
+    // Check current state via ref to avoid stale closure
+    if (resourcesRef.current.invTypes) {
+      return resourcesRef.current.invTypes;
+    }
 
     try {
       let data = await getCached('invTypes');
@@ -138,7 +149,7 @@ export function ResourceProvider({ children }) {
       console.error('Failed to load invTypes:', err);
       throw err;
     }
-  }, [resources.invTypes]);
+  }, []); // Empty dependency array - uses ref to avoid stale closure
 
   // Load resources on mount
   useEffect(() => {
