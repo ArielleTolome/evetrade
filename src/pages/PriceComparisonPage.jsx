@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
@@ -27,22 +27,42 @@ export function PriceComparisonPage() {
   const [error, setError] = useState(null);
 
   // Toggle hub selection
-  const toggleHub = (stationId) => {
+  const toggleHub = useCallback((stationId) => {
     setSelectedHubs((prev) => ({
       ...prev,
       [stationId]: !prev[stationId],
     }));
-  };
+  }, []);
 
   // Select/deselect all hubs
-  const toggleAllHubs = (selected) => {
+  const toggleAllHubs = useCallback((selected) => {
     setSelectedHubs(
       TRADE_HUBS.reduce((acc, hub) => ({ ...acc, [hub.stationId]: selected }), {})
     );
-  };
+  }, []);
+
+  const abortControllerRef = useRef(null);
+
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   // Fetch prices from all selected hubs
   const fetchPrices = useCallback(async () => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new controller
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     if (!selectedItem) {
       setError('Please select an item to compare');
       return;
@@ -67,6 +87,7 @@ export function PriceComparisonPage() {
               itemId: selectedItem.typeId,
               from: locationStr,
               to: locationStr,
+              signal: controller.signal,
             });
 
             // Calculate best buy/sell prices and totals
@@ -85,7 +106,7 @@ export function PriceComparisonPage() {
 
             // Calculate spread (margin)
             const spread = highestBuy && lowestSell
-              ? ((lowestSell - highestBuy) / lowestSell) * 100
+              ? (lowestSell - highestBuy) / lowestSell
               : null;
 
             return {
@@ -100,6 +121,7 @@ export function PriceComparisonPage() {
               error: null,
             };
           } catch (err) {
+            if (err.name === 'AbortError') throw err;
             return {
               hub,
               highestBuy: null,
@@ -115,11 +137,20 @@ export function PriceComparisonPage() {
         })
       );
 
-      setPriceData(results);
+      if (!controller.signal.aborted) {
+        setPriceData(results);
+      }
     } catch (err) {
-      setError(err.message || 'Failed to fetch price data');
+      if (err.name !== 'AbortError') {
+        setError(err.message || 'Failed to fetch price data');
+      }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   }, [selectedItem, selectedHubs]);
 
@@ -158,7 +189,7 @@ export function PriceComparisonPage() {
     let arbitrage = null;
     if (bestToBuy && bestToSell && bestToBuy.hub.stationId !== bestToSell.hub.stationId) {
       const profit = bestToSell.highestBuy - bestToBuy.lowestSell;
-      const profitPercent = (profit / bestToBuy.lowestSell) * 100;
+      const profitPercent = profit / bestToBuy.lowestSell;
       if (profit > 0) {
         arbitrage = {
           buyHub: bestToBuy.hub,
@@ -297,7 +328,7 @@ export function PriceComparisonPage() {
         {/* Loading */}
         {loading && (
           <GlassmorphicCard>
-            <SkeletonTable rows={5} columns={6} />
+            <SkeletonTable rows={5} columns={7} />
           </GlassmorphicCard>
         )}
 

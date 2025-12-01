@@ -24,6 +24,7 @@ export function ItemAutocomplete({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const [itemsList, setItemsList] = useState([]);
+  const [loadError, setLoadError] = useState(null);
 
   const inputRef = useRef(null);
   const listRef = useRef(null);
@@ -50,6 +51,7 @@ export function ItemAutocomplete({
       }
 
       setIsLoading(true);
+      setLoadError(null);
       try {
         const data = await loadInvTypes();
         if (data) {
@@ -64,6 +66,7 @@ export function ItemAutocomplete({
         }
       } catch (err) {
         console.error('Failed to load invTypes:', err);
+        setLoadError('Failed to load item list. Please try again later.');
       } finally {
         setIsLoading(false);
       }
@@ -165,6 +168,7 @@ export function ItemAutocomplete({
 
   const getPlaceholder = () => {
     if (isLoading) return 'Loading items...';
+    if (loadError) return 'Failed to load items';
     if (itemsList.length === 0) return 'Loading items...';
     return placeholder;
   };
@@ -198,7 +202,7 @@ export function ItemAutocomplete({
           }}
           onKeyDown={handleKeyDown}
           placeholder={getPlaceholder()}
-          disabled={disabled || isLoading || itemsList.length === 0}
+          disabled={disabled || isLoading || !!loadError || itemsList.length === 0}
           required={required}
           className={`
             w-full px-4 py-3 rounded-lg
@@ -270,8 +274,8 @@ export function ItemAutocomplete({
         </ul>
       )}
 
-      {error && (
-        <p className="mt-1 text-sm text-red-400">{error}</p>
+      {(error || loadError) && (
+        <p className="mt-1 text-sm text-red-400">{error ?? loadError}</p>
       )}
     </div>
   );
