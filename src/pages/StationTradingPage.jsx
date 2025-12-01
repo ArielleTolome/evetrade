@@ -10,6 +10,19 @@ import { Toast } from '../components/common/Toast';
 import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
+import { SmartFilters } from '../components/common/SmartFilters';
+import { VolumeIndicator } from '../components/common/VolumeIndicator';
+import { ProfitPerHour } from '../components/common/ProfitPerHour';
+import { TradeRiskScore } from '../components/common/TradeRiskScore';
+import { SessionSummary } from '../components/common/SessionSummary';
+import { PriceSparkline } from '../components/common/PriceSparkline';
+import { CompetitionAnalysis } from '../components/common/CompetitionAnalysis';
+import { ItemTierBadge } from '../components/common/ItemTierBadge';
+import { AdvancedSortPanel, applySorts } from '../components/common/AdvancedSortPanel';
+import { BulkActionsBar, SelectionCheckbox } from '../components/common/BulkActionsBar';
+import { TradingDashboard } from '../components/common/TradingDashboard';
+import { TradeOpportunityScore, TradeOpportunityBadge } from '../components/common/TradeOpportunityScore';
+import { QuickFiltersBar, useQuickFilters } from '../components/common/QuickFiltersBar';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { useTradeForm } from '../hooks/useTradeForm';
@@ -17,6 +30,9 @@ import { usePortfolio } from '../hooks/usePortfolio';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { useFavorites } from '../hooks/useFavorites';
 import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../hooks/useKeyboardShortcuts';
+import { useScamDetection } from '../hooks/useScamDetection';
+import { useTradeSession } from '../hooks/useTradeSession';
+import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { fetchStationTrading } from '../api/trading';
 import { getCharacterOrders, getCharacterSkills, calculateTradingTaxes, getTypeNames, getWalletBalance } from '../api/esi';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
@@ -86,6 +102,24 @@ export function StationTradingPage() {
   const { saveRoute } = usePortfolio();
   const { isAuthenticated, character, getAccessToken } = useEveAuth();
   const { favorites, isFavorite, toggleFavorite } = useFavorites();
+  const { calculateScamRisk, isLikelyScam } = useScamDetection();
+  const {
+    session,
+    addToShoppingList,
+    removeFromShoppingList,
+    trackView,
+    clearSession,
+    sessionDuration,
+    shoppingListCount,
+    viewedCount,
+    totalPotentialProfit,
+  } = useTradeSession();
+  const {
+    checkAlerts,
+    triggeredAlerts,
+    dismissTriggered,
+  } = usePriceAlerts();
+
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -103,6 +137,33 @@ export function StationTradingPage() {
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
   const [hideScams, setHideScams] = useState(false);
   const [highQualityOnly, setHighQualityOnly] = useState(false);
+
+  // Smart Filters state
+  const [smartFilters, setSmartFilters] = useState({
+    hideScams: false,
+    hideLowVolume: false,
+    highQualityOnly: false,
+    verifiedOnly: false,
+    minVolume: 0,
+    maxVolume: null,
+    minMargin: 0,
+    maxMargin: 100,
+    minProfit: 0,
+    maxProfit: null,
+    riskLevels: ['low', 'medium', 'high', 'extreme'],
+  });
+
+  // Advanced Sort state
+  const [advancedSorts, setAdvancedSorts] = useState([]);
+
+  // Bulk selection state
+  const [selectedItems, setSelectedItems] = useState([]);
+
+  // Quick filters state
+  const [quickFilterIds, setQuickFilterIds] = useState([]);
+
+  // Dashboard view state
+  const [showDashboard, setShowDashboard] = useState(true);
 
   // Refs for keyboard shortcuts
   const searchInputRef = useRef(null);
@@ -123,6 +184,13 @@ export function StationTradingPage() {
       setUsingPersonalTaxes(false);
     }
   }, [isAuthenticated, character?.id]);
+
+  // Check price alerts when data changes
+  useEffect(() => {
+    if (data && Array.isArray(data) && data.length > 0) {
+      checkAlerts(data);
+    }
+  }, [data, checkAlerts]);
 
   // Load character data (skills, wallet)
   const loadCharacterData = async () => {
@@ -267,9 +335,12 @@ export function StationTradingPage() {
       const itemId = item['Item ID'] || item.itemId;
       const fromLocation = `${stationData.region}:${stationData.station}`;
 
+      // Track view
+      trackView(item);
+
       navigate(`/orders?itemId=${itemId}&from=${fromLocation}&to=${fromLocation}`);
     },
-    [form.station, universeList, navigate]
+    [form.station, universeList, navigate, trackView]
   );
 
   // Handle save route
@@ -327,6 +398,12 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     copyToClipboard(text, 'Multibuy list copied!');
   }, [copyToClipboard]);
 
+  // Export shopping list
+  const exportShoppingList = useCallback(() => {
+    if (session.shoppingList.length === 0) return;
+    copyMultibuyFormat(session.shoppingList);
+  }, [session.shoppingList, copyMultibuyFormat]);
+
   // Tax options for dropdown
   const taxOptions = useMemo(
     () =>
@@ -355,7 +432,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     };
   }, [orders]);
 
-  // Filter data by category
+  // Filter data by category and smart filters
   const filteredData = useMemo(() => {
     if (!data || !Array.isArray(data)) {
       return data;
@@ -379,6 +456,56 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       }
     }
 
+    // Apply smart filters
+    if (smartFilters.hideScams) {
+      filtered = filtered.filter((item) => !isLikelyScam(item, data));
+    }
+
+    if (smartFilters.hideLowVolume) {
+      filtered = filtered.filter((item) => (item['Volume'] || 0) >= 50);
+    }
+
+    if (smartFilters.highQualityOnly) {
+      filtered = filtered.filter((item) => {
+        const margin = (item['Gross Margin'] || 0) / 100;
+        const profit = item['Net Profit'] || 0;
+        const volume = item['Volume'] || 0;
+        return margin > 0.10 && profit > 1000000 && volume > 100;
+      });
+    }
+
+    if (smartFilters.minVolume > 0) {
+      filtered = filtered.filter((item) => (item['Volume'] || 0) >= smartFilters.minVolume);
+    }
+
+    if (smartFilters.maxVolume !== null) {
+      filtered = filtered.filter((item) => (item['Volume'] || 0) <= smartFilters.maxVolume);
+    }
+
+    if (smartFilters.minMargin > 0) {
+      filtered = filtered.filter((item) => (item['Gross Margin'] || 0) >= smartFilters.minMargin);
+    }
+
+    if (smartFilters.maxMargin < 100) {
+      filtered = filtered.filter((item) => (item['Gross Margin'] || 0) <= smartFilters.maxMargin);
+    }
+
+    if (smartFilters.minProfit > 0) {
+      filtered = filtered.filter((item) => (item['Net Profit'] || 0) >= smartFilters.minProfit);
+    }
+
+    if (smartFilters.maxProfit !== null) {
+      filtered = filtered.filter((item) => (item['Net Profit'] || 0) <= smartFilters.maxProfit);
+    }
+
+    // Apply risk level filter
+    if (smartFilters.riskLevels.length < 4) {
+      filtered = filtered.filter((item) => {
+        const risk = calculateScamRisk(item, data);
+        return smartFilters.riskLevels.includes(risk.level);
+      });
+    }
+
     // Apply favorites filter
     if (showFavoritesOnly && favorites.length > 0) {
       filtered = filtered.filter((item) => {
@@ -387,19 +514,30 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       });
     }
 
-    // Apply high quality filter
+    // Apply legacy high quality filter
     if (highQualityOnly) {
       filtered = filtered.filter((item) => {
         const margin = (item['Gross Margin'] || 0) / 100;
         const profit = item['Net Profit'] || 0;
         const volume = item['Volume'] || 0;
-        // High quality = good margin (>10%) AND good profit (>1M ISK) AND decent volume (>100)
         return margin > 0.10 && profit > 1000000 && volume > 100;
       });
     }
 
     return filtered;
-  }, [data, categoryFilter, invTypes, showFavoritesOnly, favorites, highQualityOnly]);
+  }, [data, categoryFilter, invTypes, smartFilters, showFavoritesOnly, favorites, highQualityOnly, calculateScamRisk, isLikelyScam]);
+
+  // Apply quick filters
+  const quickFilteredData = useQuickFilters(filteredData, quickFilterIds);
+
+  // Apply advanced sorting
+  const sortedData = useMemo(() => {
+    const dataToSort = quickFilteredData || filteredData;
+    if (!dataToSort || !Array.isArray(dataToSort)) return dataToSort;
+    if (advancedSorts.length === 0) return dataToSort;
+
+    return applySorts(dataToSort, advancedSorts, tableColumns);
+  }, [quickFilteredData, filteredData, advancedSorts]);
 
   // Keyboard shortcuts configuration
   const keyboardHandlers = useMemo(() => ({
@@ -433,7 +571,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     },
     // Navigate table rows (j/k vim style)
     'j': () => {
-      const trades = Array.isArray(filteredData) ? filteredData : [];
+      const trades = Array.isArray(sortedData) ? sortedData : [];
       if (trades.length > 0) {
         setSelectedRowIndex(prev => Math.min(prev + 1, trades.length - 1));
       }
@@ -443,21 +581,21 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     },
     // Open selected trade details (Enter)
     'enter': () => {
-      const trades = Array.isArray(filteredData) ? filteredData : [];
+      const trades = Array.isArray(sortedData) ? sortedData : [];
       if (selectedRowIndex >= 0 && selectedRowIndex < trades.length) {
         handleRowClick(trades[selectedRowIndex]);
       }
     },
     // Copy selected trade (c)
     'c': () => {
-      const trades = Array.isArray(filteredData) ? filteredData : [];
+      const trades = Array.isArray(sortedData) ? sortedData : [];
       if (selectedRowIndex >= 0 && selectedRowIndex < trades.length) {
         copyRowToClipboard(trades[selectedRowIndex]);
       }
     },
     // Copy multibuy format (m)
     'm': () => {
-      const trades = Array.isArray(filteredData) ? filteredData : [];
+      const trades = Array.isArray(sortedData) ? sortedData : [];
       if (trades.length > 0) {
         copyMultibuyFormat(trades);
       }
@@ -467,7 +605,12 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       setHighQualityOnly(prev => !prev);
       setToastMessage(`High quality filter ${!highQualityOnly ? 'enabled' : 'disabled'}`);
     },
-  }), [form.station, data, handleSubmit, showSaveModal, showOrders, filteredData, selectedRowIndex, showFavoritesOnly, highQualityOnly, copyRowToClipboard, copyMultibuyFormat, handleRowClick]);
+    // Toggle dashboard view (d)
+    'd': () => {
+      setShowDashboard(prev => !prev);
+      setToastMessage(`Dashboard ${!showDashboard ? 'shown' : 'hidden'}`);
+    },
+  }), [form.station, data, handleSubmit, showSaveModal, showOrders, sortedData, selectedRowIndex, showFavoritesOnly, highQualityOnly, showDashboard, copyRowToClipboard, copyMultibuyFormat, handleRowClick]);
 
   // Initialize keyboard shortcuts
   const { showHelp, setShowHelp } = useKeyboardShortcuts(keyboardHandlers);
@@ -479,6 +622,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       items: [
         { keys: ['f'], description: 'Toggle favorites filter' },
         { keys: ['h'], description: 'Toggle high quality filter' },
+        { keys: ['d'], description: 'Toggle dashboard view' },
       ],
     },
     {
@@ -524,9 +668,30 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     return counts;
   }, [data, invTypes]);
 
-  // Table columns configuration
+  // Table columns configuration with new components
   const tableColumns = useMemo(
     () => [
+      {
+        key: 'Select',
+        label: '',
+        className: 'w-12',
+        render: (data, row) => {
+          const itemId = row['Item ID'] || row.itemId;
+          return (
+            <SelectionCheckbox
+              itemId={itemId}
+              isSelected={selectedItems.includes(itemId)}
+              onToggle={() => {
+                setSelectedItems(prev =>
+                  prev.includes(itemId)
+                    ? prev.filter(id => id !== itemId)
+                    : [...prev, itemId]
+                );
+              }}
+            />
+          );
+        },
+      },
       {
         key: 'Favorite',
         label: '',
@@ -563,24 +728,44 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         key: 'Item',
         label: 'Item',
         className: 'font-medium',
+        render: (itemName, row) => (
+          <div className="flex items-center gap-2">
+            <TradeOpportunityBadge trade={row} />
+            <ItemTierBadge itemName={itemName} compact={true} />
+            <span>{itemName}</span>
+          </div>
+        ),
       },
       {
         key: 'Buy Price',
         label: 'Buy Price',
         type: 'num',
-        render: (data) => formatISK(data, false),
+        render: (data, row) => (
+          <div className="flex flex-col">
+            <span>{formatISK(data, false)}</span>
+            <PriceSparkline price={data} width={60} height={16} className="mt-1" />
+          </div>
+        ),
       },
       {
         key: 'Sell Price',
         label: 'Sell Price',
         type: 'num',
-        render: (data) => formatISK(data, false),
+        render: (data, row) => (
+          <div className="flex flex-col">
+            <span>{formatISK(data, false)}</span>
+            <PriceSparkline price={data} width={60} height={16} className="mt-1" />
+          </div>
+        ),
       },
       {
         key: 'Volume',
         label: 'Volume',
         type: 'num',
-        render: (data) => formatNumber(data, 0),
+        render: (data, row) => {
+          const maxVolume = Math.max(...(Array.isArray(sortedData) ? sortedData : []).map(t => t.Volume || 0), 1000);
+          return <VolumeIndicator volume={data} maxVolume={maxVolume} compact={true} />;
+        },
       },
       {
         key: 'Profit per Unit',
@@ -593,35 +778,69 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         label: 'Net Profit',
         type: 'num',
         defaultSort: true,
-        render: (data) => formatISK(data, false),
+        render: (data, row) => (
+          <div className="flex flex-col gap-1">
+            <span>{formatISK(data, false)}</span>
+            <ProfitPerHour trade={row} inline={true} />
+          </div>
+        ),
       },
       {
         key: 'Gross Margin',
         label: 'Margin',
         type: 'num',
-        render: (data) => formatPercent(data / 100, 1),
+        render: (data, row) => (
+          <div className="flex items-center gap-2">
+            <span>{formatPercent(data / 100, 1)}</span>
+            <CompetitionAnalysis trade={row} compact={true} />
+          </div>
+        ),
+      },
+      {
+        key: 'Risk',
+        label: 'Risk',
+        type: 'num',
+        render: (data, row) => {
+          const risk = calculateScamRisk(row, Array.isArray(sortedData) ? sortedData : []);
+          return <TradeRiskScore trade={row} compact={true} />;
+        },
       },
       {
         key: 'actions',
         label: 'Actions',
-        className: 'w-20',
+        className: 'w-32',
         render: (data, row) => (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              copyRowToClipboard(row);
-            }}
-            className="p-1.5 text-text-secondary hover:text-accent-cyan transition-colors"
-            title="Copy trade details"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                copyRowToClipboard(row);
+              }}
+              className="p-1.5 text-text-secondary hover:text-accent-cyan transition-colors"
+              title="Copy trade details"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                addToShoppingList(row);
+                setToastMessage('Added to shopping list');
+              }}
+              className="p-1.5 text-text-secondary hover:text-green-400 transition-colors"
+              title="Add to shopping list"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </button>
+          </div>
         ),
       },
     ],
-    [isFavorite, toggleFavorite, copyRowToClipboard]
+    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, calculateScamRisk, addToShoppingList]
   );
 
   return (
@@ -637,6 +856,40 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
             onClose={() => setToastMessage(null)}
             type="success"
           />
+        )}
+
+        {/* Price Alert Notifications */}
+        {triggeredAlerts.length > 0 && (
+          <div className="mb-6 space-y-2">
+            {triggeredAlerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="flex items-center justify-between p-4 bg-accent-gold/10 border border-accent-gold/30 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  <div>
+                    <div className="text-text-primary font-medium">
+                      Price Alert: {alert.itemName}
+                    </div>
+                    <div className="text-xs text-text-secondary">
+                      {alert.type} is {alert.condition} {alert.threshold}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => dismissTriggered(alert.id)}
+                  className="text-text-secondary hover:text-text-primary"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Form */}
@@ -979,7 +1232,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         {data !== null && !loading && (() => {
           // Normalize data to array and apply filtering
           const allTrades = Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : []);
-          const trades = Array.isArray(filteredData) ? filteredData : (filteredData && typeof filteredData === 'object' ? [filteredData] : []);
+          const trades = Array.isArray(sortedData) ? sortedData : (sortedData && typeof sortedData === 'object' ? [sortedData] : []);
 
           if (allTrades.length === 0) {
             return (
@@ -1009,6 +1262,56 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
           return (
             <>
+              {/* Dashboard Toggle and At-A-Glance View */}
+              <div className="mb-6 flex items-center justify-between">
+                <button
+                  onClick={() => setShowDashboard(!showDashboard)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                    showDashboard
+                      ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan'
+                      : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                  </svg>
+                  <span className="font-medium">Dashboard</span>
+                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">d</kbd>
+                </button>
+              </div>
+
+              {/* At-A-Glance Trading Dashboard */}
+              {showDashboard && (
+                <TradingDashboard
+                  data={trades}
+                  onItemClick={handleRowClick}
+                  walletBalance={walletBalance}
+                  className="mb-8"
+                />
+              )}
+
+              {/* Quick Filters Bar */}
+              <QuickFiltersBar
+                onFilterChange={setQuickFilterIds}
+                activeFilters={quickFilterIds}
+                data={allTrades}
+                className="mb-6 p-4 bg-space-dark/30 border border-accent-cyan/10 rounded-xl"
+              />
+
+              {/* Smart Filters */}
+              <SmartFilters
+                onChange={setSmartFilters}
+                initialFilters={smartFilters}
+                data={allTrades}
+              />
+
+              {/* Advanced Sort Panel */}
+              <AdvancedSortPanel
+                currentSort={advancedSorts}
+                onChange={setAdvancedSorts}
+                className="mb-6"
+              />
+
               {/* Action Bar */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-wrap">
@@ -1153,6 +1456,44 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
           );
         })()}
       </div>
+
+      {/* Bulk Actions Bar */}
+      <BulkActionsBar
+        items={Array.isArray(sortedData) ? sortedData : []}
+        selectedIds={selectedItems}
+        onSelectionChange={setSelectedItems}
+        onBulkFavorite={(items) => {
+          items.forEach(item => {
+            const itemId = item['Item ID'] || item.itemId;
+            if (!isFavorite(itemId)) {
+              toggleFavorite(itemId);
+            }
+          });
+          setToastMessage(`Added ${items.length} items to favorites`);
+        }}
+        onBulkAddToShoppingList={(items) => {
+          items.forEach(item => addToShoppingList(item));
+          setToastMessage(`Added ${items.length} items to shopping list`);
+        }}
+        onBulkCopy={(items) => {
+          setToastMessage(`Copied ${items.length} items`);
+        }}
+        onExport={(items) => {
+          setToastMessage(`Exported ${items.length} items`);
+        }}
+      />
+
+      {/* Session Summary */}
+      <SessionSummary
+        sessionDuration={sessionDuration}
+        viewedCount={viewedCount}
+        shoppingListCount={shoppingListCount}
+        totalPotentialProfit={totalPotentialProfit}
+        shoppingList={session.shoppingList}
+        onClearSession={clearSession}
+        onExportShoppingList={exportShoppingList}
+        onRemoveFromShoppingList={removeFromShoppingList}
+      />
 
       {/* Save Route Modal */}
       {showSaveModal && (

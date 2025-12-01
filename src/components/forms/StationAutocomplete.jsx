@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { useResources, useLocationLookup } from '../../hooks/useResources';
 import { SecurityBadge } from '../common/SecurityBadge';
 import { isCitadel } from '../../utils/security';
+import { TRADE_HUBS } from '../../utils/constants';
 
 /**
  * Station Autocomplete Component
@@ -16,6 +17,7 @@ export function StationAutocomplete({
   disabled = false,
   className = '',
   maxResults = 10,
+  showTradeHubs = true,
 }) {
   const { stationList, universeList, loading: resourcesLoading } = useResources();
   const { searchStations } = useLocationLookup();
@@ -179,6 +181,14 @@ export function StationAutocomplete({
     };
   }, []);
 
+  // Handle trade hub selection
+  const handleTradeHubSelect = (hub) => {
+    setInputValue(hub.name);
+    onChange?.(hub.name);
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+  };
+
   return (
     <div className={`relative ${className}`}>
       {label && (
@@ -186,6 +196,43 @@ export function StationAutocomplete({
           {label}
           {required && <span className="text-red-400 ml-1">*</span>}
         </label>
+      )}
+
+      {/* Trade Hub Quick Select */}
+      {showTradeHubs && !disabled && (
+        <div className="mb-3">
+          <div className="text-xs text-text-secondary mb-2 flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Quick Select Trade Hub
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {TRADE_HUBS.map((hub) => (
+              <button
+                key={hub.stationId}
+                type="button"
+                onClick={() => handleTradeHubSelect(hub)}
+                className={`
+                  px-3 py-1.5 text-xs font-medium rounded-lg
+                  border transition-all duration-200
+                  ${value === hub.name
+                    ? 'bg-accent-cyan/30 border-accent-cyan text-accent-cyan'
+                    : 'bg-space-dark/50 border-accent-cyan/20 text-text-secondary hover:border-accent-cyan/50 hover:text-text-primary hover:bg-accent-cyan/10'
+                  }
+                `}
+                title={`${hub.name} - ${hub.regionName}`}
+              >
+                <span className="flex items-center gap-1.5">
+                  {hub.shortName === 'Jita' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent-gold animate-pulse" title="Highest Volume"></span>
+                  )}
+                  {hub.shortName}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="relative">
