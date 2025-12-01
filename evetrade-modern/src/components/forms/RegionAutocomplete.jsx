@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useResources, useLocationLookup } from '../../hooks/useResources';
 
 /**
@@ -32,6 +32,9 @@ export function RegionAutocomplete({
     setInputValue(value || '');
   }, [value]);
 
+  // Memoize excludeRegions to prevent infinite loops
+  const excludeRegionsKey = useMemo(() => excludeRegions.join(','), [excludeRegions]);
+
   // Filter regions based on input
   useEffect(() => {
     if (inputValue && regionList) {
@@ -42,7 +45,8 @@ export function RegionAutocomplete({
     } else {
       setFiltered([]);
     }
-  }, [inputValue, regionList, searchRegions, maxResults, excludeRegions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue, regionList, searchRegions, maxResults, excludeRegionsKey]);
 
   // Handle input change
   const handleInputChange = (e) => {
