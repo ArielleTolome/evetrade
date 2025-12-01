@@ -1,168 +1,58 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!DOCTYPE html>
-<!--[if lt IE 7]>      <html lang="en" class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html lang="en" class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html lang="en" class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
-<head>
-    <!-- Meta Tags -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>EVE Online Market Trade Tool | Realtime Hauling & Station Trading</title>
-    <meta name="Description" content="The EVE Online trading tool that lets you discover what to trade between stations and regions. This tool enables making ISK through hauling or station trading.">
-    <meta name="Keywords" content="eve, eve online, isk, market, eve market, jita, amarr, dodixie, rens, hek, trade, trade finder, regions, stations, tradefinder, help, hauling, haul, route, buy, sell, tool, tools">
-    <meta name="google-site-verification" content="g0f9bRd7w4GdyAXj5bzHhlW725kHswcpIgkzqdEum9s" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv='cache-control' content='no-cache'>
-    <meta http-equiv='expires' content='0'>
-    <meta http-equiv='pragma' content='no-cache'>
-    <link rel="canonical" href="https://evetrade.space/" />
-    <script async src="https://fundingchoicesmessages.google.com/i/pub-0599578547621989?ers=1"></script><script>(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
-    
-    <!-- CSS -->
-    
-    <!-- Roboto font -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-    
-    <!-- bootstrap.min -->
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <!-- Main Stylesheet -->
-    <link rel="stylesheet" href="css/main.css">
-    
-    <!-- Favicon -->
-    <link rel='shortcut icon' href='img/favicon.png' type='image/x-icon'/>
-    
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BFV89PY0ST"></script>
+    <!-- SEO Meta Tags -->
+    <title>EVETrade - Market Trading Tool for EVE Online</title>
+    <meta name="description" content="Discover profitable trades across New Eden. Station trading, station-to-station hauling, and region-to-region hauling tools for EVE Online market traders." />
+    <meta name="keywords" content="EVE Online, trading, market, hauling, ISK, profit, station trading, region trading" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="EVETrade - Market Trading Tool for EVE Online" />
+    <meta property="og:description" content="Discover profitable trades across New Eden. Free market analysis tools for EVE Online." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://evetrade.space" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="EVETrade - EVE Online Trading Tool" />
+    <meta name="twitter:description" content="Find profitable trades across New Eden" />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://evetrade.s3.amazonaws.com" />
+
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap" as="style" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        
-        gtag('config', 'G-BFV89PY0ST');
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
     </script>
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0599578547621989" crossorigin="anonymous"></script>
-</head>
-
-
-<body id="body">
-    
-    <!-- Background container -->
-    <div class="background-container">
-        <div class="stars"></div>
-        <div class="twinkling"></div>
-    </div>
-    <!-- End Background container -->
-    
-    <!-- Navigation -->
-    <header id="navigation" class="navbar-inverse navbar-fixed-top animated-header">
-        <div class="container">
-            <div class="navbar-header">
-                <!-- responsive nav button -->
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <!-- /responsive nav button -->
-                
-                <!-- logo -->
-                <h1 class="navbar-brand">
-                    <a href="/"><img src="img/logo.png" alt="EVETrade"/></a>
-                </h1>
-                <!-- /logo -->
-            </div>
-            
-            <!-- main nav -->
-            <nav class="collapse navbar-collapse navbar-right" role="navigation">
-                <ul id="nav" class="nav navbar-nav">
-                    <li><a href="./index.html">Home</a></li>
-                    <li>
-                        <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Trade Menu
-                        </a>
-                        
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                            <a class="dropdown-item btn btn-grey btn-border btn-effect" href="./station-trading.html">Single Station</a>
-                            <a class="dropdown-item btn btn-grey btn-border btn-effect" href="./station-hauling.html">Station to Station</a>
-                            <a class="dropdown-item btn btn-grey btn-border btn-effect" href="./region-hauling.html">Region to Region</a>
-                        </div>
-                    </li>
-                    <li>
-                        <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Help
-                        </a>
-                        
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                            <a class="dropdown-item btn btn-grey btn-border btn-effect" href="./help.html" target="_blank">Documentation &amp; Guide</a>
-                            <a class="dropdown-item btn btn-grey btn-border btn-effect" href="#" onclick="clearLocalStorageAndRefresh()" title="Clears your local resource cache and refreshes the page. Useful if experiencing bugs.">Reload Resources</a>
-                        </div>
-                    </li>
-                    <li><a href="https://discord.gg/9xZh5qKCeR" target="_blank"><span class="fa-brands fa-discord"></span> Discord/Support</a></li>
-                    <li><a title="Donate" class="kofi-button" href="https://ko-fi.com/evetrade" target="_blank"><img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="Donations" class="kofiimg">Donate</a></li>
-                </ul>
-            </nav>
-            <!-- /main nav -->
-            
-        </div>
-    </header>
-    <!-- End Navigation -->
-    
-    <!-- Main Section-->
-    <main class="site-content" role="main">
-        <section id="main">
-            <div class="main">
-                <div class="slide-caption">
-                    <div class="caption-content">
-                        <h1>The EVE Online Market Trading Tool</h1>
-                        <h2>Realtime Hauling &amp; Station Data</h2>
-
-                        <h3> <i> How do you trade? </i> </h3>
-                        <h3>
-                            <a href="./station-trading.html" class="btn btn-grey btn-border btn-effect">Single Station</a><br>
-                        </h3>
-                        <h3>
-                            <a href="./station-hauling.html" class="btn btn-grey btn-border btn-effect">Station to Station</a><br>
-                        </h3>
-                        <h3>
-                            <a href="./region-hauling.html" class="btn btn-grey btn-border btn-effect">Region to Region</a><br>
-                        </h3>
-                    </div>
-                </div>
-            </div>
-
-            <div id="announcements"></div>
-            
-        </section>
-    </main>
-    <!-- End Main Section -->
-    
-    <footer id="footer">
-        <main class="container">
-            <div class="row text-center">
-                <div class="footer-content">
-                    <p><a href="./release.html" target="_blank">Version {{version}}</a> | Updated {{release_date}} | <a href="https://github.com/awhipp/evetrade" target="_blank">Source Code</a> | <a href="https://github.com/awhipp/evetrade/releases" target="_blank">Download</a></p>		
-                    <p>Copyright &copy; {{years_active}} EVETrade. All Rights Reserved.</p>
-                </div>
-            </div>
-        </main>
-    </footer>
-    
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/brands.min.css"/>
-    
-    <!-- Javascript  -->
-    
-    <!-- Main jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <!-- Twitter Bootstrap -->
-    <script src="js/bootstrap.min.js"></script>
-    <!-- Custom Functions -->
-    <script src="js/index.js"></script>
-    <script src="js/main.js"></script>
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-</body>
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

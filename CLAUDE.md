@@ -4,58 +4,68 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-EVETrade is a static web application for EVE Online trading. It helps players discover profitable trades between stations and regions, supporting station trading (margin trading) and inter-station/region hauling.
+EVETrade is a modern React application for EVE Online trading. It helps players discover profitable trades between stations and regions, supporting station trading (margin trading) and inter-station/region hauling.
 
 ## Development
 
-This is a static HTML/CSS/JS site with no build process. To develop locally:
-
 ```bash
-# Use any local server to avoid CORS issues:
-npx serve .
-# or
-python -m http.server 8000
-# or VS Code Live Server extension
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
 ```
 
-The site deploys automatically to Netlify on commits to main.
+The site deploys automatically to Vercel on commits to main.
 
 ## Architecture
 
-### Page Structure
-- `index.html` - Landing page with trading mode selection
-- `station-trading.html` + `js/station-trading.js` - Single station margin trading
-- `station-hauling.html` + `js/station-hauling.js` - Station-to-station hauling
-- `region-hauling.html` + `js/region-hauling.js` - Region-to-region hauling
-- `orders.html` + `js/orders.js` - Market depth view for specific items
+### Tech Stack
+- **React 19** with Vite for fast development
+- **Tailwind CSS** for styling
+- **React Router** for navigation
+- **DataTables** for data display with export capabilities
+- **Axios** with retry logic for API calls
 
-### Core JavaScript (`js/main.js`)
-- Global configuration and API endpoint management
-- Resource data loading with localStorage caching (hourly expiry)
-- Loads universe data: `universeList`, `regionList`, `stationList`, `structureList`, `structureInfo`
-- `fetchWithRetry()` - API calls with retry logic and rate limit handling
-- `loadComplete()` - Called when page resources are ready
-- Each page defines `loadNext()` function called after core data loads
+### Directory Structure
+```
+src/
+├── api/           # API layer (client.js, trading.js)
+├── components/    # React components
+│   ├── common/    # Navbar, Footer, LoadingSpinner, etc.
+│   ├── forms/     # FormInput, FormSelect, autocomplete components
+│   ├── layout/    # PageLayout, AnimatedBackground
+│   └── tables/    # TradingTable
+├── hooks/         # Custom hooks (useCache, useResources, useApiCall)
+├── lib/           # Third-party integrations (supabase.js)
+├── pages/         # Page components
+├── store/         # Global state (ThemeContext)
+└── utils/         # Utilities (formatters, security, constants)
+```
+
+### Pages
+- `HomePage.jsx` - Landing page with trading mode selection
+- `StationTradingPage.jsx` - Single station margin trading
+- `StationHaulingPage.jsx` - Station-to-station hauling
+- `RegionHaulingPage.jsx` - Region-to-region hauling
+- `OrdersPage.jsx` - Market depth view for specific items
+- `HelpPage.jsx` - Documentation
 
 ### API Endpoints
-- Production: `/api/*` proxied via Netlify to AWS Lambda
-- Development: `/dev/*` proxied to separate Lambda
-- Local: Direct Lambda URL (defined in `main.js`)
+- Vercel serverless functions in `/api/` directory
 - Static resources: `https://evetrade.s3.amazonaws.com/resources/`
 
 ### Data Flow
-1. `main.js` loads on page, fetches `version.json`
-2. Loads cached or fresh universe/region/station data
-3. Calls page-specific `loadNext()` function
-4. User submits form, request goes to API
-5. Results displayed in DataTables
-
-### External Dependencies
-- jQuery 1.11.1
-- Bootstrap (bundled)
-- DataTables (for result tables with export buttons)
-- Awesomplete (autocomplete for station/region inputs)
-- SweetAlert (custom alerts)
+1. App mounts, ResourceProvider loads universe data from cache or S3
+2. User navigates to trading page
+3. Form submission triggers API call via useApiCall hook
+4. Results displayed in TradingTable with export options
 
 ## Related Repositories
 
