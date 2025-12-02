@@ -28,7 +28,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+      className="p-2 rounded-lg text-text-secondary hover:text-accent-cyan hover:bg-accent-cyan/10 transition-colors"
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
     >
       {isDark ? (
@@ -52,7 +52,7 @@ function MobileMenuButton({ isOpen, onClick, buttonRef }) {
     <button
       ref={buttonRef}
       onClick={onClick}
-      className="md:hidden p-2 text-text-secondary hover:text-text-primary"
+      className="md:hidden p-2 text-text-secondary hover:text-accent-cyan"
       aria-label="Toggle menu"
       aria-expanded={isOpen}
       aria-controls="mobile-menu"
@@ -141,31 +141,31 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-[100] bg-space-dark/70 dark:bg-space-dark/70 bg-white/70 backdrop-blur-lg border-b border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-200">
+    <nav className="sticky top-0 z-[100] bg-space-dark/80 dark:bg-space-dark/80 bg-white/80 backdrop-blur-xl border-b border-white/5 dark:border-white/5 shadow-lg shadow-black/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 bg-gradient-to-br from-accent-cyan to-accent-purple rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-accent-cyan to-accent-purple rounded-lg flex items-center justify-center shadow-lg shadow-accent-cyan/20 group-hover:shadow-accent-cyan/40 transition-shadow">
               <span className="font-display font-bold text-space-black text-sm">ET</span>
             </div>
-            <span className="font-display text-xl font-bold">
-              <span className="text-accent-cyan">EVE</span>
+            <span className="font-display text-xl font-bold tracking-wide">
+              <span className="text-accent-cyan group-hover:text-accent-cyan-dim transition-colors">EVE</span>
               <span className="text-text-primary dark:text-text-primary text-light-text">Trade</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {navItems.map(({ path, label }) => (
+            {navItems.slice(0, 6).map(({ path, label }) => (
               <Link
                 key={path}
                 to={path}
                 className={`
-                  px-4 py-2 rounded-lg text-sm font-medium
+                  px-3 py-2 rounded-lg text-sm font-medium
                   transition-all duration-200
                   ${location.pathname === path
-                    ? 'bg-accent-cyan/20 text-accent-cyan'
+                    ? 'bg-accent-cyan/10 text-accent-cyan shadow-[0_0_10px_rgba(0,240,255,0.1)]'
                     : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                   }
                 `}
@@ -173,6 +173,19 @@ export function Navbar() {
                 {label}
               </Link>
             ))}
+
+            {/* More Menu (Dropdown could be implemented here, for now just showing key items) */}
+            <div className="h-4 w-[1px] bg-white/10 mx-2"></div>
+
+            <Link
+              to="/tools"
+              className={`
+                px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                ${location.pathname === '/tools' ? 'bg-accent-cyan/10 text-accent-cyan' : 'text-text-secondary hover:text-text-primary hover:bg-white/5'}
+              `}
+            >
+              Tools
+            </Link>
           </div>
 
           {/* Right side actions */}
@@ -191,27 +204,31 @@ export function Navbar() {
       <div
         id="mobile-menu"
         ref={menuRef}
-        className={`md:hidden border-t border-accent-cyan/20 bg-space-dark/95 backdrop-blur-lg ${
-          isMobileMenuOpen ? '' : 'hidden'
-        }`}
+        className={`
+          md:hidden fixed inset-x-0 top-16 bottom-0 bg-space-dark/95 backdrop-blur-xl z-50 overflow-y-auto
+          transition-all duration-300 ease-in-out origin-top
+          ${isMobileMenuOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}
+        `}
         aria-hidden={!isMobileMenuOpen}
       >
-        <div className="px-4 py-3 space-y-1">
-          {navItems.map(({ path, label, icon }) => (
+        <div className="px-4 py-6 space-y-2">
+          {navItems.map(({ path, label, icon }, index) => (
             <Link
               key={path}
               to={path}
               onClick={handleMenuClose}
+              style={{ animationDelay: `${index * 50}ms` }}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
+                flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium
                 transition-all duration-200
+                ${isMobileMenuOpen ? 'animate-fade-in-up' : ''}
                 ${location.pathname === path
-                  ? 'bg-accent-cyan/20 text-accent-cyan'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                  ? 'bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5 border border-transparent'
                 }
               `}
             >
-              <span>{icon}</span>
+              <span className="text-xl">{icon}</span>
               {label}
             </Link>
           ))}

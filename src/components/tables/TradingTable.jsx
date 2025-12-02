@@ -39,28 +39,28 @@ function getMarginTrend(marginPercent) {
   if (marginPercent >= EXCELLENT_MARGIN) {
     return {
       arrow: '▲',
-      color: 'text-green-400',
+      color: 'text-accent-green',
       tooltip: `Excellent margin (${marginPercent.toFixed(1)}%)`,
       status: 'excellent',
     };
   } else if (marginPercent >= GOOD_MARGIN) {
     return {
       arrow: '▲',
-      color: 'text-green-400',
+      color: 'text-accent-cyan',
       tooltip: `Good margin (${marginPercent.toFixed(1)}%)`,
       status: 'good',
     };
   } else if (marginPercent >= MODERATE_MARGIN) {
     return {
       arrow: '—',
-      color: 'text-yellow-400',
+      color: 'text-accent-gold',
       tooltip: `Moderate margin (${marginPercent.toFixed(1)}%)`,
       status: 'moderate',
     };
   } else if (marginPercent >= THIN_MARGIN) {
     return {
       arrow: '▼',
-      color: 'text-red-400',
+      color: 'text-accent-pink',
       tooltip: `Thin margin (${marginPercent.toFixed(1)}%)`,
       status: 'thin',
     };
@@ -94,7 +94,7 @@ function getTradingBadges(row, stats) {
   if (highVolume && goodMargin && goodProfit) {
     badges.push({
       label: 'Hot',
-      color: 'bg-orange-500/20 text-orange-400 border border-orange-500/40',
+      color: 'bg-accent-pink/10 text-accent-pink border border-accent-pink/30 shadow-[0_0_10px_rgba(255,0,153,0.1)]',
       tooltip: 'High volume with excellent profit potential',
     });
   }
@@ -103,7 +103,7 @@ function getTradingBadges(row, stats) {
   if (margin < 3) {
     badges.push({
       label: 'Competitive',
-      color: 'bg-red-500/20 text-red-400 border border-red-500/40',
+      color: 'bg-accent-gold/10 text-accent-gold border border-accent-gold/30',
       tooltip: 'Very thin margins - market is highly competitive',
     });
   }
@@ -327,18 +327,19 @@ export function TradingTable({
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-space-dark/30 rounded-xl border border-accent-cyan/10 overflow-hidden">
-        <div className="text-center py-12 text-text-secondary">
-          {emptyMessage}
+      <div className="bg-space-dark/40 backdrop-blur-md rounded-xl border border-white/5 overflow-hidden shadow-lg">
+        <div className="text-center py-16 text-text-secondary">
+          <div className="text-4xl mb-4 opacity-20">📊</div>
+          <p className="text-lg">{emptyMessage}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-space-dark/30 rounded-xl border border-accent-cyan/10 overflow-hidden flex flex-col ${className}`}>
+    <div className={`bg-space-dark/40 backdrop-blur-md rounded-xl border border-white/5 overflow-hidden flex flex-col shadow-xl ${className}`}>
       {/* Top Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center p-3 md:p-4 gap-3 md:gap-4 bg-space-mid/50 border-b border-accent-cyan/10">
+      <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 bg-space-mid/40 border-b border-white/5">
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             type="button"
@@ -393,11 +394,11 @@ export function TradingTable({
                   key={col.key}
                   onClick={() => handleSort(col.key)}
                   className={`
-                    bg-space-mid/80 text-accent-cyan font-display font-semibold
-                    px-4 py-3 border-b border-accent-cyan/20
+                    bg-space-mid/60 text-accent-cyan font-display font-semibold text-xs uppercase tracking-wider
+                    px-4 py-4 border-b border-white/5
                     whitespace-nowrap cursor-pointer select-none
-                    hover:bg-space-mid transition-colors
-                    ${sortConfig?.key === col.key ? 'text-accent-cyan' : 'text-accent-cyan/80'}
+                    hover:bg-white/5 transition-colors
+                    ${sortConfig?.key === col.key ? 'text-accent-cyan' : 'text-text-secondary'}
                   `}
                 >
                   <div className="flex items-center gap-1">
@@ -425,9 +426,9 @@ export function TradingTable({
 
               // Tailwind classes for quality tiers
               const qualityClasses = {
-                excellent: 'bg-yellow-400/10 border-l-2 border-yellow-400/60 hover:bg-yellow-400/15',
-                good: 'bg-green-400/8 border-l-2 border-green-400/50 hover:bg-green-400/12',
-                fair: 'bg-cyan-400/5 border-l-2 border-cyan-400/30 hover:bg-cyan-400/10',
+                excellent: 'bg-accent-green/5 border-l-2 border-accent-green/60 hover:bg-accent-green/10',
+                good: 'bg-accent-cyan/5 border-l-2 border-accent-cyan/50 hover:bg-accent-cyan/10',
+                fair: 'bg-accent-gold/5 border-l-2 border-accent-gold/30 hover:bg-accent-gold/10',
               };
 
               // Check if this row is selected via keyboard navigation
@@ -440,8 +441,8 @@ export function TradingTable({
                     onClick={() => onRowClick?.(row, idx)}
                     className={`
                       transition-colors
-                      ${isSelected ? 'bg-accent-cyan/20 ring-2 ring-accent-cyan/50' : ''}
-                      ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-accent-cyan/5' : ''}
+                      ${isSelected ? 'bg-accent-cyan/10 ring-1 ring-accent-cyan/30' : ''}
+                      ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-white/5' : ''}
                       ${onRowClick ? 'cursor-pointer' : ''}
                     `}
                   >
@@ -473,11 +474,10 @@ export function TradingTable({
                             onAddToWatchlist(row);
                           }}
                           disabled={isItemWatched && isItemWatched(row['Item ID'] || row.itemId)}
-                          className={`p-2 rounded-lg transition-all ${
-                            isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
+                          className={`p-2 rounded-lg transition-all ${isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
                               ? 'bg-accent-purple/20 text-accent-purple/50 cursor-not-allowed'
                               : 'bg-accent-purple/10 border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/20 hover:border-accent-purple/50'
-                          }`}
+                            }`}
                           title={
                             isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
                               ? 'Already in watchlist'
