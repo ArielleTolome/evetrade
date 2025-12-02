@@ -21,6 +21,9 @@ const ToolsPage = lazy(() => import('./pages/ToolsPage'));
 const TradingDashboardPage = lazy(() => import('./pages/TradingDashboardPage'));
 const LongTermTradingPage = lazy(() => import('./pages/LongTermTradingPage'));
 const RouteOptimizationPage = lazy(() => import('./pages/RouteOptimizationPage'));
+const MarketOrdersPage = lazy(() => import('./pages/MarketOrdersPage'));
+const OverviewPage = lazy(() => import('./pages/OverviewPage'));
+const TradeProfitsPage = lazy(() => import('./pages/TradeProfitsPage'));
 
 /**
  * Lazy page wrapper with loading fallback
@@ -174,6 +177,30 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <RouteOptimizationPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'market-orders',
+        element: (
+          <LazyPage>
+            <MarketOrdersPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'overview',
+        element: (
+          <LazyPage>
+            <OverviewPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'trade-profits',
+        element: (
+          <LazyPage>
+            <TradeProfitsPage />
           </LazyPage>
         ),
       },
