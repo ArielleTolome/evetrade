@@ -27,6 +27,10 @@ import { TradeOpportunityScore, TradeOpportunityBadge } from '../components/comm
 import { QuickFiltersBar, useQuickFilters } from '../components/common/QuickFiltersBar';
 import { TradeHubPresets } from '../components/common/TradeHubPresets';
 import { ActionableError } from '../components/common/ActionableError';
+import { EveLinksDropdown, EveLinksInline } from '../components/common/EveLinks';
+import { TradeDecisionBadge, TradeDecisionCard } from '../components/common/TradeDecisionCard';
+import { OrderBookCard } from '../components/common/OrderBookPreview';
+import { AffordabilityBadge, AffordabilityCard } from '../components/common/AffordabilityIndicator';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { useTradeForm } from '../hooks/useTradeForm';
@@ -393,11 +397,19 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     copyToClipboard(text, `Copied ${trades.length} trades!`);
   }, [copyToClipboard]);
 
-  // Copy for EVE Online Multibuy format
-  const copyMultibuyFormat = useCallback((trades) => {
-    const text = trades.map(trade =>
-      `${trade.Item} x ${trade.Volume || 1}`
-    ).join('\n');
+  // Copy for EVE Online Multibuy format (correct format: "Item Name 10000")
+  const copyMultibuyFormat = useCallback((trades, options = {}) => {
+    const { useRecommendedQty = false, maxInvestment = null } = options;
+
+    const text = trades.map(trade => {
+      let qty = trade.Volume || 1;
+      // If using recommended quantity based on budget
+      if (useRecommendedQty && maxInvestment && trade['Buy Price']) {
+        qty = Math.floor(maxInvestment / trade['Buy Price']);
+      }
+      // EVE multibuy format: "Item Name 10000" (space-separated, no 'x')
+      return `${trade.Item} ${qty}`;
+    }).join('\n');
 
     copyToClipboard(text, 'Multibuy list copied!');
   }, [copyToClipboard]);
@@ -798,6 +810,17 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         },
       },
       {
+        key: 'Decision',
+        label: '',
+        className: 'w-16',
+        render: (data, row) => (
+          <TradeDecisionBadge
+            trade={row}
+            allTrades={Array.isArray(sortedData) ? sortedData : []}
+          />
+        ),
+      },
+      {
         key: 'Item',
         label: 'Item',
         className: 'font-medium',
@@ -896,41 +919,67 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         },
       },
       {
+        key: 'Afford',
+        label: '',
+        className: 'w-20',
+        render: (data, row) => {
+          if (walletBalance === null) return null;
+          const cost = row['Buy Price'] || 0;
+          return (
+            <AffordabilityBadge cost={cost} walletBalance={walletBalance} />
+          );
+        },
+      },
+      {
         key: 'actions',
         label: 'Actions',
-        className: 'w-32',
-        render: (data, row) => (
-          <div className="flex gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                copyRowToClipboard(row);
-              }}
-              className="p-1.5 text-text-secondary hover:text-accent-cyan transition-colors"
-              title="Copy trade details"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                addToShoppingList(row);
-                setToastMessage('Added to shopping list');
-              }}
-              className="p-1.5 text-text-secondary hover:text-green-400 transition-colors"
-              title="Add to shopping list"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </button>
-          </div>
-        ),
+        className: 'w-44',
+        render: (data, row) => {
+          const itemId = row['Item ID'] || row.itemId;
+          const stationData = getStationData(form.station, universeList);
+          const regionId = stationData?.region;
+          const stationId = stationData?.station;
+
+          return (
+            <div className="flex gap-1 items-center">
+              {/* EVE Links Dropdown */}
+              <EveLinksDropdown
+                typeId={itemId}
+                regionId={regionId}
+                stationId={stationId}
+                itemName={row.Item}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyRowToClipboard(row);
+                }}
+                className="p-1.5 text-text-secondary hover:text-accent-cyan transition-colors"
+                title="Copy trade details"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addToShoppingList(row);
+                  setToastMessage('Added to shopping list');
+                }}
+                className="p-1.5 text-text-secondary hover:text-green-400 transition-colors"
+                title="Add to shopping list"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </button>
+            </div>
+          );
+        },
       },
     ],
-    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, calculateScamRisk, addToShoppingList]
+    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, calculateScamRisk, addToShoppingList, walletBalance, form.station, universeList]
   );
 
   return (
@@ -1538,16 +1587,57 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                 showQualityIndicators={true}
                 searchInputRef={searchInputRef}
                 selectedRowIndex={selectedRowIndex}
-                expandableRowContent={(row) => (
-                  <QuickTradeCalculator
-                    buyPrice={row['Buy Price']}
-                    sellPrice={row['Sell Price']}
-                    initialQuantity={row['Volume'] || 1}
-                    brokerFee={characterTaxes?.brokerFee || form.brokerFee / 100}
-                    salesTax={characterTaxes?.salesTax || form.tax}
-                    itemName={row['Item']}
-                  />
-                )}
+                expandableRowContent={(row) => {
+                  const itemId = row['Item ID'] || row.itemId;
+                  const stationData = getStationData(form.station, universeList);
+                  const regionId = stationData?.region;
+                  const stationId = stationData?.station;
+
+                  return (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      {/* Quick Calculator */}
+                      <div className="lg:col-span-1">
+                        <QuickTradeCalculator
+                          buyPrice={row['Buy Price']}
+                          sellPrice={row['Sell Price']}
+                          initialQuantity={row['Volume'] || 1}
+                          brokerFee={characterTaxes?.brokerFee || form.brokerFee / 100}
+                          salesTax={characterTaxes?.salesTax || form.tax}
+                          itemName={row['Item']}
+                        />
+                      </div>
+
+                      {/* Trade Decision Card */}
+                      <div className="lg:col-span-1">
+                        <TradeDecisionCard
+                          trade={row}
+                          allTrades={Array.isArray(sortedData) ? sortedData : []}
+                        />
+                        {/* Affordability Card (if logged in) */}
+                        {walletBalance !== null && (
+                          <AffordabilityCard
+                            cost={row['Buy Price'] || 0}
+                            walletBalance={walletBalance}
+                            itemName={row['Item']}
+                            className="mt-4"
+                          />
+                        )}
+                      </div>
+
+                      {/* Order Book Preview */}
+                      <div className="lg:col-span-1">
+                        {regionId && itemId && (
+                          <OrderBookCard
+                            regionId={regionId}
+                            typeId={itemId}
+                            stationId={stationId}
+                            itemName={row['Item']}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  );
+                }}
               />
             </>
           );

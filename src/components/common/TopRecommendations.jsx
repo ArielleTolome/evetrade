@@ -151,10 +151,12 @@ export function TopRecommendations({ data, onItemClick, maxItems = 10 }) {
   }, [data]);
 
   // Calculate scores and get top items
+  // Filter out volume=1 trades as they're almost certainly scams
   const recommendations = useMemo(() => {
     if (!data || data.length === 0) return [];
 
     return data
+      .filter(trade => (trade['Volume'] || 0) > 1) // Exclude volume=1 scam trades
       .map(trade => ({
         ...trade,
         scoreData: calculateScore(trade, stats),

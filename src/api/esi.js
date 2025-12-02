@@ -224,6 +224,117 @@ export async function getMarketHistory(regionId, typeId) {
 }
 
 /**
+ * Get market orders for a type in a region
+ * Returns all buy and sell orders for the specified item
+ * @param {number} regionId - Region ID
+ * @param {number} typeId - Type ID of the item
+ * @param {string} orderType - 'all', 'buy', or 'sell' (default: 'all')
+ * @returns {Promise<Array>} Array of market orders
+ */
+export async function getMarketOrders(regionId, typeId, orderType = 'all') {
+  const orders = await esiRequest(
+    `/markets/${regionId}/orders/?type_id=${typeId}&order_type=${orderType}`
+  );
+  return orders;
+}
+
+/**
+ * Analyze market orders to get competition data
+ * @param {Array} orders - Array of market orders from getMarketOrders
+ * @param {number} stationId - Optional station ID to filter orders
+ * @returns {Object} Competition analysis data
+ */
+export function analyzeMarketOrders(orders, stationId = null) {
+  let filteredOrders = orders;
+  if (stationId) {
+    filteredOrders = orders.filter(o => o.location_id === stationId);
+  }
+
+  const buyOrders = filteredOrders.filter(o => o.is_buy_order);
+  const sellOrders = filteredOrders.filter(o => !o.is_buy_order);
+
+  // Sort by price
+  buyOrders.sort((a, b) => b.price - a.price);  // Highest buy first
+  sellOrders.sort((a, b) => a.price - b.price); // Lowest sell first
+
+  // Get best prices
+  const bestBuyPrice = buyOrders[0]?.price || 0;
+  const bestSellPrice = sellOrders[0]?.price || 0;
+
+  // Count orders at best price (competition)
+  const buyersAtBestPrice = buyOrders.filter(o => o.price === bestBuyPrice).length;
+  const sellersAtBestPrice = sellOrders.filter(o => o.price === bestSellPrice).length;
+
+  // Calculate total volume available
+  const totalBuyVolume = buyOrders.reduce((sum, o) => sum + o.volume_remain, 0);
+  const totalSellVolume = sellOrders.reduce((sum, o) => sum + o.volume_remain, 0);
+
+  // Price walls (orders with > 10% of total volume at a price point)
+  const buyWalls = findPriceWalls(buyOrders, totalBuyVolume);
+  const sellWalls = findPriceWalls(sellOrders, totalSellVolume);
+
+  // Calculate spread
+  const spread = bestSellPrice > 0 && bestBuyPrice > 0
+    ? ((bestSellPrice - bestBuyPrice) / bestSellPrice) * 100
+    : 0;
+
+  return {
+    buyOrders: buyOrders.length,
+    sellOrders: sellOrders.length,
+    bestBuyPrice,
+    bestSellPrice,
+    buyersAtBestPrice,
+    sellersAtBestPrice,
+    totalBuyVolume,
+    totalSellVolume,
+    buyWalls,
+    sellWalls,
+    spread,
+    competitionLevel: getCompetitionLevel(buyersAtBestPrice, sellersAtBestPrice),
+  };
+}
+
+/**
+ * Find price walls in order book
+ */
+function findPriceWalls(orders, totalVolume) {
+  const priceGroups = {};
+  orders.forEach(order => {
+    const price = order.price;
+    if (!priceGroups[price]) {
+      priceGroups[price] = 0;
+    }
+    priceGroups[price] += order.volume_remain;
+  });
+
+  const walls = [];
+  const threshold = totalVolume * 0.1; // 10% of total volume
+
+  Object.entries(priceGroups).forEach(([price, volume]) => {
+    if (volume >= threshold) {
+      walls.push({
+        price: parseFloat(price),
+        volume,
+        percentage: (volume / totalVolume) * 100,
+      });
+    }
+  });
+
+  return walls;
+}
+
+/**
+ * Determine competition level
+ */
+function getCompetitionLevel(buyers, sellers) {
+  const total = buyers + sellers;
+  if (total <= 2) return 'low';
+  if (total <= 5) return 'medium';
+  if (total <= 10) return 'high';
+  return 'extreme';
+}
+
+/**
  * Calculate trading taxes based on skills and standings
  */
 export function calculateTradingTaxes(skills, standings) {
@@ -285,5 +396,7 @@ export default {
   getMarketPrices,
   getTypeNames,
   getMarketHistory,
+  getMarketOrders,
+  analyzeMarketOrders,
   calculateTradingTaxes,
 };
