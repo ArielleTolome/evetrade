@@ -6,9 +6,13 @@ import { Button } from '../components/common/Button';
 import { TradingTable } from '../components/tables/TradingTable';
 import { Toast } from '../components/common/Toast';
 import { QuickCopyButton } from '../components/common/QuickCopyButtons';
-import { FormSelect } from '../components/forms';
+import { FormSelect, ItemAutocomplete } from '../components/forms';
+import { PriceHistoryChart } from '../components/common/PriceHistoryChart';
+import { MarketHistoryChart, MarketHistoryTable } from '../components/common/MarketHistoryPanel';
 import { useResources } from '../hooks/useResources';
+import { getMarketHistory } from '../api/esi';
 import { formatISK, formatPercent, formatNumber, formatCompact } from '../utils/formatters';
+import { TRADE_HUBS } from '../utils/constants';
 
 /**
  * Generate realistic long-term predictions based on market data
@@ -366,6 +370,14 @@ export function LongTermTradingPage() {
   // Combined loading state - keep loading until invTypes is actually available
   const isLoading = resourcesLoading || invTypesLoading || !invTypes;
 
+  // Trade hub state
+  const [selectedTradeHub, setSelectedTradeHub] = useState(TRADE_HUBS[0]); // Default to Jita
+
+  // Item search state
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [priceHistory, setPriceHistory] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   // Form state
   const [timeHorizon, setTimeHorizon] = useState(90); // 3 months default
   const [minInvestment, setMinInvestment] = useState(1000000); // 1M ISK
@@ -376,6 +388,30 @@ export function LongTermTradingPage() {
   // UI state
   const [toastMessage, setToastMessage] = useState(null);
   const [investmentAmount, setInvestmentAmount] = useState(100000000); // 100M ISK for calculator
+
+  // Fetch price history when item is selected
+  useEffect(() => {
+    if (!selectedItem) {
+      setPriceHistory(null);
+      return;
+    }
+
+    const fetchHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const history = await getMarketHistory(selectedTradeHub.regionId, selectedItem.typeId);
+        setPriceHistory(history);
+      } catch (err) {
+        console.error('Failed to fetch price history:', err);
+        setToastMessage('Failed to load price history');
+        setPriceHistory(null);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [selectedItem, selectedTradeHub]);
 
   // Generate predictions
   const predictions = useMemo(() => {
@@ -643,6 +679,109 @@ Confidence: ${pred.confidence}%`;
           />
         )}
 
+        {/* Trade Hub Selector */}
+        <GlassmorphicCard className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex-1">
+              <h3 className="font-display text-lg font-semibold text-text-primary mb-2">
+                Select Trade Hub
+              </h3>
+              <p className="text-sm text-text-secondary">
+                View predictions and price history for items in your selected trade hub
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {TRADE_HUBS.map((hub) => (
+                <button
+                  key={hub.stationId}
+                  onClick={() => setSelectedTradeHub(hub)}
+                  className={`
+                    px-4 py-2 rounded-lg font-medium transition-all duration-200
+                    ${selectedTradeHub.stationId === hub.stationId
+                      ? 'bg-accent-cyan text-space-black'
+                      : 'bg-space-dark/50 text-text-secondary hover:bg-accent-cyan/20 hover:text-text-primary border border-accent-cyan/20'
+                    }
+                  `}
+                >
+                  {hub.shortName}
+                </button>
+              ))}
+            </div>
+          </div>
+        </GlassmorphicCard>
+
+        {/* Item Search & Price Chart */}
+        <GlassmorphicCard className="mb-8">
+          <h3 className="font-display text-lg font-semibold text-text-primary mb-4">
+            Item Price History
+          </h3>
+          <p className="text-sm text-text-secondary mb-4">
+            Search for any item to view its price history with moving averages, volume, and daily data in {selectedTradeHub.shortName}
+          </p>
+
+          <div className="mb-6">
+            <ItemAutocomplete
+              value={selectedItem?.name || ''}
+              onChange={(item) => setSelectedItem(item)}
+              placeholder="Search for an item (e.g., Hydrogen Fuel Block, Tritanium, PLEX)..."
+              label="Item Name"
+            />
+          </div>
+
+          {!selectedItem && (
+            <div className="text-center py-8 text-text-secondary border border-dashed border-accent-cyan/20 rounded-lg">
+              <svg className="w-12 h-12 mx-auto mb-3 text-text-secondary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <p>Search for an item above to view its price history</p>
+            </div>
+          )}
+        </GlassmorphicCard>
+
+        {/* Price History Chart with MA and Volume - Full Width */}
+        {selectedItem && (
+          <MarketHistoryChart
+            historyData={priceHistory}
+            title={`${selectedItem.name} - ${selectedTradeHub.shortName}`}
+            loading={historyLoading}
+            width={Math.min(1200, typeof window !== 'undefined' ? window.innerWidth - 80 : 1000)}
+            height={400}
+            className="mb-8"
+          />
+        )}
+
+        {/* Price History Table */}
+        {selectedItem && priceHistory && priceHistory.length > 0 && (
+          <GlassmorphicCard className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-lg font-semibold text-text-primary">
+                Daily Market Data
+              </h3>
+              <button
+                onClick={() => {
+                  const header = 'Date\tOrders\tQuantity\tLow\tHigh\tAvg';
+                  const rows = priceHistory.map(d =>
+                    `${d.date}\t${d.order_count}\t${d.volume}\t${d.lowest}\t${d.highest}\t${d.average}`
+                  ).join('\n');
+                  copyToClipboard(`${header}\n${rows}`, 'Market data copied!');
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs bg-accent-cyan/20 text-accent-cyan rounded hover:bg-accent-cyan/30 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy Table
+              </button>
+            </div>
+            <MarketHistoryTable
+              historyData={priceHistory}
+              loading={historyLoading}
+              maxRows={30}
+              className="border-none p-0 bg-transparent"
+            />
+          </GlassmorphicCard>
+        )}
+
         {/* Hero Section */}
         <GlassmorphicCard className="mb-8">
           <div className="flex items-start gap-4">
@@ -694,9 +833,14 @@ Confidence: ${pred.confidence}%`;
 
         {/* Filters */}
         <GlassmorphicCard className="mb-8">
-          <h3 className="font-display text-lg font-semibold text-text-primary mb-4">
-            Prediction Filters
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-lg font-semibold text-text-primary">
+              Prediction Filters
+            </h3>
+            <span className="px-3 py-1 bg-accent-cyan/10 border border-accent-cyan/30 rounded-lg text-accent-cyan text-sm">
+              {selectedTradeHub.shortName} - {selectedTradeHub.regionName}
+            </span>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormSelect
               label="Time Horizon"
@@ -886,7 +1030,7 @@ Confidence: ${pred.confidence}%`;
         {!isLoading && (
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div className="text-text-secondary">
-              Found <span className="text-accent-cyan font-medium">{filteredPredictions.length}</span> predictions
+              Found <span className="text-accent-cyan font-medium">{filteredPredictions.length}</span> predictions in {selectedTradeHub.shortName}
               {filteredPredictions.length !== predictions.length && (
                 <span className="ml-2 text-text-secondary/70">
                   (filtered from {predictions.length} total)
