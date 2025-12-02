@@ -202,7 +202,7 @@ function MarketAnalysisTools({ activeTool, setActiveTool }) {
   return (
     <div>
       <BackButton onClick={() => setActiveTool(null)} />
-      <GlassmorphicCard className="p-6">
+      <GlassmorphicCard className="p-4 md:p-6">
         {activeTool === 'spread' && (
           <MarketSpreadAnalyzer
             highestBuy={95000000}
@@ -250,7 +250,7 @@ function TradingEfficiencyTools({ activeTool, setActiveTool }) {
       {activeTool === 'profit' ? (
         <ComprehensiveProfitCalculator />
       ) : (
-        <GlassmorphicCard className="p-6">
+        <GlassmorphicCard className="p-4 md:p-6">
           {activeTool === 'tax' && <TaxCalculator />}
           {activeTool === 'breakeven' && <BreakEvenCalculator />}
           {activeTool === 'pricing' && <OptimalPricing />}
@@ -289,7 +289,7 @@ function InventoryTools({ activeTool, setActiveTool }) {
   return (
     <div>
       <BackButton onClick={() => setActiveTool(null)} />
-      <GlassmorphicCard className="p-6">
+      <GlassmorphicCard className="p-4 md:p-6">
         {activeTool === 'alerts' && <StockAlertPanel inventory={sampleInventory} />}
         {activeTool === 'restock' && <RestockSuggestions inventory={sampleInventory} />}
         {activeTool === 'deadstock' && <DeadStockIdentifier inventory={sampleInventory} />}
@@ -319,7 +319,7 @@ function RoutingTools({ activeTool, setActiveTool }) {
   return (
     <div>
       <BackButton onClick={() => setActiveTool(null)} />
-      <GlassmorphicCard className="p-6">
+      <GlassmorphicCard className="p-4 md:p-6">
         {activeTool === 'multistop' && <MultiStopPlanner />}
         {activeTool === 'cargo' && <CargoOptimizer trades={[]} />}
         {activeTool === 'fuel' && <FuelCostCalculator />}
@@ -349,7 +349,7 @@ function AnalyticsTools({ activeTool, setActiveTool }) {
   return (
     <div>
       <BackButton onClick={() => setActiveTool(null)} />
-      <GlassmorphicCard className="p-6">
+      <GlassmorphicCard className="p-4 md:p-6">
         {activeTool === 'profit' && <ProfitPerHourCalculator />}
         {activeTool === 'seasonal' && <SeasonalTrends typeId={34} regionId={10000002} />}
         {activeTool === 'competition' && <CompetitionTracker />}
@@ -390,7 +390,7 @@ function ProductivityTools({ activeTool, setActiveTool }) {
   return (
     <div>
       <BackButton onClick={() => setActiveTool(null)} />
-      <GlassmorphicCard className="p-6">
+      <GlassmorphicCard className="p-4 md:p-6">
         {activeTool === 'copy' && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-text-primary">Quick Copy Demo</h3>
@@ -461,7 +461,7 @@ function IntegrationsTools({ activeTool, setActiveTool }) {
   return (
     <div>
       <BackButton onClick={() => setActiveTool(null)} />
-      <GlassmorphicCard className="p-6">
+      <GlassmorphicCard className="p-4 md:p-6">
         {activeTool === 'discord' && <DiscordWebhookPanel />}
         {activeTool === 'contracts' && <ContractFinder />}
         {activeTool === 'industry' && <IndustryCalculator />}

@@ -150,7 +150,7 @@ export function HelpPage() {
     <PageLayout title="Help & Documentation">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <GlassmorphicCard>
-          <article className="prose prose-invert dark:prose-invert max-w-none prose-headings:font-display prose-headings:text-accent-cyan prose-a:text-accent-cyan prose-strong:text-text-primary prose-code:text-accent-purple">
+          <article className="prose prose-invert dark:prose-invert max-w-none prose-headings:font-display prose-headings:text-accent-cyan prose-a:text-accent-cyan prose-strong:text-text-primary prose-code:text-accent-purple overflow-x-auto">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {helpContent}
             </ReactMarkdown>

@@ -43,7 +43,22 @@ export function QuickCopyButtonsExample() {
         </div>
       </GlassmorphicCard>
 
-      {/* Example 3: Custom Formats */}
+      {/* Example 3: With Multibuy Format */}
+      <GlassmorphicCard>
+        <h3 className="text-lg font-display text-accent-cyan mb-4">With Multibuy Format</h3>
+        <p className="text-text-secondary text-sm mb-3">
+          Enable the Multibuy format for EVE Online market integration
+        </p>
+        <QuickCopyButtons
+          itemName="PLEX"
+          price={3500000}
+          quantity={10}
+          enableMultibuy={true}
+          onCopy={handleCopy}
+        />
+      </GlassmorphicCard>
+
+      {/* Example 4: Custom Formats */}
       <GlassmorphicCard>
         <h3 className="text-lg font-display text-accent-cyan mb-4">Custom Formats</h3>
         <QuickCopyButtons
@@ -66,7 +81,7 @@ export function QuickCopyButtonsExample() {
         />
       </GlassmorphicCard>
 
-      {/* Example 4: Single Copy Button */}
+      {/* Example 5: Single Copy Button */}
       <GlassmorphicCard>
         <h3 className="text-lg font-display text-accent-cyan mb-4">Single Copy Button</h3>
         <div className="space-y-3">
@@ -91,7 +106,7 @@ export function QuickCopyButtonsExample() {
         </div>
       </GlassmorphicCard>
 
-      {/* Example 5: In Trading Table Row */}
+      {/* Example 6: In Trading Table Row */}
       <GlassmorphicCard>
         <h3 className="text-lg font-display text-accent-cyan mb-4">In Trading Table Row</h3>
         <div className="overflow-x-auto">

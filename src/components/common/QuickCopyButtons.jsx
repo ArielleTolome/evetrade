@@ -2,6 +2,20 @@ import { useState, useCallback } from 'react';
 import { formatISK, formatNumber } from '../../utils/formatters';
 
 /**
+ * Generate EVE Online Multibuy format
+ * Format: "Item Name quantity" (one per line)
+ * @param {Array<{name: string, quantity: number}>} items - Array of items
+ * @returns {string} Multibuy formatted string
+ */
+export function generateMultibuyFormat(items) {
+  if (!items || items.length === 0) return '';
+
+  return items
+    .map(item => `${item.name} ${item.quantity}`)
+    .join('\n');
+}
+
+/**
  * Quick Copy Buttons Component
  * Provides one-click copy functionality for trading data with visual feedback
  */
@@ -12,6 +26,7 @@ export function QuickCopyButtons({
   customFormats = [],
   onCopy,
   compact = false,
+  enableMultibuy = false,
 }) {
   const [copiedItem, setCopiedItem] = useState(null);
   const [showTooltip, setShowTooltip] = useState(null);
@@ -83,6 +98,20 @@ export function QuickCopyButtons({
       ),
     },
   ];
+
+  // Add Multibuy format if enabled
+  if (enableMultibuy) {
+    formats.push({
+      id: 'multibuy',
+      label: 'Multibuy',
+      getValue: () => generateMultibuyFormat([{ name: itemName, quantity: formatNumber(quantity, 0) }]),
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      ),
+    });
+  }
 
   // Add custom formats
   const allFormats = [...formats, ...customFormats];

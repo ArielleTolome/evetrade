@@ -1,5 +1,5 @@
-import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook, act, cleanup } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useClipboard } from './useClipboard';
 
 // Mock localStorage
@@ -42,7 +42,14 @@ describe('useClipboard', () => {
   });
 
   afterEach(() => {
-    vi.runOnlyPendingTimers();
+    // Cleanup any mounted components
+    cleanup();
+    // Only run pending timers if fake timers are active
+    try {
+      vi.runOnlyPendingTimers();
+    } catch {
+      // Ignore - timers are real
+    }
     vi.useRealTimers();
   });
 
@@ -183,20 +190,36 @@ describe('useClipboard', () => {
   });
 
   it('should preserve pinned items when clearing history', async () => {
+    // Clear localStorage to ensure clean state
+    localStorageMock.clear();
+    // Use real timers for this test since state updates need to propagate
+    vi.useRealTimers();
     const { result } = renderHook(() => useClipboard());
 
-    // Add items and pin one
+    // Add items one at a time and pin one
     await act(async () => {
       await result.current.copy('Pinned item');
+    });
+
+    await act(async () => {
       await result.current.copy('Regular item 1');
+    });
+
+    await act(async () => {
       await result.current.copy('Regular item 2');
     });
 
-    const pinnedId = result.current.history[2].id; // First added item
+    expect(result.current.history).toHaveLength(3);
+
+    // History order is newest first: ['Regular item 2', 'Regular item 1', 'Pinned item']
+    // So index 2 is 'Pinned item'
+    const pinnedId = result.current.history[2].id;
 
     await act(async () => {
       result.current.pinItem(pinnedId);
     });
+
+    expect(result.current.history[2].pinned).toBe(true);
 
     await act(async () => {
       result.current.clearHistory();
@@ -204,22 +227,38 @@ describe('useClipboard', () => {
 
     expect(result.current.history).toHaveLength(1);
     expect(result.current.history[0].pinned).toBe(true);
+    expect(result.current.history[0].text).toBe('Pinned item');
   });
 
   it('should remove item from history', async () => {
+    // Clear localStorage to ensure clean state
+    localStorageMock.clear();
+    // Use real timers for this test since state updates need to propagate
+    vi.useRealTimers();
     const { result } = renderHook(() => useClipboard());
 
     await act(async () => {
       await result.current.copy('Test text 1');
+    });
+
+    await act(async () => {
       await result.current.copy('Test text 2');
     });
 
-    const itemId = result.current.history[0].id;
+    expect(result.current.history).toHaveLength(2);
+    expect(result.current.history[0].text).toBe('Test text 2');
+    expect(result.current.history[1].text).toBe('Test text 1');
+
+    // History order is newest first: ['Test text 2', 'Test text 1']
+    // Remove 'Test text 2' (index 0), leaving 'Test text 1'
+    const itemToRemove = result.current.history[0];
+    expect(itemToRemove.text).toBe('Test text 2');
 
     await act(async () => {
-      result.current.removeFromHistory(itemId);
+      result.current.removeFromHistory(itemToRemove.id);
     });
 
+    // After removing 'Test text 2', only 'Test text 1' should remain
     expect(result.current.history).toHaveLength(1);
     expect(result.current.history[0].text).toBe('Test text 1');
   });

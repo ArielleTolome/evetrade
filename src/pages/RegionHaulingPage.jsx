@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
-import { TopRecommendations } from '../components/common/TopRecommendations';
-import { TradingStats } from '../components/common/TradingStats';
 import { ProfitDistribution } from '../components/common/ProfitDistribution';
 import { FormInput, FormSelect, RegionAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
@@ -851,17 +849,6 @@ Jumps: ${jumps}`;
                     <span className="sm:hidden">Save</span>
                   </button>
                 </div>
-
-                {/* Top Recommendations */}
-                <TopRecommendations
-                  data={filteredData}
-                  onItemClick={handleRowClick}
-                  maxItems={10}
-                  profitKey="Profit"
-                />
-
-                {/* Statistics Summary */}
-                <TradingStats data={filteredData} profitKey="Profit" />
 
                 {/* Profit Distribution */}
                 <ProfitDistribution data={filteredData} profitKey="Profit" className="mb-8" />

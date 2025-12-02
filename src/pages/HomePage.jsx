@@ -51,7 +51,7 @@ export function HomePage() {
             ✨ The Modern EVE Online Trading Tool
           </div>
 
-          <h1 className="font-display text-5xl sm:text-6xl md:text-8xl font-black mb-6 md:mb-8 px-2 tracking-tight leading-tight">
+          <h1 className="font-display text-4xl sm:text-6xl md:text-8xl font-black mb-6 md:mb-8 px-2 tracking-tight leading-tight">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-cyan via-white to-accent-purple animate-shimmer bg-[length:200%_100%]">EVE</span>
             <span className="text-text-primary">Trade</span>
           </h1>
@@ -124,7 +124,7 @@ export function HomePage() {
         </div>
 
         {/* Quick Stats / Features */}
-        <div className="mt-20 md:mt-32 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center animate-fade-in relative z-10 w-full max-w-6xl px-4" style={{ animationDelay: '400ms' }}>
+        <div className="mt-20 md:mt-32 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12 text-center animate-fade-in relative z-10 w-full max-w-6xl px-4" style={{ animationDelay: '400ms' }}>
           <div className="group cursor-default p-4 rounded-xl hover:bg-white/5 transition-colors">
             <div className="text-3xl sm:text-4xl font-display font-bold text-accent-cyan mb-2 group-hover:scale-110 transition-transform duration-300">100+</div>
             <div className="text-text-secondary text-sm font-medium uppercase tracking-wider">Regions</div>

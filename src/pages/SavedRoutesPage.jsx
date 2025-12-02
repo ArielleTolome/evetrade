@@ -266,7 +266,7 @@ export function SavedRoutesPage() {
         {/* Header Actions */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           {/* Filters */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {[
               { value: 'all', label: 'All Routes' },
               { value: 'station-trading', label: 'Station Trading' },

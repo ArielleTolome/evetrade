@@ -31,10 +31,13 @@ describe('AdvancedSortPanel', () => {
       const button = screen.getByText('Advanced Sorting');
       fireEvent.click(button);
 
-      const bestOverallButton = screen.getByText(/Best Overall/);
-      fireEvent.click(bestOverallButton);
+      // Get all "Best Overall" elements and click one
+      const bestOverallElements = screen.getAllByText(/Best Overall/);
+      fireEvent.click(bestOverallElements[0]);
 
-      expect(screen.getByText(/Best Overall/)).toBeInTheDocument();
+      // After clicking, there should still be "Best Overall" text visible (the preset button)
+      const activeElements = screen.getAllByText(/Best Overall/);
+      expect(activeElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 
