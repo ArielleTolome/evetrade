@@ -68,6 +68,9 @@ export function RegionHaulingPage() {
   // Toast state for copy feedback
   const [toastMessage, setToastMessage] = useState(null);
 
+  // Form error state
+  const [formError, setFormError] = useState(null);
+
   // Copy to clipboard helper
   const copyToClipboard = useCallback(async (text, message = 'Copied!') => {
     try {
@@ -188,27 +191,34 @@ Jumps: ${jumps}`;
         try {
           if (locationId >= 1000000000000) {
             const structure = await getStructureInfo(locationId, accessToken);
-            locationMap[locationId] = structure.name || `Structure ${locationId}`;
-            if (structure.solar_system_id) {
+            locationMap[locationId] = structure?.name || `Structure ${locationId}`;
+            if (structure?.solar_system_id) {
               // Map structure's solar system to region
-              const regionData = await getRegionFromSystem(structure.solar_system_id);
-              regionMap[locationId] = regionData?.regionName || null;
+              try {
+                const regionData = await getRegionFromSystem(structure.solar_system_id);
+                regionMap[locationId] = regionData?.regionName || 'Unknown Region';
+              } catch {
+                regionMap[locationId] = 'Unknown Region';
+              }
+            } else {
+              regionMap[locationId] = 'Unknown Region';
             }
           } else {
             const station = await getStationInfo(locationId);
-            locationMap[locationId] = station.name || `Station ${locationId}`;
-            if (station.system_id && universeList) {
+            locationMap[locationId] = station?.name || `Station ${locationId}`;
+            if (station?.system_id && universeList) {
               // Find region from universeList using station name
               const stationData = Object.values(universeList).find(
                 (s) => s.station === locationId
               );
-              if (stationData?.regionName) {
-                regionMap[locationId] = stationData.regionName;
-              }
+              regionMap[locationId] = stationData?.regionName || 'Unknown Region';
+            } else {
+              regionMap[locationId] = 'Unknown Region';
             }
           }
         } catch {
           locationMap[locationId] = `Location ${locationId}`;
+          regionMap[locationId] = 'Unknown Region';
         }
       }
 
@@ -237,9 +247,12 @@ Jumps: ${jumps}`;
     async (e) => {
       e.preventDefault();
 
+      // Clear any previous form errors
+      setFormError(null);
+
       const fromId = getRegionId(form.fromRegion);
       if (!fromId) {
-        alert('Please select a valid origin region');
+        setFormError('Please select a valid origin region');
         return;
       }
 
@@ -250,7 +263,7 @@ Jumps: ${jumps}`;
       } else {
         const toId = getRegionId(form.toRegion);
         if (!toId) {
-          alert('Please select a valid destination region');
+          setFormError('Please select a valid destination region');
           return;
         }
         toParam = `${form.toPreference}-${toId}`;
@@ -587,6 +600,13 @@ Jumps: ${jumps}`;
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Form Error Display */}
+            {formError && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm" role="alert">
+                {formError}
+              </div>
+            )}
+
             {/* Region Selection */}
             <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-4">

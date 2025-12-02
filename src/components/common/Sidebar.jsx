@@ -101,7 +101,9 @@ export function Sidebar({ isCollapsed, onToggle }) {
         </Link>
         <button
           onClick={onToggle}
-          className="p-2 rounded-lg text-text-secondary hover:text-accent-cyan hover:bg-white/5 transition-colors"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!isCollapsed}
+          className="p-2 rounded-lg text-text-secondary hover:text-accent-cyan hover:bg-white/5 transition-colors focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none"
         >
           <svg className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
@@ -131,6 +133,7 @@ export function Sidebar({ isCollapsed, onToggle }) {
                     <Link
                       to={item.path}
                       title={isCollapsed ? item.label : undefined}
+                      aria-current={isActive ? "page" : undefined}
                       className={`
                         flex items-center gap-3 px-3 py-2.5 rounded-xl
                         transition-all duration-200
@@ -139,6 +142,7 @@ export function Sidebar({ isCollapsed, onToggle }) {
                           ? 'bg-accent-cyan/15 text-accent-cyan shadow-[0_0_20px_rgba(0,212,255,0.1)]'
                           : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                         }
+                        focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none
                       `}
                     >
                       <NavIcon path={item.icon} className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-accent-cyan' : ''}`} />
@@ -205,7 +209,8 @@ export function MobileNav() {
               </Link>
               <button
                 onClick={() => setShowMenu(false)}
-                className="p-3 rounded-xl text-text-secondary hover:text-accent-cyan active:bg-accent-cyan/10 transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
+                aria-label="Close menu"
+                className="p-3 rounded-xl text-text-secondary hover:text-accent-cyan active:bg-accent-cyan/10 transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -233,6 +238,7 @@ export function MobileNav() {
                           <Link
                             to={item.path}
                             onClick={() => setShowMenu(false)}
+                            aria-current={isActive ? "page" : undefined}
                             className={`
                               flex items-center gap-3 px-4 py-3.5 rounded-xl min-h-[52px]
                               transition-all duration-200 active:scale-[0.98]
@@ -240,6 +246,7 @@ export function MobileNav() {
                                 ? 'bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/20 shadow-lg shadow-accent-cyan/5'
                                 : 'text-text-secondary active:bg-white/10'
                               }
+                              focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none
                             `}
                           >
                             <NavIcon path={item.icon} className={`w-5 h-5 ${isActive ? 'text-accent-cyan' : ''}`} />
@@ -277,7 +284,8 @@ export function MobileNav() {
                 <button
                   key={item.path}
                   onClick={() => setShowMenu(true)}
-                  className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] px-2 py-1.5 rounded-xl text-text-secondary active:bg-white/10 transition-colors"
+                  aria-label="Open menu"
+                  className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] px-2 py-1.5 rounded-xl text-text-secondary active:bg-white/10 transition-colors focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none"
                 >
                   <NavIcon path={item.icon} className="w-6 h-6" />
                   <span className="text-[10px] font-medium">{item.label}</span>
@@ -289,6 +297,7 @@ export function MobileNav() {
               <Link
                 key={item.path}
                 to={item.path}
+                aria-current={isActive ? "page" : undefined}
                 className={`
                   flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] px-2 py-1.5 rounded-xl
                   transition-all duration-200 active:scale-95
@@ -296,6 +305,7 @@ export function MobileNav() {
                     ? 'text-accent-cyan bg-accent-cyan/10'
                     : 'text-text-secondary active:bg-white/10'
                   }
+                  focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none
                 `}
               >
                 <div className={`relative ${isActive ? 'animate-pulse' : ''}`}>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
@@ -112,8 +112,14 @@ export function OrdersPage() {
 
         // Fetch user's orders
         const orders = await getCharacterOrders(character.id, accessToken);
-        const itemOrders = orders.filter(order => order.type_id === parseInt(itemId));
-        setUserOrders(itemOrders);
+        const parsedItemId = parseInt(itemId, 10);
+        if (isNaN(parsedItemId)) {
+          console.warn('Invalid itemId for order filtering:', itemId);
+          setUserOrders([]);
+        } else {
+          const itemOrders = orders.filter(order => order.type_id === parsedItemId);
+          setUserOrders(itemOrders);
+        }
 
         // Fetch user's assets for this item
         let allAssets = [];
@@ -130,8 +136,13 @@ export function OrdersPage() {
           }
         }
 
-        const itemAssets = allAssets.filter(asset => asset.type_id === parseInt(itemId));
-        setUserAssets(itemAssets);
+        const assetItemId = parseInt(itemId, 10);
+        if (isNaN(assetItemId)) {
+          setUserAssets([]);
+        } else {
+          const itemAssets = allAssets.filter(asset => asset.type_id === assetItemId);
+          setUserAssets(itemAssets);
+        }
       } catch (err) {
         console.error('Error fetching user data:', err);
       } finally {
@@ -169,13 +180,18 @@ export function OrdersPage() {
   }, [userOrders, userAssets]);
 
   // Helper to check if an order belongs to the user
-  const isUserOrder = (orderPrice, isBuyOrder) => {
+  const isUserOrder = useCallback((orderPrice, isBuyOrder) => {
+    if (!userOrders || !Array.isArray(userOrders) || userOrders.length === 0) {
+      return false;
+    }
     return userOrders.some(userOrder =>
+      userOrder &&
+      typeof userOrder.price === 'number' &&
       Math.abs(userOrder.price - orderPrice) < 0.01 &&
       userOrder.is_buy_order === isBuyOrder &&
       !userOrder.is_closed
     );
-  };
+  }, [userOrders]);
 
   // Check if same station
   const isSameStation = from === to;
@@ -284,9 +300,10 @@ export function OrdersPage() {
                         .slice(0, 20)
                         .map((order, i) => {
                           const isOwned = isAuthenticated && isUserOrder(order.price, true);
+                          const orderKey = `buy-${order.price}-${order.location_id || i}-${order.quantity || i}`;
                           return (
                             <tr
-                              key={i}
+                              key={orderKey}
                               className={`border-b border-accent-cyan/10 ${isOwned ? 'bg-accent-gold/20' : ''}`}
                             >
                               <td className="py-2 font-mono text-green-400">
@@ -337,9 +354,10 @@ export function OrdersPage() {
                         .slice(0, 20)
                         .map((order, i) => {
                           const isOwned = isAuthenticated && isUserOrder(order.price, false);
+                          const orderKey = `sell-${order.price}-${order.location_id || i}-${order.quantity || i}`;
                           return (
                             <tr
-                              key={i}
+                              key={orderKey}
                               className={`border-b border-accent-cyan/10 ${isOwned ? 'bg-accent-gold/20' : ''}`}
                             >
                               <td className="py-2 font-mono text-red-400">

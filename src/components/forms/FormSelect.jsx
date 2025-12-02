@@ -23,6 +23,8 @@ export const FormSelect = forwardRef(function FormSelect(
   ref
 ) {
   const selectId = id || name;
+  const errorId = `${selectId}-error`;
+  const helperId = `${selectId}-helper`;
 
   const handleChange = (e) => {
     onChange?.(e.target.value);
@@ -49,6 +51,8 @@ export const FormSelect = forwardRef(function FormSelect(
           onChange={handleChange}
           disabled={disabled}
           required={required}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : helper ? helperId : undefined}
           className={`
             w-full px-3 sm:px-4 py-3 rounded-lg appearance-none
             bg-space-dark/50 dark:bg-space-dark/50 bg-white
@@ -98,11 +102,11 @@ export const FormSelect = forwardRef(function FormSelect(
       </div>
 
       {error && (
-        <p className="text-sm text-red-400">{error}</p>
+        <p id={errorId} role="alert" className="text-sm text-red-400">{error}</p>
       )}
 
       {helper && !error && (
-        <p className="text-sm text-text-secondary/70">{helper}</p>
+        <p id={helperId} className="text-sm text-text-secondary/70">{helper}</p>
       )}
     </div>
   );

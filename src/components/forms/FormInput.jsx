@@ -28,6 +28,8 @@ export const FormInput = forwardRef(function FormInput(
   ref
 ) {
   const inputId = id || name;
+  const errorId = `${inputId}-error`;
+  const helperId = `${inputId}-helper`;
 
   const handleChange = (e) => {
     const newValue = type === 'number'
@@ -68,6 +70,8 @@ export const FormInput = forwardRef(function FormInput(
           min={min}
           max={max}
           step={step}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : helper ? helperId : undefined}
           className={`
             w-full px-3 sm:px-4 py-3 rounded-lg
             bg-space-dark/50 dark:bg-space-dark/50 bg-white
@@ -93,11 +97,11 @@ export const FormInput = forwardRef(function FormInput(
       </div>
 
       {error && (
-        <p className="text-sm text-red-400">{error}</p>
+        <p id={errorId} role="alert" className="text-sm text-red-400">{error}</p>
       )}
 
       {helper && !error && (
-        <p className="text-sm text-text-secondary/70">{helper}</p>
+        <p id={helperId} className="text-sm text-text-secondary/70">{helper}</p>
       )}
     </div>
   );

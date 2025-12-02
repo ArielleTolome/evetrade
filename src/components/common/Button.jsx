@@ -25,7 +25,7 @@ export function Button({
     font-display font-medium tracking-wide
     transition-all duration-300
     disabled:opacity-50 disabled:cursor-not-allowed
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-space-black
+    focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-black
     active:scale-95
   `;
 
@@ -60,8 +60,8 @@ export function Button({
 
     // Size classes - ensuring min-height for touch targets on mobile
     const sizes = {
-        sm: 'text-xs px-3 py-2 rounded-md gap-1.5 min-h-[36px] sm:min-h-[32px]',
-        md: 'text-sm px-4 sm:px-5 py-2.5 rounded-lg gap-2 min-h-[44px]',
+        sm: 'text-xs px-3 py-2 rounded-md gap-1.5 min-h-[44px] sm:min-h-[36px]',
+        md: 'text-sm px-4 sm:px-5 py-2.5 rounded-lg gap-2 min-h-[44px] sm:min-h-[40px]',
         lg: 'text-base px-6 sm:px-8 py-3 sm:py-4 rounded-xl gap-3 min-h-[48px]',
     };
 

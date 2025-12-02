@@ -71,6 +71,9 @@ export function StationHaulingPage() {
   // Toast state for copy feedback
   const [toastMessage, setToastMessage] = useState(null);
 
+  // Form error state
+  const [formError, setFormError] = useState(null);
+
   // Copy to clipboard helper
   const copyToClipboard = useCallback(async (text, message = 'Copied!') => {
     try {
@@ -234,11 +237,14 @@ ROI: ${formatPercent(roi / 100, 1)}`;
     async (e) => {
       e.preventDefault();
 
+      // Clear any previous errors
+      setFormError(null);
+
       const fromLocation = buildLocationString(form.fromStations, form.fromPreference);
       const toLocation = buildLocationString(form.toStations, form.toPreference);
 
       if (!fromLocation || !toLocation) {
-        alert('Please select at least one station for both origin and destination');
+        setFormError('Please select at least one station for both origin and destination');
         return;
       }
 
@@ -557,6 +563,13 @@ ROI: ${formatPercent(roi / 100, 1)}`;
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Form Error Message */}
+            {formError && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm" role="alert">
+                {formError}
+              </div>
+            )}
+
             {/* Quick Route Presets */}
             <TradeRoutePresets
               fromStation={form.fromStations[0]}
