@@ -378,6 +378,10 @@ export function LongTermTradingPage() {
   const [priceHistory, setPriceHistory] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Expandable row state - cache price history for each item
+  const [expandedItemHistory, setExpandedItemHistory] = useState({});
+  const [expandedItemLoading, setExpandedItemLoading] = useState({});
+
   // Form state
   const [timeHorizon, setTimeHorizon] = useState(90); // 3 months default
   const [minInvestment, setMinInvestment] = useState(1000000); // 1M ISK
@@ -509,7 +513,113 @@ Confidence: ${pred.confidence}%`;
   // Handle row click - navigate to price comparison
   const handleRowClick = useCallback((pred) => {
     // In a real app, you'd navigate to a detailed view
-    setToastMessage(`Viewing details for ${pred.itemName}`);
+    copyPrediction(pred);
+  }, [copyPrediction]);
+
+  // Fetch price history for an expanded row
+  const fetchExpandedItemHistory = useCallback(async (itemId) => {
+    if (expandedItemHistory[itemId] || expandedItemLoading[itemId]) return;
+
+    setExpandedItemLoading(prev => ({ ...prev, [itemId]: true }));
+    try {
+      const history = await getMarketHistory(selectedTradeHub.regionId, itemId);
+      setExpandedItemHistory(prev => ({ ...prev, [itemId]: history }));
+    } catch (err) {
+      console.error(`Failed to fetch history for item ${itemId}:`, err);
+      setExpandedItemHistory(prev => ({ ...prev, [itemId]: [] }));
+    } finally {
+      setExpandedItemLoading(prev => ({ ...prev, [itemId]: false }));
+    }
+  }, [selectedTradeHub.regionId, expandedItemHistory, expandedItemLoading]);
+
+  // Calculate prediction from historical data with multi-month projections
+  const calculatePredictionFromHistory = useCallback((history, months = 3) => {
+    if (!history || history.length < 30) return null;
+
+    // Sort by date ascending
+    const sorted = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const totalDays = sorted.length;
+
+    // Use all available data (up to 12 months / 365 days from ESI)
+    const recent = sorted.slice(-90); // Last 90 days for current trends
+    const midterm = sorted.slice(-180, -90); // 90-180 days ago
+    const longterm = sorted.slice(-365, -180); // 180-365 days ago (if available)
+
+    if (recent.length < 30) return null;
+
+    // Calculate weighted averages (more recent = more weight)
+    const recentAvg = recent.reduce((sum, d) => sum + d.average, 0) / recent.length;
+    const midtermAvg = midterm.length > 0 ? midterm.reduce((sum, d) => sum + d.average, 0) / midterm.length : recentAvg;
+    const longtermAvg = longterm.length > 0 ? longterm.reduce((sum, d) => sum + d.average, 0) / longterm.length : midtermAvg;
+
+    // Calculate multiple trend indicators
+    const shortTermTrend = midterm.length > 0 ? ((recentAvg - midtermAvg) / midtermAvg) / 3 : 0; // 3-month trend
+    const longTermTrend = longterm.length > 0 ? ((recentAvg - longtermAvg) / longtermAvg) / 6 : shortTermTrend; // 6-month trend
+
+    // Weighted trend (short-term has more weight for near-future predictions)
+    const weightedTrend = months <= 2
+      ? shortTermTrend * 0.7 + longTermTrend * 0.3
+      : shortTermTrend * 0.5 + longTermTrend * 0.5;
+
+    // Current price (average of last 7 days for stability)
+    const last7Days = recent.slice(-7);
+    const currentPrice = last7Days.reduce((sum, d) => sum + d.average, 0) / last7Days.length;
+
+    // Calculate volatility from recent period
+    const prices = recent.map(d => d.average);
+    const mean = prices.reduce((a, b) => a + b, 0) / prices.length;
+    const variance = prices.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / prices.length;
+    const volatility = Math.sqrt(variance) / mean;
+
+    // Volume analysis
+    const recentVolume = recent.slice(-30).reduce((sum, d) => sum + d.volume, 0) / 30;
+    const olderVolume = recent.slice(0, 30).reduce((sum, d) => sum + d.volume, 0) / 30;
+    const volumeChange = olderVolume > 0 ? ((recentVolume - olderVolume) / olderVolume) : 0;
+
+    // Generate predictions for multiple future months
+    const predictions = [];
+    for (let m = 1; m <= Math.max(months, 3); m++) {
+      // Apply trend with diminishing confidence for longer periods
+      const trendMultiplier = 1 + weightedTrend * m;
+      const volatilityFactor = 1 + (volatility * 0.5 * m); // Price may deviate more over time
+      const predictedPrice = currentPrice * trendMultiplier;
+
+      // Confidence decreases for longer predictions
+      const baseConfidence = Math.max(30, Math.min(85, 75 - volatility * 100));
+      const timeDecay = Math.pow(0.9, m - 1); // 10% confidence decay per month
+      const dataBonus = totalDays > 180 ? 10 : totalDays > 90 ? 5 : 0; // Bonus for more data
+
+      predictions.push({
+        month: m,
+        price: predictedPrice,
+        roi: ((predictedPrice - currentPrice) / currentPrice) * 100,
+        confidence: Math.round(baseConfidence * timeDecay + dataBonus),
+        volatilityRange: {
+          low: predictedPrice * (1 - volatility * m * 0.5),
+          high: predictedPrice * (1 + volatility * m * 0.5),
+        },
+      });
+    }
+
+    // Main prediction for the requested time horizon
+    const mainPrediction = predictions.find(p => p.month === Math.round(months)) || predictions[predictions.length - 1];
+
+    return {
+      currentPrice,
+      predictedPrice: mainPrediction.price,
+      priceChange: mainPrediction.price - currentPrice,
+      roi: mainPrediction.roi,
+      monthlyTrend: weightedTrend * 100,
+      shortTermTrend: shortTermTrend * 100,
+      longTermTrend: longTermTrend * 100,
+      volatility: volatility * 100,
+      volumeTrend: volumeChange > 0.1 ? 'up' : volumeChange < -0.1 ? 'down' : 'stable',
+      volumeChange: volumeChange * 100,
+      confidence: mainPrediction.confidence,
+      dataPoints: totalDays,
+      futurePredictions: predictions,
+      volatilityRange: mainPrediction.volatilityRange,
+    };
   }, []);
 
   // Table columns
@@ -1148,6 +1258,249 @@ Confidence: ${pred.confidence}%`;
               onRowClick={handleRowClick}
               defaultSort={{ column: 'roi', direction: 'desc' }}
               emptyMessage="No predictions found"
+              expandableRowContent={(row) => {
+                const itemId = row.itemId;
+                const history = expandedItemHistory[itemId];
+                const isLoading = expandedItemLoading[itemId];
+
+                // Trigger data fetch when row expands
+                if (!history && !isLoading) {
+                  fetchExpandedItemHistory(itemId);
+                }
+
+                // Calculate real predictions from history
+                const realPrediction = history && history.length > 30
+                  ? calculatePredictionFromHistory(history, timeHorizon / 30)
+                  : null;
+
+                return (
+                  <div className="py-4 space-y-4">
+                    {/* Loading state */}
+                    {isLoading && (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-6 h-6 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+                        <span className="ml-3 text-text-secondary">Loading price history...</span>
+                      </div>
+                    )}
+
+                    {/* No data state */}
+                    {!isLoading && history && history.length === 0 && (
+                      <div className="text-center py-6 text-text-secondary">
+                        No market history available for this item
+                      </div>
+                    )}
+
+                    {/* Chart and predictions */}
+                    {!isLoading && history && history.length > 0 && (
+                      <>
+                        {/* Price Chart */}
+                        <MarketHistoryChart
+                          historyData={history}
+                          title={`${row.itemName} - ${selectedTradeHub.shortName} (${history.length} days)`}
+                          width={Math.min(900, typeof window !== 'undefined' ? window.innerWidth - 120 : 800)}
+                          height={300}
+                          className="border-none bg-transparent p-0"
+                        />
+
+                        {/* Prediction Summary - Real Data vs Generated */}
+                        {realPrediction && (
+                          <div className="space-y-4 mt-4">
+                            {/* Multi-Month Predictions */}
+                            {realPrediction.futurePredictions && realPrediction.futurePredictions.length > 0 && (
+                              <div className="p-4 bg-space-dark/30 border border-accent-cyan/20 rounded-lg">
+                                <h4 className="text-sm font-semibold text-accent-cyan mb-3 flex items-center gap-2">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                  </svg>
+                                  Future Price Predictions (Based on {realPrediction.dataPoints} days of history)
+                                </h4>
+                                <div className="grid grid-cols-3 gap-3">
+                                  {realPrediction.futurePredictions.slice(0, 3).map((pred) => (
+                                    <div
+                                      key={pred.month}
+                                      className={`p-3 rounded-lg border ${
+                                        pred.month === Math.round(timeHorizon / 30)
+                                          ? 'bg-accent-cyan/10 border-accent-cyan/40'
+                                          : 'bg-space-dark/50 border-white/10'
+                                      }`}
+                                    >
+                                      <div className="text-xs text-text-secondary mb-1">
+                                        {pred.month} Month{pred.month > 1 ? 's' : ''}
+                                        {pred.month === Math.round(timeHorizon / 30) && (
+                                          <span className="ml-1 text-accent-cyan">(Selected)</span>
+                                        )}
+                                      </div>
+                                      <div className={`text-lg font-mono font-bold ${pred.roi > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {pred.roi > 0 ? '+' : ''}{pred.roi.toFixed(1)}%
+                                      </div>
+                                      <div className="text-sm text-text-primary font-mono">
+                                        {formatISK(pred.price, false)}
+                                      </div>
+                                      <div className="mt-2 text-xs text-text-secondary">
+                                        <div className="flex justify-between">
+                                          <span>Range:</span>
+                                          <span className="font-mono">
+                                            {formatCompact(pred.volatilityRange.low)} - {formatCompact(pred.volatilityRange.high)}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between mt-1">
+                                          <span>Confidence:</span>
+                                          <span className={`font-mono ${
+                                            pred.confidence >= 70 ? 'text-green-400' :
+                                            pred.confidence >= 50 ? 'text-yellow-400' : 'text-red-400'
+                                          }`}>
+                                            {pred.confidence}%
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Trend Analysis */}
+                              <div className="p-4 bg-accent-cyan/5 border border-accent-cyan/20 rounded-lg">
+                                <h4 className="text-sm font-semibold text-accent-cyan mb-3 flex items-center gap-2">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                  </svg>
+                                  Trend Analysis
+                                </h4>
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                  <div>
+                                    <div className="text-text-secondary text-xs">Current Price</div>
+                                    <div className="text-text-primary font-mono">{formatISK(realPrediction.currentPrice, false)}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-text-secondary text-xs">Short-term Trend (3mo)</div>
+                                    <div className={`font-mono ${realPrediction.shortTermTrend > 0 ? 'text-green-400' : realPrediction.shortTermTrend < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
+                                      {realPrediction.shortTermTrend > 0 ? '+' : ''}{realPrediction.shortTermTrend.toFixed(2)}%/mo
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-text-secondary text-xs">Long-term Trend (6mo)</div>
+                                    <div className={`font-mono ${realPrediction.longTermTrend > 0 ? 'text-green-400' : realPrediction.longTermTrend < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
+                                      {realPrediction.longTermTrend > 0 ? '+' : ''}{realPrediction.longTermTrend.toFixed(2)}%/mo
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-text-secondary text-xs">Volatility</div>
+                                    <div className="text-purple-400 font-mono">{realPrediction.volatility.toFixed(1)}%</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-text-secondary text-xs">Volume Trend</div>
+                                    <div className={`font-mono ${
+                                      realPrediction.volumeTrend === 'up' ? 'text-green-400' :
+                                      realPrediction.volumeTrend === 'down' ? 'text-red-400' : 'text-yellow-400'
+                                    }`}>
+                                      {realPrediction.volumeTrend === 'up' ? '↑ Rising' :
+                                       realPrediction.volumeTrend === 'down' ? '↓ Falling' : '→ Stable'}
+                                      {realPrediction.volumeChange !== undefined && (
+                                        <span className="text-xs ml-1">({realPrediction.volumeChange > 0 ? '+' : ''}{realPrediction.volumeChange.toFixed(0)}%)</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-text-secondary text-xs">Data Quality</div>
+                                    <div className="text-text-primary font-mono">
+                                      {realPrediction.dataPoints} days
+                                      <span className={`ml-1 text-xs ${realPrediction.dataPoints > 180 ? 'text-green-400' : realPrediction.dataPoints > 90 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                        ({realPrediction.dataPoints > 180 ? 'Excellent' : realPrediction.dataPoints > 90 ? 'Good' : 'Limited'})
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-accent-cyan/10">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="text-text-secondary">Overall Confidence</span>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-24 h-1.5 bg-space-dark rounded-full overflow-hidden">
+                                        <div
+                                          className={`h-full rounded-full ${
+                                            realPrediction.confidence >= 70 ? 'bg-green-400' :
+                                            realPrediction.confidence >= 50 ? 'bg-yellow-400' : 'bg-red-400'
+                                          }`}
+                                          style={{ width: `${realPrediction.confidence}%` }}
+                                        />
+                                      </div>
+                                      <span className="text-text-primary font-mono">{Math.round(realPrediction.confidence)}%</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Investment Projection */}
+                              <div className="p-4 bg-accent-gold/5 border border-accent-gold/20 rounded-lg">
+                                <h4 className="text-sm font-semibold text-accent-gold mb-3 flex items-center gap-2">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Investment Projection (100M ISK)
+                                </h4>
+                                {(() => {
+                                  const investment = 100000000; // 100M ISK
+                                  const quantity = Math.floor(investment / realPrediction.currentPrice);
+                                  const totalCost = quantity * realPrediction.currentPrice;
+                                  const predictedValue = quantity * realPrediction.predictedPrice;
+                                  const profit = predictedValue - totalCost;
+                                  const lowValue = realPrediction.volatilityRange ? quantity * realPrediction.volatilityRange.low : predictedValue * 0.9;
+                                  const highValue = realPrediction.volatilityRange ? quantity * realPrediction.volatilityRange.high : predictedValue * 1.1;
+                                  return (
+                                    <div className="space-y-2 text-sm">
+                                      <div className="flex justify-between">
+                                        <span className="text-text-secondary">Units to Buy</span>
+                                        <span className="text-text-primary font-mono">{formatNumber(quantity, 0)}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-text-secondary">Total Cost</span>
+                                        <span className="text-text-primary font-mono">{formatISK(totalCost, false)}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-text-secondary">Predicted Value</span>
+                                        <span className={`font-mono ${profit > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                          {formatISK(predictedValue, false)}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-text-secondary">Value Range</span>
+                                        <span className="font-mono text-text-secondary">
+                                          {formatCompact(lowValue)} - {formatCompact(highValue)}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between pt-2 border-t border-accent-gold/20">
+                                        <span className="text-text-secondary font-medium">Expected Profit</span>
+                                        <span className={`font-mono font-bold ${profit > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                          {profit > 0 ? '+' : ''}{formatISK(profit, false)}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-text-secondary">Profit Range</span>
+                                        <span className="font-mono text-text-secondary">
+                                          {formatCompact(lowValue - totalCost)} to {formatCompact(highValue - totalCost)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Data disclaimer */}
+                        <div className="text-xs text-text-secondary/70 mt-2 flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Based on {history.length} days of market history from {selectedTradeHub.shortName}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              }}
             />
           </>
         )}

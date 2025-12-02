@@ -224,14 +224,14 @@ export function QuickTradeCalculator({
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-text-secondary">Buy @ {formatNumber(quantity, 0)} units:</span>
-                    <span className="font-mono text-text-primary">
+                    <span className="text-text-secondary">Lowest Sell (buy at):</span>
+                    <span className="font-mono text-red-400">
                       {formatISK(buyPrice)} ea
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-text-secondary">Sell @ {formatNumber(quantity, 0)} units:</span>
-                    <span className="font-mono text-text-primary">
+                    <span className="text-text-secondary">Highest Buy (sell to):</span>
+                    <span className="font-mono text-green-400">
                       {formatISK(sellPrice)} ea
                     </span>
                   </div>
@@ -244,8 +244,8 @@ export function QuickTradeCalculator({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div className="text-xs text-text-secondary">
-                  This calculator assumes you buy at the lowest sell order and sell at the highest buy order.
-                  Actual profits may vary based on order execution and market conditions.
+                  <strong>Station Trading:</strong> Place a buy order just above the highest buy order, wait for it to fill, then place a sell order just below the lowest sell order.
+                  Margin = (Lowest Sell - Highest Buy) / Lowest Sell.
                 </div>
               </div>
             </div>

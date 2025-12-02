@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as Sentry from '@sentry/react';
 import { getApiEndpoint, RESOURCE_ENDPOINT } from '../utils/constants';
 import { isSupabaseConfigured, fetchFromSupabase } from '../lib/supabase';
 
@@ -96,6 +97,16 @@ apiClient.interceptors.response.use(
       return apiClient(config);
     }
 
+    // Report non-cancelled errors to Sentry
+    Sentry.withScope((scope) => {
+      scope.setTag('errorType', 'apiError');
+      scope.setExtra('url', config?.url);
+      scope.setExtra('method', config?.method);
+      scope.setExtra('status', status);
+      scope.setExtra('retryCount', config?._retryCount || 0);
+      Sentry.captureException(error);
+    });
+
     return Promise.reject(error);
   }
 );
@@ -146,6 +157,15 @@ export async function fetchResource(filename) {
     return response.data;
   } catch (error) {
     console.error(`Failed to fetch resource: ${filename}`, error);
+
+    // Report resource loading failures to Sentry
+    Sentry.withScope((scope) => {
+      scope.setTag('errorType', 'resourceLoading');
+      scope.setExtra('filename', filename);
+      scope.setExtra('source', 's3Fallback');
+      Sentry.captureException(error);
+    });
+
     throw error;
   }
 }

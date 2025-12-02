@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import * as Sentry from '@sentry/react';
 
 /**
  * Generic API call hook with request cancellation support
@@ -51,6 +52,14 @@ export function useApiCall(apiFunction) {
           console.log('Request cancelled');
           return null;
         }
+
+        // Report API errors to Sentry
+        Sentry.withScope((scope) => {
+          scope.setTag('errorType', 'useApiCall');
+          scope.setExtra('apiFunction', apiFunction.name || 'anonymous');
+          scope.setExtra('params', params);
+          Sentry.captureException(err);
+        });
 
         const errorMessage = err.message || 'An error occurred';
         if (!abortController.signal.aborted) {

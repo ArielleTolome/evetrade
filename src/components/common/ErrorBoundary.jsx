@@ -1,9 +1,11 @@
 import { Component } from 'react';
+import * as Sentry from '@sentry/react';
 import { GlassmorphicCard } from './GlassmorphicCard';
 
 /**
  * Error Boundary Component
  * Catches React errors in child components and displays a fallback UI
+ * Reports errors to Sentry for monitoring
  */
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -23,6 +25,14 @@ export class ErrorBoundary extends Component {
   componentDidCatch(error, errorInfo) {
     // Log error details for debugging
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // Report to Sentry with additional context
+    Sentry.withScope((scope) => {
+      scope.setTag('errorBoundary', this.props.name || 'unknown');
+      scope.setExtra('componentStack', errorInfo.componentStack);
+      Sentry.captureException(error);
+    });
+
     this.setState({
       error,
       errorInfo,
@@ -133,6 +143,18 @@ export class ErrorBoundary extends Component {
  * Specific fallback UI for resource loading errors
  */
 export function ResourceErrorFallback({ error, resetError, loadingProgress }) {
+  // Report resource loading errors to Sentry
+  if (error) {
+    Sentry.withScope((scope) => {
+      scope.setTag('errorType', 'resourceLoading');
+      if (loadingProgress) {
+        scope.setExtra('loadedResources', loadingProgress.current);
+        scope.setExtra('totalResources', loadingProgress.total);
+      }
+      Sentry.captureException(error);
+    });
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-space-black via-space-dark to-space-black">
       <GlassmorphicCard className="max-w-2xl w-full">

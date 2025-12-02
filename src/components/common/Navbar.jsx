@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../store/ThemeContext';
+import { useEveAuth } from '../../hooks/useEveAuth';
 
 const navItems = [
   { path: '/', label: 'Home', icon: '🏠' },
@@ -42,6 +43,265 @@ function ThemeToggle() {
         </svg>
       )}
     </button>
+  );
+}
+
+/**
+ * User Menu Component - Login/Logout and Character Switcher
+ */
+function UserMenu() {
+  const { isAuthenticated, character, login, logout, loading, error } = useEveAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Generate portrait URL from character ID
+  const getPortraitUrl = (characterId, size = 64) => {
+    return `https://images.evetech.net/characters/${characterId}/portrait?size=${size}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="w-8 h-8 rounded-full bg-space-dark/50 animate-pulse" />
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <button
+        onClick={login}
+        className="flex items-center gap-2 px-3 py-2 bg-accent-cyan/20 hover:bg-accent-cyan/30 text-accent-cyan text-sm font-medium rounded-lg transition-colors border border-accent-cyan/30"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <span className="hidden sm:inline">Login with EVE</span>
+        <span className="sm:hidden">Login</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-2 py-1.5 bg-space-dark/50 hover:bg-space-dark/70 rounded-lg transition-colors border border-accent-cyan/20"
+      >
+        {character?.id ? (
+          <img
+            src={getPortraitUrl(character.id, 64)}
+            alt={character.name}
+            className="w-7 h-7 rounded-full border border-accent-cyan/30"
+          />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-accent-cyan/20 flex items-center justify-center">
+            <svg className="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+        )}
+        <span className="hidden sm:block text-sm text-text-primary max-w-[100px] truncate">
+          {character?.name || 'Character'}
+        </span>
+        <svg className={`w-4 h-4 text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-64 bg-space-dark border border-accent-cyan/20 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
+          {/* Character Info */}
+          <div className="p-4 border-b border-accent-cyan/10">
+            <div className="flex items-center gap-3">
+              {character?.id && (
+                <img
+                  src={getPortraitUrl(character.id, 128)}
+                  alt={character.name}
+                  className="w-12 h-12 rounded-full border-2 border-accent-cyan/30"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-text-primary font-medium truncate">{character?.name}</div>
+                <div className="text-xs text-text-secondary">Logged in via EVE SSO</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Menu Items */}
+          <div className="p-2">
+            <button
+              onClick={() => {
+                login();
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm text-text-secondary hover:text-text-primary hover:bg-accent-cyan/10 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              Add Another Character
+            </button>
+
+            <Link
+              to="/portfolio"
+              onClick={() => setIsOpen(false)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm text-text-secondary hover:text-text-primary hover:bg-accent-cyan/10 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Portfolio & Wallet
+            </Link>
+
+            <div className="my-2 border-t border-accent-cyan/10" />
+
+            <button
+              onClick={() => {
+                logout();
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Log Out
+            </button>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="p-3 bg-red-500/10 border-t border-red-500/20 text-xs text-red-400">
+              {error}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Mobile Menu Component with Login
+ */
+function MobileMenu({ menuRef, isMobileMenuOpen, location, handleMenuClose }) {
+  const { isAuthenticated, character, login, logout } = useEveAuth();
+
+  const getPortraitUrl = (characterId, size = 64) => {
+    return `https://images.evetech.net/characters/${characterId}/portrait?size=${size}`;
+  };
+
+  return (
+    <div
+      id="mobile-menu"
+      ref={menuRef}
+      className={`
+        md:hidden fixed inset-x-0 top-16 bottom-0 bg-space-dark/95 backdrop-blur-xl z-50
+        overflow-y-auto overscroll-contain
+        transition-all duration-300 ease-in-out origin-top
+        ${isMobileMenuOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}
+      `}
+      aria-hidden={!isMobileMenuOpen}
+    >
+      <div className="px-3 py-4 space-y-1 pb-safe">
+        {/* User Section at Top */}
+        <div className="mb-4 pb-4 border-b border-accent-cyan/10">
+          {isAuthenticated ? (
+            <div className="px-4 py-3 bg-space-dark/50 rounded-xl border border-accent-cyan/20">
+              <div className="flex items-center gap-3">
+                {character?.id ? (
+                  <img
+                    src={getPortraitUrl(character.id, 64)}
+                    alt={character.name}
+                    className="w-10 h-10 rounded-full border border-accent-cyan/30"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-text-primary font-medium truncate">{character?.name}</div>
+                  <div className="text-xs text-text-secondary">Logged in</div>
+                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    handleMenuClose();
+                  }}
+                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  login();
+                  handleMenuClose();
+                }}
+                className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 bg-accent-cyan/10 text-accent-cyan text-sm rounded-lg hover:bg-accent-cyan/20 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Add Another Character
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                login();
+                handleMenuClose();
+              }}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-accent-cyan/20 text-accent-cyan text-base font-medium rounded-xl border border-accent-cyan/30 hover:bg-accent-cyan/30 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Login with EVE Online
+            </button>
+          )}
+        </div>
+
+        {/* Navigation Items */}
+        {navItems.map(({ path, label, icon }, index) => (
+          <Link
+            key={path}
+            to={path}
+            onClick={handleMenuClose}
+            style={{ animationDelay: `${index * 30}ms` }}
+            className={`
+              flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium
+              transition-all duration-200 min-h-[48px]
+              ${isMobileMenuOpen ? 'animate-fade-in-up' : ''}
+              ${location.pathname === path
+                ? 'bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20'
+                : 'text-text-secondary hover:text-text-primary hover:bg-white/5 border border-transparent active:bg-white/10'
+              }
+            `}
+          >
+            <span className="text-xl">{icon}</span>
+            {label}
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -191,6 +451,7 @@ export function Navbar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
+            <UserMenu />
             <ThemeToggle />
             <MobileMenuButton
               isOpen={isMobileMenuOpen}
@@ -202,40 +463,12 @@ export function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      <div
-        id="mobile-menu"
-        ref={menuRef}
-        className={`
-          md:hidden fixed inset-x-0 top-16 bottom-0 bg-space-dark/95 backdrop-blur-xl z-50
-          overflow-y-auto overscroll-contain
-          transition-all duration-300 ease-in-out origin-top
-          ${isMobileMenuOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}
-        `}
-        aria-hidden={!isMobileMenuOpen}
-      >
-        <div className="px-3 py-4 space-y-1 pb-safe">
-          {navItems.map(({ path, label, icon }, index) => (
-            <Link
-              key={path}
-              to={path}
-              onClick={handleMenuClose}
-              style={{ animationDelay: `${index * 30}ms` }}
-              className={`
-                flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium
-                transition-all duration-200 min-h-[48px]
-                ${isMobileMenuOpen ? 'animate-fade-in-up' : ''}
-                ${location.pathname === path
-                  ? 'bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5 border border-transparent active:bg-white/10'
-                }
-              `}
-            >
-              <span className="text-xl">{icon}</span>
-              {label}
-            </Link>
-          ))}
-        </div>
-      </div>
+      <MobileMenu
+        menuRef={menuRef}
+        isMobileMenuOpen={isMobileMenuOpen}
+        location={location}
+        handleMenuClose={handleMenuClose}
+      />
     </nav>
   );
 }

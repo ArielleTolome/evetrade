@@ -36,15 +36,38 @@ export function ItemAutocomplete({
   // Load invTypes on mount if not already loaded
   useEffect(() => {
     async function loadItems() {
-      if (invTypes) {
-        // Build searchable list from invTypes
+      const processInvTypes = (data) => {
+        if (!data) return [];
+
         const items = [];
-        for (const [typeId, typeData] of Object.entries(invTypes)) {
-          const name = typeof typeData === 'object' ? typeData.typeName : typeData;
-          if (name) {
-            items.push({ typeId, name });
+
+        // Handle array format: [{typeID, typeName, ...}, ...]
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            const typeId = item.typeID || item.typeId || item.type_id;
+            const name = item.typeName || item.name || item.type_name;
+            if (typeId && name && name !== '#System') {
+              items.push({ typeId: String(typeId), name });
+            }
           }
         }
+        // Handle object format: {typeId: {typeName, ...}, ...}
+        else if (typeof data === 'object') {
+          for (const [typeId, typeData] of Object.entries(data)) {
+            const name = typeof typeData === 'object'
+              ? (typeData.typeName || typeData.name)
+              : typeData;
+            if (name && name !== '#System') {
+              items.push({ typeId, name });
+            }
+          }
+        }
+
+        return items;
+      };
+
+      if (invTypes && (Array.isArray(invTypes) ? invTypes.length > 0 : Object.keys(invTypes).length > 0)) {
+        const items = processInvTypes(invTypes);
         setItemsList(items);
         return;
       }
@@ -53,13 +76,7 @@ export function ItemAutocomplete({
       try {
         const data = await loadInvTypes();
         if (data) {
-          const items = [];
-          for (const [typeId, typeData] of Object.entries(data)) {
-            const name = typeof typeData === 'object' ? typeData.typeName : typeData;
-            if (name) {
-              items.push({ typeId, name });
-            }
-          }
+          const items = processInvTypes(data);
           setItemsList(items);
         }
       } catch (err) {

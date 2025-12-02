@@ -31,6 +31,7 @@ import { EveLinksDropdown, EveLinksInline } from '../components/common/EveLinks'
 import { TradeDecisionBadge, TradeDecisionCard } from '../components/common/TradeDecisionCard';
 import { OrderBookCard } from '../components/common/OrderBookPreview';
 import { AffordabilityBadge, AffordabilityCard } from '../components/common/AffordabilityIndicator';
+import { QuickPricePanel, QuickCopyButtons } from '../components/common/QuickPricePanel';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { useTradeForm } from '../hooks/useTradeForm';
@@ -377,8 +378,8 @@ export function StationTradingPage() {
   // Copy individual row
   const copyRowToClipboard = useCallback((item) => {
     const text = `Item: ${item.Item}
-Buy Price: ${formatISK(item['Buy Price'], false)}
-Sell Price: ${formatISK(item['Sell Price'], false)}
+Lowest Sell (Buy At): ${formatISK(item['Buy Price'], false)}
+Highest Buy (Sell At): ${formatISK(item['Sell Price'], false)}
 Profit per Unit: ${formatISK(item['Profit per Unit'], false)}
 Net Profit: ${formatISK(item['Net Profit'], false)}
 Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
@@ -388,7 +389,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
   // Copy all results as formatted table
   const copyAllResults = useCallback((trades) => {
-    const header = 'Item\tBuy Price\tSell Price\tProfit/Unit\tNet Profit\tMargin';
+    const header = 'Item\tLowest Sell\tHighest Buy\tProfit/Unit\tNet Profit\tMargin';
     const rows = trades.map(trade =>
       `${trade.Item}\t${formatISK(trade['Buy Price'], false)}\t${formatISK(trade['Sell Price'], false)}\t${formatISK(trade['Profit per Unit'], false)}\t${formatISK(trade['Net Profit'], false)}\t${formatPercent(trade['Gross Margin'] / 100, 1)}`
     ).join('\n');
@@ -834,23 +835,51 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       },
       {
         key: 'Buy Price',
-        label: 'Buy Price',
+        label: 'Lowest Sell',
         type: 'num',
         render: (data, row) => (
           <div className="flex flex-col">
-            <span>{formatISK(data, false)}</span>
-            <PriceSparkline price={data} width={60} height={16} className="mt-1" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-red-400">{formatISK(data, false)}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(String(data), 'Buy price copied!');
+                }}
+                className="p-1 text-text-secondary hover:text-accent-cyan transition-colors opacity-60 hover:opacity-100"
+                title="Copy buy price"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+            <span className="text-[10px] text-text-secondary">Buy at this price</span>
           </div>
         ),
       },
       {
         key: 'Sell Price',
-        label: 'Sell Price',
+        label: 'Highest Buy',
         type: 'num',
         render: (data, row) => (
           <div className="flex flex-col">
-            <span>{formatISK(data, false)}</span>
-            <PriceSparkline price={data} width={60} height={16} className="mt-1" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-green-400">{formatISK(data, false)}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(String(data), 'Sell price copied!');
+                }}
+                className="p-1 text-text-secondary hover:text-accent-cyan transition-colors opacity-60 hover:opacity-100"
+                title="Copy sell price"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+            <span className="text-[10px] text-text-secondary">Sell at this price</span>
           </div>
         ),
       },
@@ -931,9 +960,21 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         },
       },
       {
+        key: 'quickCopy',
+        label: 'Quick Copy',
+        className: 'w-32',
+        render: (data, row) => (
+          <QuickCopyButtons
+            buyPrice={row['Buy Price']}
+            sellPrice={row['Sell Price']}
+            onCopy={setToastMessage}
+          />
+        ),
+      },
+      {
         key: 'actions',
         label: 'Actions',
-        className: 'w-44',
+        className: 'w-36',
         render: (data, row) => {
           const itemId = row['Item ID'] || row.itemId;
           const stationData = getStationData(form.station, universeList);
@@ -979,7 +1020,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         },
       },
     ],
-    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, calculateScamRisk, addToShoppingList, walletBalance, form.station, universeList]
+    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, calculateScamRisk, addToShoppingList, walletBalance, form.station, universeList, setToastMessage]
   );
 
   return (
@@ -1594,7 +1635,17 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   const stationId = stationData?.station;
 
                   return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                      {/* Quick Price Copy Panel - Most Important! */}
+                      <div className="lg:col-span-1">
+                        <QuickPricePanel
+                          buyPrice={row['Buy Price']}
+                          sellPrice={row['Sell Price']}
+                          itemName={row['Item']}
+                          onCopy={setToastMessage}
+                        />
+                      </div>
+
                       {/* Quick Calculator */}
                       <div className="lg:col-span-1">
                         <QuickTradeCalculator

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { formatISK, formatRelativeTime } from '../../utils/formatters';
+import { formatISK, formatRelativeTime, formatNumber } from '../../utils/formatters';
 import GlassmorphicCard from './GlassmorphicCard';
 
 /**
  * Generate mock price history with timestamps
- * In production, this would come from an API
+ * Used as fallback when no external data is provided
  */
 function generateDetailedPriceHistory(currentPrice, days = 30, volatility = 0.08) {
   const history = [];
@@ -30,6 +30,23 @@ function generateDetailedPriceHistory(currentPrice, days = 30, volatility = 0.08
   history[history.length - 1].price = currentPrice;
 
   return history;
+}
+
+/**
+ * Convert ESI market history data to chart format
+ * ESI returns: [{date, average, highest, lowest, order_count, volume}, ...]
+ */
+function convertESIHistoryToChartData(esiHistory) {
+  if (!esiHistory || esiHistory.length === 0) return [];
+
+  return esiHistory.map(day => ({
+    timestamp: new Date(day.date).getTime(),
+    price: day.average,
+    high: day.highest,
+    low: day.lowest,
+    volume: day.volume,
+    orderCount: day.order_count,
+  }));
 }
 
 /**
@@ -66,33 +83,70 @@ function formatYAxisLabel(value) {
  * PriceHistoryChart Component
  * Displays a detailed price history chart with hover interactions
  *
- * @param {number} price - Current price value
+ * @param {number} price - Current price value (used for mock data if no historyData provided)
+ * @param {Array} historyData - Optional ESI market history data [{date, average, highest, lowest, order_count, volume}, ...]
  * @param {number} width - Width of the chart in pixels
  * @param {number} height - Height of the chart in pixels
  * @param {number} days - Number of days of history to show
  * @param {string} title - Chart title
  * @param {string} className - Additional CSS classes
+ * @param {boolean} loading - Show loading state
  */
 export function PriceHistoryChart({
   price,
+  historyData,
   width = 600,
   height = 300,
   days = 30,
   title = 'Price History',
   className = '',
+  loading = false,
 }) {
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  const data = useMemo(() => generateDetailedPriceHistory(price, days), [price, days]);
+  // Use ESI data if provided, otherwise generate mock data
+  const data = useMemo(() => {
+    if (historyData && historyData.length > 0) {
+      const converted = convertESIHistoryToChartData(historyData);
+      // Filter to only show last N days
+      const cutoffDate = Date.now() - (days * 24 * 60 * 60 * 1000);
+      return converted.filter(d => d.timestamp >= cutoffDate);
+    }
+    return generateDetailedPriceHistory(price, days);
+  }, [historyData, price, days]);
 
   const { linePath, areaPath, points, min, max } = useMemo(
     () => calculateChartPath(data, width, height),
     [data, width, height]
   );
 
-  const trend = data[data.length - 1].price >= data[0].price ? 'up' : 'down';
-  const trendPercent = ((data[data.length - 1].price - data[0].price) / data[0].price) * 100;
+  // Handle empty data case
+  if (loading) {
+    return (
+      <GlassmorphicCard className={className}>
+        <div className="flex items-center justify-center py-12">
+          <div className="w-8 h-8 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+          <span className="ml-3 text-text-secondary">Loading price history...</span>
+        </div>
+      </GlassmorphicCard>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <GlassmorphicCard className={className}>
+        <div className="text-center py-8 text-text-secondary">
+          No price history available
+        </div>
+      </GlassmorphicCard>
+    );
+  }
+
+  // Calculate current price from data or use provided price
+  const currentPrice = data[data.length - 1]?.price || price;
+  const trend = currentPrice >= data[0].price ? 'up' : 'down';
+  const trendPercent = ((currentPrice - data[0].price) / data[0].price) * 100;
 
   const strokeColor = trend === 'up' ? '#4ade80' : '#f87171';
   const gradientId = `price-history-gradient-${price}`;
@@ -134,7 +188,7 @@ export function PriceHistoryChart({
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-white">
-              {formatISK(price, false)}
+              {formatISK(currentPrice, false)}
             </div>
             <div className={`text-sm font-mono ${trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
               {trend === 'up' ? '↑' : '↓'} {trendPercent >= 0 ? '+' : ''}
@@ -245,11 +299,18 @@ export function PriceHistoryChart({
               <div className="text-accent-cyan font-semibold">
                 {formatISK(hoveredPoint.price, false)}
               </div>
+              {hoveredPoint.high && hoveredPoint.low && (
+                <div className="text-gray-400 text-xs">
+                  <span className="text-green-400">H: {formatISK(hoveredPoint.high, false)}</span>
+                  {' / '}
+                  <span className="text-red-400">L: {formatISK(hoveredPoint.low, false)}</span>
+                </div>
+              )}
               <div className="text-gray-400 text-xs">
                 {formatRelativeTime(hoveredPoint.timestamp)}
               </div>
               <div className="text-gray-400 text-xs">
-                Volume: {hoveredPoint.volume.toLocaleString()}
+                Volume: {formatNumber(hoveredPoint.volume, 0)}
               </div>
             </div>
           )}
