@@ -5,7 +5,7 @@ import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
-import { useToast, ToastContainer } from '../components/common/Toast';
+import { useToast } from '../components/common/ToastProvider';
 
 /**
  * Route Card Component
@@ -195,7 +195,7 @@ function EmptyState() {
 export function SavedRoutesPage() {
   const navigate = useNavigate();
   const { savedRoutes, deleteRoute, isLoaded, exportData, importData } = usePortfolio();
-  const { toasts, addToast, removeToast } = useToast();
+  const toast = useToast();
   const [filter, setFilter] = useState('all');
   const [showImport, setShowImport] = useState(false);
   const [importValue, setImportValue] = useState('');
@@ -244,11 +244,11 @@ export function SavedRoutesPage() {
     if (importData(importValue)) {
       setShowImport(false);
       setImportValue('');
-      addToast('Portfolio data imported successfully!', 'success', 3000);
+      toast.success('Portfolio data imported successfully!', { duration: 3000 });
     } else {
-      addToast('Invalid data format. Please paste valid JSON.', 'error', 5000);
+      toast.error('Invalid data format. Please paste valid JSON.', { duration: 5000 });
     }
-  }, [importData, importValue, addToast]);
+  }, [importData, importValue, toast]);
 
   if (!isLoaded) {
     return (
@@ -261,9 +261,7 @@ export function SavedRoutesPage() {
   }
 
   return (
-    <>
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
-      <PageLayout
+    <PageLayout
         title="Saved Routes"
         subtitle="Your favorite trade routes for quick access"
       >
@@ -391,7 +389,6 @@ export function SavedRoutesPage() {
         )}
       </div>
     </PageLayout>
-    </>
   );
 }
 

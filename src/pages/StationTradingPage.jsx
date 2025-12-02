@@ -7,7 +7,7 @@ import { QuickTradeCalculator } from '../components/common/QuickTradeCalculator'
 import { TopRecommendations } from '../components/common/TopRecommendations';
 import { TradingStats } from '../components/common/TradingStats';
 import { ProfitDistribution } from '../components/common/ProfitDistribution';
-import { Toast } from '../components/common/Toast';
+import { useToast } from '../components/common/ToastProvider';
 import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
@@ -156,7 +156,7 @@ export function StationTradingPage() {
   const [characterTaxes, setCharacterTaxes] = useState(null);
   const [usingPersonalTaxes, setUsingPersonalTaxes] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [toastMessage, setToastMessage] = useState(null);
+  const toast = useToast();
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
   const [hideScams, setHideScams] = useState(false);
   const [highQualityOnly, setHighQualityOnly] = useState(false);
@@ -398,12 +398,12 @@ export function StationTradingPage() {
   const copyToClipboard = useCallback(async (text, successMessage = 'Copied to clipboard!') => {
     try {
       await navigator.clipboard.writeText(text);
-      setToastMessage(successMessage);
+      toast.success(successMessage);
     } catch (err) {
       console.error('Failed to copy to clipboard:', err);
-      setToastMessage('Failed to copy to clipboard');
+      toast.error('Failed to copy to clipboard');
     }
-  }, []);
+  }, [toast]);
 
   // Copy individual row
   const copyRowToClipboard = useCallback((item) => {
@@ -594,13 +594,13 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     // Toggle favorites filter (f key)
     'f': () => {
       setShowFavoritesOnly(prev => !prev);
-      setToastMessage(`Favorites filter ${!showFavoritesOnly ? 'enabled' : 'disabled'}`);
+      toast.info(`Favorites filter ${!showFavoritesOnly ? 'enabled' : 'disabled'}`);
     },
     // Refresh data (r key)
     'r': () => {
       if (form.station && data !== null) {
         handleSubmit(new Event('submit'));
-        setToastMessage('Refreshing data...');
+        toast.info('Refreshing data...');
       }
     },
     // Focus search box (/ or Ctrl+K or Ctrl+F)
@@ -673,7 +673,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     // Toggle watchlist panel (w key)
     'w': () => {
       setShowFavoritesOnly(prev => !prev);
-      setToastMessage(`Watchlist ${!showFavoritesOnly ? 'shown' : 'hidden'}`);
+      toast.info(`Watchlist ${!showFavoritesOnly ? 'shown' : 'hidden'}`);
     },
     // Add selected item to watchlist (a key)
     'a': () => {
@@ -682,49 +682,49 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         const itemId = trades[selectedRowIndex]['Item ID'] || trades[selectedRowIndex].itemId;
         const wasInWatchlist = isFavorite(itemId);
         toggleFavorite(itemId);
-        setToastMessage(`${wasInWatchlist ? 'Removed from' : 'Added to'} watchlist`);
+        toast.success(`${wasInWatchlist ? 'Removed from' : 'Added to'} watchlist`);
       }
     },
     // Quick filter presets (1-5 keys)
     '1': () => {
       if (quickFilterIds.length > 0 && data !== null) {
         setQuickFilterIds([quickFilterIds[0]]);
-        setToastMessage('Quick filter 1 applied');
+        toast.info('Quick filter 1 applied');
       }
     },
     '2': () => {
       if (quickFilterIds.length > 1 && data !== null) {
         setQuickFilterIds([quickFilterIds[1]]);
-        setToastMessage('Quick filter 2 applied');
+        toast.info('Quick filter 2 applied');
       }
     },
     '3': () => {
       if (quickFilterIds.length > 2 && data !== null) {
         setQuickFilterIds([quickFilterIds[2]]);
-        setToastMessage('Quick filter 3 applied');
+        toast.info('Quick filter 3 applied');
       }
     },
     '4': () => {
       if (quickFilterIds.length > 3 && data !== null) {
         setQuickFilterIds([quickFilterIds[3]]);
-        setToastMessage('Quick filter 4 applied');
+        toast.info('Quick filter 4 applied');
       }
     },
     '5': () => {
       if (quickFilterIds.length > 4 && data !== null) {
         setQuickFilterIds([quickFilterIds[4]]);
-        setToastMessage('Quick filter 5 applied');
+        toast.info('Quick filter 5 applied');
       }
     },
     // Toggle high quality filter (h)
     'h': () => {
       setHighQualityOnly(prev => !prev);
-      setToastMessage(`High quality filter ${!highQualityOnly ? 'enabled' : 'disabled'}`);
+      toast.info(`High quality filter ${!highQualityOnly ? 'enabled' : 'disabled'}`);
     },
     // Toggle dashboard view (b for board)
     'b': () => {
       setShowDashboard(prev => !prev);
-      setToastMessage(`Dashboard ${!showDashboard ? 'shown' : 'hidden'}`);
+      toast.info(`Dashboard ${!showDashboard ? 'shown' : 'hidden'}`);
     },
   }), [form.station, data, handleSubmit, showSaveModal, showOrders, sortedData, selectedRowIndex, showFavoritesOnly, highQualityOnly, showDashboard, copyRowToClipboard, copyMultibuyFormat, handleRowClick, toggleFavorite, isFavorite, quickFilterIds]);
 
@@ -1000,7 +1000,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
           <QuickCopyButtons
             buyPrice={row['Buy Price']}
             sellPrice={row['Sell Price']}
-            onCopy={setToastMessage}
+            onCopy={(msg) => toast.success(msg)}
           />
         ),
       },
@@ -1039,7 +1039,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                 onClick={(e) => {
                   e.stopPropagation();
                   addToShoppingList(row);
-                  setToastMessage('Added to shopping list');
+                  toast.success('Added to shopping list');
                 }}
                 className="p-1.5 text-text-secondary hover:text-green-400 transition-colors"
                 title="Add to shopping list"
@@ -1053,7 +1053,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         },
       },
     ],
-    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, calculateScamRisk, addToShoppingList, walletBalance, form.station, universeList, setToastMessage]
+    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, calculateScamRisk, addToShoppingList, walletBalance, form.station, universeList, toast]
   );
 
   return (
@@ -1063,14 +1063,6 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     >
       {/* Add padding-bottom for mobile quick actions bar */}
       <div className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8">
-        {/* Toast Notification */}
-        {toastMessage && (
-          <Toast
-            message={toastMessage}
-            onClose={() => setToastMessage(null)}
-            type="success"
-          />
-        )}
 
         {/* Price Alert Notifications */}
         {triggeredAlerts.length > 0 && (
@@ -1419,7 +1411,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                                 <RecommendedPrice
                                   marketPrice={marketPrice}
                                   isBuyOrder={order.is_buy_order}
-                                  onCopy={setToastMessage}
+                                  onCopy={(msg) => toast.success(msg)}
                                 />
                               </td>
                               <td className="py-2 px-3 text-right">
@@ -1928,7 +1920,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                           buyPrice={row['Buy Price']}
                           sellPrice={row['Sell Price']}
                           itemName={row['Item']}
-                          onCopy={setToastMessage}
+                          onCopy={(msg) => toast.success(msg)}
                         />
                       </div>
 
@@ -1993,17 +1985,17 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
               toggleFavorite(itemId);
             }
           });
-          setToastMessage(`Added ${items.length} items to favorites`);
+          toast.success(`Added ${items.length} items to favorites`);
         }}
         onBulkAddToShoppingList={(items) => {
           items.forEach(item => addToShoppingList(item));
-          setToastMessage(`Added ${items.length} items to shopping list`);
+          toast.success(`Added ${items.length} items to shopping list`);
         }}
         onBulkCopy={(items) => {
-          setToastMessage(`Copied ${items.length} items`);
+          toast.success(`Copied ${items.length} items`);
         }}
         onExport={(items) => {
-          setToastMessage(`Exported ${items.length} items`);
+          toast.success(`Exported ${items.length} items`);
         }}
       />
 

@@ -19,7 +19,7 @@ import { useEveAuth } from '../hooks/useEveAuth';
 import { fetchStationHauling } from '../api/trading';
 import { getCharacterAssets, getWalletBalance, getTypeNames, getStationInfo, getStructureInfo } from '../api/esi';
 import { formatISK, formatNumber, formatPercent, formatCompact } from '../utils/formatters';
-import { Toast } from '../components/common/Toast';
+import { useToast } from '../components/common/ToastProvider';
 import { isCitadel } from '../utils/security';
 import {
   TAX_OPTIONS,

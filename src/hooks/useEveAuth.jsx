@@ -11,9 +11,11 @@ const EVE_SSO_CONFIG = {
   scopes: [
     'esi-wallet.read_character_wallet.v1',
     'esi-markets.read_character_orders.v1',
+    'esi-markets.read_corporation_orders.v1',
     'esi-assets.read_assets.v1',
     'esi-characters.read_standings.v1',
     'esi-skills.read_skills.v1',
+    'esi-planets.manage_planets.v1',
   ].join(' '),
   authUrl: 'https://login.eveonline.com/v2/oauth/authorize',
   tokenUrl: 'https://login.eveonline.com/v2/oauth/token',

@@ -93,6 +93,22 @@ export async function getCharacterOrderHistory(characterId, accessToken, page = 
 }
 
 /**
+ * Get corporation market orders
+ * Requires: esi-markets.read_corporation_orders.v1 scope
+ */
+export async function getCorporationOrders(corporationId, accessToken) {
+  return esiRequest(`/corporations/${corporationId}/orders/`, accessToken);
+}
+
+/**
+ * Get corporation order history
+ * Requires: esi-markets.read_corporation_orders.v1 scope
+ */
+export async function getCorporationOrderHistory(corporationId, accessToken, page = 1) {
+  return esiRequest(`/corporations/${corporationId}/orders/history/?page=${page}`, accessToken);
+}
+
+/**
  * Get character assets
  */
 export async function getCharacterAssets(characterId, accessToken, page = 1) {
@@ -111,6 +127,13 @@ export async function getCharacterSkills(characterId, accessToken) {
  */
 export async function getCharacterStandings(characterId, accessToken) {
   return esiRequest(`/characters/${characterId}/standings/`, accessToken);
+}
+
+/**
+ * Get character planetary interaction colonies
+ */
+export async function getCharacterPlanets(characterId, accessToken) {
+  return esiRequest(`/characters/${characterId}/planets/`, accessToken);
 }
 
 /**
@@ -439,9 +462,12 @@ export default {
   getWalletJournal,
   getCharacterOrders,
   getCharacterOrderHistory,
+  getCorporationOrders,
+  getCorporationOrderHistory,
   getCharacterAssets,
   getCharacterSkills,
   getCharacterStandings,
+  getCharacterPlanets,
   getTypeInfo,
   getStationInfo,
   getStructureInfo,

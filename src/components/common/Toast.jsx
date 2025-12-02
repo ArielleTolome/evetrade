@@ -1,309 +1,223 @@
 import { useEffect, useState, useRef } from 'react';
 
 /**
- * Toast Notification Component
- * Simple toast notification that displays a message and auto-dismisses
+ * Individual Toast Component
+ * Displays a single notification with type-specific styling, animations, and progress bar
  */
-export function Toast({ message, onClose, duration = 3000, type = 'success' }) {
-  const [isPaused, setIsPaused] = useState(false);
+export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, action }) {
   const [progress, setProgress] = useState(100);
+  const [isExiting, setIsExiting] = useState(false);
   const startTimeRef = useRef(Date.now());
   const remainingTimeRef = useRef(duration);
-  const timerRef = useRef(null);
-  const animationRef = useRef(null);
+  const pausedRef = useRef(false);
+  const animationFrameRef = useRef(null);
 
+  // Toast type configurations with cyberpunk/space theme
+  const config = {
+    success: {
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      bgColor: 'bg-accent-green/10 dark:bg-accent-green/20',
+      borderColor: 'border-accent-green/30',
+      iconColor: 'text-accent-green',
+      progressColor: 'bg-accent-green',
+      glowColor: 'shadow-accent-green/20',
+    },
+    error: {
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      bgColor: 'bg-red-500/10 dark:bg-red-500/20',
+      borderColor: 'border-red-500/30',
+      iconColor: 'text-red-500',
+      progressColor: 'bg-red-500',
+      glowColor: 'shadow-red-500/20',
+    },
+    warning: {
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      bgColor: 'bg-accent-gold/10 dark:bg-accent-gold/20',
+      borderColor: 'border-accent-gold/30',
+      iconColor: 'text-accent-gold',
+      progressColor: 'bg-accent-gold',
+      glowColor: 'shadow-accent-gold/20',
+    },
+    info: {
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+      bgColor: 'bg-accent-cyan/10 dark:bg-accent-cyan/20',
+      borderColor: 'border-accent-cyan/30',
+      iconColor: 'text-accent-cyan',
+      progressColor: 'bg-accent-cyan',
+      glowColor: 'shadow-accent-cyan/20',
+    },
+  };
+
+  const toastConfig = config[type] || config.info;
+
+  // Handle auto-dismiss with smooth progress animation
   useEffect(() => {
-    const animate = () => {
-      if (!isPaused) {
-        const elapsed = Date.now() - startTimeRef.current;
-        const remaining = Math.max(0, remainingTimeRef.current - elapsed);
-        const progressPercent = (remaining / duration) * 100;
-        setProgress(progressPercent);
+    if (duration === Infinity) return;
 
-        if (remaining <= 0) {
-          onClose();
-        } else {
-          animationRef.current = requestAnimationFrame(animate);
-        }
+    let lastTime = Date.now();
+
+    const updateProgress = () => {
+      if (pausedRef.current) {
+        lastTime = Date.now();
+        animationFrameRef.current = requestAnimationFrame(updateProgress);
+        return;
+      }
+
+      const currentTime = Date.now();
+      const deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
+
+      remainingTimeRef.current -= deltaTime;
+      const newProgress = Math.max(0, (remainingTimeRef.current / duration) * 100);
+      setProgress(newProgress);
+
+      if (remainingTimeRef.current <= 0) {
+        handleDismiss();
+      } else {
+        animationFrameRef.current = requestAnimationFrame(updateProgress);
       }
     };
 
-    if (!isPaused) {
-      startTimeRef.current = Date.now();
-      animationRef.current = requestAnimationFrame(animate);
-
-      timerRef.current = setTimeout(() => {
-        onClose();
-      }, remainingTimeRef.current);
-    }
+    animationFrameRef.current = requestAnimationFrame(updateProgress);
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
-  }, [isPaused, duration, onClose]);
-
-  const handleMouseEnter = () => {
-    setIsPaused(true);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    const elapsed = Date.now() - startTimeRef.current;
-    remainingTimeRef.current = Math.max(0, remainingTimeRef.current - elapsed);
-  };
-
-  const handleMouseLeave = () => {
-    setIsPaused(false);
-  };
-
-  const typeStyles = {
-    success: 'bg-green-500/20 border-green-500/50 text-green-400',
-    error: 'bg-red-500/20 border-red-500/50 text-red-400',
-    info: 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan',
-    warning: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400',
-    alert: 'bg-accent-gold/20 border-accent-gold/50 text-accent-gold',
-  };
-
-  const icons = {
-    success: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    error: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    info: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    warning: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-    ),
-    alert: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
-    ),
-  };
-
-  const progressBarColors = {
-    success: 'bg-green-400',
-    error: 'bg-red-400',
-    info: 'bg-accent-cyan',
-    warning: 'bg-yellow-400',
-    alert: 'bg-accent-gold',
-  };
-
-  return (
-    <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
-      <div
-        className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur-sm shadow-lg overflow-hidden ${typeStyles[type] || typeStyles.info}`}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        {icons[type] || icons.info}
-        <span className="font-medium">{message}</span>
-        <button
-          onClick={onClose}
-          className="ml-2 p-1 rounded hover:bg-white/10 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
-          aria-label="Close"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <div
-          className={`absolute bottom-0 left-0 h-1 transition-all ${progressBarColors[type] || progressBarColors.info}`}
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-/**
- * Individual toast item with pause-on-hover and progress bar
- */
-function ToastItem({ toast, onRemove }) {
-  const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(100);
-  const startTimeRef = useRef(Date.now());
-  const remainingTimeRef = useRef(toast.duration || 5000);
-  const timerRef = useRef(null);
-  const animationRef = useRef(null);
-
-  const duration = toast.duration || 5000;
-
-  useEffect(() => {
-    const animate = () => {
-      if (!isPaused) {
-        const elapsed = Date.now() - startTimeRef.current;
-        const remaining = Math.max(0, remainingTimeRef.current - elapsed);
-        const progressPercent = (remaining / duration) * 100;
-        setProgress(progressPercent);
-
-        if (remaining <= 0) {
-          onRemove(toast.id);
-        } else {
-          animationRef.current = requestAnimationFrame(animate);
-        }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
+  }, [duration]);
 
-    if (!isPaused) {
-      startTimeRef.current = Date.now();
-      animationRef.current = requestAnimationFrame(animate);
-
-      timerRef.current = setTimeout(() => {
-        onRemove(toast.id);
-      }, remainingTimeRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
-  }, [isPaused, duration, toast.id, onRemove]);
+  const handleDismiss = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onDismiss(id);
+    }, 300); // Match animation duration
+  };
 
   const handleMouseEnter = () => {
-    setIsPaused(true);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    const elapsed = Date.now() - startTimeRef.current;
-    remainingTimeRef.current = Math.max(0, remainingTimeRef.current - elapsed);
+    pausedRef.current = true;
   };
 
   const handleMouseLeave = () => {
-    setIsPaused(false);
-  };
-
-  const typeStyles = {
-    success: 'bg-green-500/20 border-green-500/50 text-green-400',
-    error: 'bg-red-500/20 border-red-500/50 text-red-400',
-    info: 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan',
-    warning: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400',
-    alert: 'bg-accent-gold/20 border-accent-gold/50 text-accent-gold',
-  };
-
-  const progressBarColors = {
-    success: 'bg-green-400',
-    error: 'bg-red-400',
-    info: 'bg-accent-cyan',
-    warning: 'bg-yellow-400',
-    alert: 'bg-accent-gold',
-  };
-
-  const icons = {
-    success: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    error: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    info: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    warning: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-    ),
-    alert: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
-    ),
+    pausedRef.current = false;
   };
 
   return (
     <div
-      className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur-sm shadow-lg overflow-hidden ${
-        typeStyles[toast.type] || typeStyles.info
-      }`}
+      role="alert"
+      aria-live="polite"
+      aria-atomic="true"
+      className={`
+        relative w-full overflow-hidden
+        ${toastConfig.bgColor}
+        backdrop-blur-xl
+        border ${toastConfig.borderColor}
+        rounded-lg shadow-xl ${toastConfig.glowColor}
+        transition-all duration-300 ease-out
+        ${
+          isExiting
+            ? 'opacity-0 translate-x-full scale-95'
+            : 'opacity-100 translate-x-0 scale-100'
+        }
+      `}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {icons[toast.type] || icons.info}
-      <span className="font-medium flex-1">{toast.message}</span>
-      <button
-        onClick={() => onRemove(toast.id)}
-        className="ml-2 p-1 rounded hover:bg-white/10 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
-        aria-label="Close"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      <div
-        className={`absolute bottom-0 left-0 h-1 transition-all ${
-          progressBarColors[toast.type] || progressBarColors.info
-        }`}
-        style={{ width: `${progress}%` }}
-      />
-    </div>
-  );
-}
+      {/* Glassmorphic gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
-/**
- * Toast container component
- * Manages multiple toasts stacked vertically
- */
-export function ToastContainer({ toasts, onRemove }) {
-  if (!toasts || toasts.length === 0) return null;
-
-  return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-3 max-w-md w-full pointer-events-none">
-      <div className="flex flex-col gap-3 pointer-events-auto">
-        {toasts.map((toast, index) => (
-          <div key={toast.id} style={{ animationDelay: `${index * 100}ms` }} className="animate-slide-in-right">
-            <ToastItem toast={toast} onRemove={onRemove} />
+      {/* Content */}
+      <div className="relative z-10 p-4">
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div className={`flex-shrink-0 ${toastConfig.iconColor}`}>
+            {toastConfig.icon}
           </div>
-        ))}
+
+          {/* Message */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-text-primary dark:text-text-primary break-words">
+              {message}
+            </p>
+
+            {/* Action button */}
+            {action && (
+              <button
+                onClick={action.onClick}
+                className={`
+                  mt-2 text-xs font-semibold ${toastConfig.iconColor}
+                  hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-cyan/50 rounded
+                  transition-all
+                `}
+              >
+                {action.label}
+              </button>
+            )}
+          </div>
+
+          {/* Dismiss button */}
+          <button
+            onClick={handleDismiss}
+            className="
+              flex-shrink-0 text-text-secondary hover:text-text-primary
+              transition-colors focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 rounded p-1
+            "
+            aria-label="Dismiss notification"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {/* Progress bar */}
+      {duration !== Infinity && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20 dark:bg-white/5">
+          <div
+            className={`h-full ${toastConfig.progressColor} transition-all duration-100 ease-linear`}
+            style={{ width: `${progress}%` }}
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin="0"
+            aria-valuemax="100"
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-/**
- * Hook for managing toasts
- */
-export function useToast() {
-  const [toasts, setToasts] = useState([]);
-
-  const addToast = (message, type = 'info', duration = 5000) => {
-    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-    const toast = { id, message, type, duration };
-    setToasts(prev => [...prev, toast]);
-
-    // Note: Auto-removal is now handled by ToastItem component
-    // to support pause-on-hover functionality
-
-    return id;
-  };
-
-  const removeToast = (id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  };
-
-  const clearToasts = () => {
-    setToasts([]);
-  };
-
-  return {
-    toasts,
-    addToast,
-    removeToast,
-    clearToasts,
-  };
-}
+export default Toast;

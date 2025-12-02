@@ -28,6 +28,14 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const AlertsPage = lazy(() => import('./pages/AlertsPage'));
 const SmartTradingPage = lazy(() => import('./pages/SmartTradingPage'));
 const MultiCharacterPage = lazy(() => import('./pages/MultiCharacterPage'));
+const ArbitragePage = lazy(() => import('./pages/ArbitragePage'));
+const MarketVelocityPage = lazy(() => import('./pages/MarketVelocityPage'));
+const PIOptimizerPage = lazy(() => import('./pages/PIOptimizerPage'));
+const IndustryProfitsPage = lazy(() => import('./pages/IndustryProfitsPage'));
+const LPOptimizerPage = lazy(() => import('./pages/LPOptimizerPage'));
+const ContractFinderPage = lazy(() => import('./pages/ContractFinderPage'));
+const CorpOrdersPage = lazy(() => import('./pages/CorpOrdersPage'));
+const SmartRouteOptimizerPage = lazy(() => import('./pages/SmartRouteOptimizerPage'));
 
 /**
  * Lazy page wrapper with loading fallback
@@ -237,6 +245,70 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <MultiCharacterPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'arbitrage',
+        element: (
+          <LazyPage>
+            <ArbitragePage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'market-velocity',
+        element: (
+          <LazyPage>
+            <MarketVelocityPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'pi-optimizer',
+        element: (
+          <LazyPage>
+            <PIOptimizerPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'industry-profits',
+        element: (
+          <LazyPage>
+            <IndustryProfitsPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'lp-optimizer',
+        element: (
+          <LazyPage>
+            <LPOptimizerPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'contracts',
+        element: (
+          <LazyPage>
+            <ContractFinderPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'corp-orders',
+        element: (
+          <LazyPage>
+            <CorpOrdersPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'smart-route',
+        element: (
+          <LazyPage>
+            <SmartRouteOptimizerPage />
           </LazyPage>
         ),
       },

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from './Button';
-import { Toast } from './Toast';
+import { useToast } from './ToastProvider';
 import {
   openMarketDetails,
   showItemInfo,

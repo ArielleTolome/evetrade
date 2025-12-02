@@ -29,6 +29,14 @@ const tradingModes = [
     gradient: 'from-accent-purple to-pink-600',
     delay: '200ms',
   },
+  {
+    title: 'Cross-Region Arbitrage',
+    description: 'Scan multiple regions simultaneously to find buy-low, sell-high opportunities with risk assessment.',
+    path: '/arbitrage',
+    icon: '💱',
+    gradient: 'from-green-500 to-emerald-600',
+    delay: '300ms',
+  },
 ];
 
 /**
@@ -81,7 +89,7 @@ export function HomePage() {
         </div>
 
         {/* Trading Mode Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl w-full relative z-10 px-3 sm:px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-7xl w-full relative z-10 px-3 sm:px-4">
           {tradingModes.map((mode, index) => (
             <Link
               key={mode.path}

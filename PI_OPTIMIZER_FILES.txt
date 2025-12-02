@@ -1,0 +1,71 @@
+# PI Optimizer Feature - File Listing
+
+## Core Implementation Files
+
+### Backend API
+- /api/pi-optimizer.js (652 lines)
+  Serverless function that analyzes PI materials and calculates profitability.
+  Supports both public market analysis and authenticated character PI data.
+
+### Frontend Hook
+- /src/hooks/usePIOptimizer.js (387 lines)
+  React hook for fetching and managing PI optimization data.
+  Includes caching, filtering, sorting, and analysis utilities.
+
+### API Integration
+- /src/api/trading.js (modified)
+  Added fetchPIOpportunities() function for easy API consumption.
+
+## Documentation
+
+- PI_OPTIMIZER.md (430 lines)
+  Comprehensive feature documentation with API specs, usage examples,
+  error handling guide, and future enhancements.
+
+- /src/hooks/usePIOptimizer.QUICKSTART.md (136 lines)
+  Quick reference guide for developers with common patterns and examples.
+
+- PI_OPTIMIZER_SUMMARY.md (252 lines)
+  High-level implementation summary with technical details and integration points.
+
+## Examples & Tests
+
+- /src/hooks/usePIOptimizer.example.jsx (371 lines)
+  Complete working example component with interactive filters, statistics,
+  and sortable results table.
+
+- /src/hooks/usePIOptimizer.test.js (302 lines)
+  Comprehensive test suite covering all hook methods, error handling,
+  and caching behavior.
+
+## Total Lines of Code
+- Production Code: ~1,039 lines (API + Hook)
+- Documentation: ~818 lines
+- Examples & Tests: ~673 lines
+- Total: ~2,530 lines
+
+## Key Features
+- Market analysis for all PI tiers (P0-P4)
+- Real-time ESI market data
+- Character PI colony integration (optional)
+- Advanced filtering and sorting
+- Liquidity assessment
+- Profit per m³ calculation
+- Comprehensive error handling
+- Client and server-side caching
+- Request cancellation
+- Sentry monitoring integration
+
+## ESI Endpoints Used
+- GET /markets/{region_id}/orders/ (market prices)
+- GET /universe/types/{type_id}/ (item info)
+- POST /universe/names/ (batch name lookup)
+- GET /characters/{character_id}/planets/ (character colonies)
+- GET /characters/{character_id}/planets/{planet_id}/ (planet details)
+
+## Required ESI Scopes (Optional)
+- esi-planets.manage_planets.v1 (for character PI data)
+
+## Deployment Ready
+All files follow EVETrade conventions and are ready for deployment to Vercel.
+No additional dependencies or environment variables required.

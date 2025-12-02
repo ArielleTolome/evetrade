@@ -4,7 +4,7 @@ import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { TradingTable } from '../components/tables/TradingTable';
-import { Toast } from '../components/common/Toast';
+import { useToast } from '../components/common/ToastProvider';
 import { QuickCopyButton } from '../components/common/QuickCopyButtons';
 import { FormSelect, ItemAutocomplete } from '../components/forms';
 import { PriceHistoryChart } from '../components/common/PriceHistoryChart';
