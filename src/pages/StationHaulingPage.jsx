@@ -17,7 +17,8 @@ import { usePortfolio } from '../hooks/usePortfolio';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { fetchStationHauling } from '../api/trading';
 import { getCharacterAssets, getWalletBalance, getTypeNames, getStationInfo, getStructureInfo } from '../api/esi';
-import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
+import { formatISK, formatNumber, formatPercent, formatCompact } from '../utils/formatters';
+import { Toast } from '../components/common/Toast';
 import { isCitadel } from '../utils/security';
 import {
   TAX_OPTIONS,
@@ -65,6 +66,48 @@ export function StationHaulingPage() {
   const [assetsLoading, setAssetsLoading] = useState(false);
   const [typeNames, setTypeNames] = useState({});
   const [locationNames, setLocationNames] = useState({});
+
+  // Toast state for copy feedback
+  const [toastMessage, setToastMessage] = useState(null);
+
+  // Copy to clipboard helper
+  const copyToClipboard = useCallback(async (text, message = 'Copied!') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setToastMessage(message);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      setToastMessage('Failed to copy');
+    }
+  }, []);
+
+  // Copy trade details for in-game use
+  const copyTradeDetails = useCallback((item) => {
+    const itemName = item.Item || item.name;
+    const fromLocation = typeof item.From === 'object' ? item.From.name : item.From;
+    const toLocation = typeof item['Take To'] === 'object' ? item['Take To'].name : item['Take To'];
+    const buyPrice = item['Buy Price'] || item.buyPrice || 0;
+    const sellPrice = item['Sell Price'] || item.sellPrice || 0;
+    const quantity = item.Quantity || item.quantity || 0;
+    const profit = item.Profit || item.profit || 0;
+    const roi = item.ROI || item.roi || 0;
+
+    const text = `${itemName}
+Buy at: ${fromLocation}
+Buy Price: ${formatISK(buyPrice, false)}
+Sell at: ${toLocation}
+Sell Price: ${formatISK(sellPrice, false)}
+Quantity: ${formatNumber(quantity, 0)}
+Profit: ${formatISK(profit, false)}
+ROI: ${formatPercent(roi / 100, 1)}`;
+
+    copyToClipboard(text, 'Trade details copied!');
+  }, [copyToClipboard]);
+
+  // Copy just the item name
+  const copyItemName = useCallback((itemName) => {
+    copyToClipboard(itemName, 'Item name copied!');
+  }, [copyToClipboard]);
 
   // Add station to list
   const addStation = useCallback((type, station) => {
@@ -288,7 +331,7 @@ export function StationHaulingPage() {
       {
         key: 'Item',
         label: 'Item',
-        className: 'font-medium',
+        className: 'font-medium min-w-[180px]',
         render: (data, row) => {
           const itemName = row.Item || row.name;
           const fromLocation = typeof row.From === 'object' ? row.From.name : row.From;
@@ -296,9 +339,21 @@ export function StationHaulingPage() {
 
           return (
             <div className="flex items-center gap-2">
-              <span>{itemName}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyItemName(itemName);
+                }}
+                className="p-1 text-text-secondary hover:text-accent-cyan transition-colors flex-shrink-0"
+                title="Copy item name"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+              <span className="truncate">{itemName}</span>
               {hasAsset && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
+                <span className="px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
                   Owned
                 </span>
               )}
@@ -308,41 +363,147 @@ export function StationHaulingPage() {
       },
       {
         key: 'From',
-        label: 'From',
-        render: (data) => (typeof data === 'object' ? data.name : data),
+        label: 'Buy At',
+        className: 'min-w-[140px]',
+        render: (data, row) => {
+          const location = typeof data === 'object' ? data.name : data;
+          const buyPrice = row['Buy Price'] || row.buyPrice || 0;
+          return (
+            <div className="flex flex-col">
+              <span className="text-text-primary truncate" title={location}>{location}</span>
+              {buyPrice > 0 && (
+                <span className="text-xs text-red-400 font-mono">
+                  Buy: {formatCompact(buyPrice)}
+                </span>
+              )}
+            </div>
+          );
+        },
       },
       {
         key: 'Take To',
-        label: 'To',
-        render: (data) => (typeof data === 'object' ? data.name : data),
+        label: 'Sell At',
+        className: 'min-w-[140px]',
+        render: (data, row) => {
+          const location = typeof data === 'object' ? data.name : data;
+          const sellPrice = row['Sell Price'] || row.sellPrice || 0;
+          return (
+            <div className="flex flex-col">
+              <span className="text-text-primary truncate" title={location}>{location}</span>
+              {sellPrice > 0 && (
+                <span className="text-xs text-green-400 font-mono">
+                  Sell: {formatCompact(sellPrice)}
+                </span>
+              )}
+            </div>
+          );
+        },
       },
       {
         key: 'Quantity',
-        label: 'Quantity',
+        label: 'Qty',
         type: 'num',
-        render: (data, row) => formatNumber(data || row.quantity, 0),
+        className: 'text-right',
+        render: (data, row) => (
+          <span className="font-mono">{formatNumber(data || row.quantity, 0)}</span>
+        ),
+      },
+      {
+        key: 'Investment',
+        label: 'Investment',
+        type: 'num',
+        className: 'text-right',
+        render: (_, row) => {
+          const buyPrice = row['Buy Price'] || row.buyPrice || 0;
+          const quantity = row.Quantity || row.quantity || 0;
+          const investment = buyPrice * quantity;
+          return (
+            <span className="font-mono text-text-secondary">{formatCompact(investment)}</span>
+          );
+        },
       },
       {
         key: 'Profit',
         label: 'Profit',
         type: 'num',
         defaultSort: true,
-        render: (data, row) => formatISK(data || row.profit, false),
+        className: 'text-right',
+        render: (data, row) => {
+          const profit = data || row.profit;
+          return (
+            <span className={`font-mono font-semibold ${profit > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {profit > 0 ? '+' : ''}{formatCompact(profit)}
+            </span>
+          );
+        },
       },
       {
         key: 'ROI',
         label: 'ROI',
         type: 'num',
-        render: (data, row) => formatPercent((data || row.roi) / 100, 1),
+        className: 'text-right',
+        render: (data, row) => {
+          const roi = data || row.roi;
+          return (
+            <span className={`font-mono font-semibold ${roi > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {roi > 0 ? '+' : ''}{formatPercent(roi / 100, 1)}
+            </span>
+          );
+        },
+      },
+      {
+        key: 'ISK/Jump',
+        label: 'ISK/Jump',
+        type: 'num',
+        className: 'text-right',
+        render: (_, row) => {
+          const profit = row.Profit || row.profit || 0;
+          const jumps = row.Jumps || row.jumps || 1;
+          const iskPerJump = jumps > 0 ? profit / jumps : profit;
+          return (
+            <span className="font-mono text-accent-cyan">{formatCompact(iskPerJump)}</span>
+          );
+        },
       },
       {
         key: 'Jumps',
         label: 'Jumps',
         type: 'num',
-        render: (data, row) => data || row.jumps || 'N/A',
+        className: 'text-center',
+        render: (data, row) => {
+          const jumps = data || row.jumps;
+          return (
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+              jumps <= 5 ? 'bg-green-500/20 text-green-400' :
+              jumps <= 15 ? 'bg-yellow-500/20 text-yellow-400' :
+              'bg-red-500/20 text-red-400'
+            }`}>
+              {jumps || 'N/A'}
+            </span>
+          );
+        },
+      },
+      {
+        key: 'actions',
+        label: '',
+        className: 'w-10',
+        render: (_, row) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              copyTradeDetails(row);
+            }}
+            className="p-2 text-text-secondary hover:text-accent-cyan transition-colors"
+            title="Copy trade details"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
+        ),
       },
     ],
-    [isAuthenticated, hasAssetAtLocation]
+    [isAuthenticated, hasAssetAtLocation, copyItemName, copyTradeDetails]
   );
 
   // Handle row click
@@ -380,6 +541,15 @@ export function StationHaulingPage() {
       subtitle="Find profitable trades between specific stations"
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Toast for copy feedback */}
+        {toastMessage && (
+          <Toast
+            message={toastMessage}
+            onClose={() => setToastMessage(null)}
+            type="success"
+          />
+        )}
+
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">

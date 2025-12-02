@@ -39,6 +39,13 @@ import { QuickCopyButtons } from '../components/common/QuickCopyButtons';
 import { TradeSessionTimer } from '../components/common/TradeSessionTimer';
 import { EnhancedExport } from '../components/common/EnhancedExport';
 
+// New Advanced Features
+import { DiscordWebhookPanel } from '../components/common/DiscordWebhookPanel';
+import { RouteSafetyPanel } from '../components/common/RouteSafetyPanel';
+import { CharacterSwitcher } from '../components/common/CharacterSwitcher';
+import { ContractFinder } from '../components/trading/ContractFinder';
+import { IndustryCalculator } from '../components/trading/IndustryCalculator';
+
 const TOOL_CATEGORIES = [
   {
     id: 'market-analysis',
@@ -82,6 +89,13 @@ const TOOL_CATEGORIES = [
     description: 'Quick copy, session timers, and export utilities',
     color: 'from-indigo-500 to-violet-600',
   },
+  {
+    id: 'integrations',
+    name: 'Integrations',
+    icon: '🔗',
+    description: 'Discord webhooks, contracts, industry calculator, and more',
+    color: 'from-teal-500 to-cyan-600',
+  },
 ];
 
 /**
@@ -105,6 +119,8 @@ export function ToolsPage() {
         return <AnalyticsTools activeTool={activeTool} setActiveTool={setActiveTool} />;
       case 'productivity':
         return <ProductivityTools activeTool={activeTool} setActiveTool={setActiveTool} />;
+      case 'integrations':
+        return <IntegrationsTools activeTool={activeTool} setActiveTool={setActiveTool} />;
       default:
         return null;
     }
@@ -417,6 +433,47 @@ function ToolGrid({ tools, onSelect, color }) {
           </GlassmorphicCard>
         </button>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Integrations Tools Section
+ */
+function IntegrationsTools({ activeTool, setActiveTool }) {
+  const tools = [
+    { id: 'discord', name: 'Discord Webhooks', desc: 'Send alerts to Discord channels' },
+    { id: 'contracts', name: 'Contract Finder', desc: 'Find profitable courier & item contracts' },
+    { id: 'industry', name: 'Industry Calculator', desc: 'Manufacturing & invention profits' },
+    { id: 'routesafety', name: 'Route Safety', desc: 'Zkillboard route danger analysis' },
+    { id: 'characters', name: 'Character Manager', desc: 'Multi-character support' },
+  ];
+
+  if (!activeTool) {
+    return (
+      <ToolGrid tools={tools} onSelect={setActiveTool} color="teal-500" />
+    );
+  }
+
+  return (
+    <div>
+      <BackButton onClick={() => setActiveTool(null)} />
+      <GlassmorphicCard className="p-6">
+        {activeTool === 'discord' && <DiscordWebhookPanel />}
+        {activeTool === 'contracts' && <ContractFinder />}
+        {activeTool === 'industry' && <IndustryCalculator />}
+        {activeTool === 'routesafety' && (
+          <RouteSafetyPanel
+            systemIds={[30000142, 30002187, 30002510]} // Jita, Amarr, Rens systems
+            systemNames={{
+              30000142: 'Jita',
+              30002187: 'Amarr',
+              30002510: 'Rens',
+            }}
+          />
+        )}
+        {activeTool === 'characters' && <CharacterSwitcher />}
+      </GlassmorphicCard>
     </div>
   );
 }

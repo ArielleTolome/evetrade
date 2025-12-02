@@ -266,7 +266,21 @@ function getCategoryName(groupID) {
  */
 export function LongTermTradingPage() {
   const navigate = useNavigate();
-  const { invTypes, loading: resourcesLoading } = useResources();
+  const { invTypes, loading: resourcesLoading, loadInvTypes } = useResources();
+
+  // Loading state for invTypes
+  const [invTypesLoading, setInvTypesLoading] = useState(true);
+
+  // Load invTypes on mount (it's loaded on-demand)
+  useEffect(() => {
+    setInvTypesLoading(true);
+    loadInvTypes()
+      .then(() => setInvTypesLoading(false))
+      .catch(() => setInvTypesLoading(false));
+  }, [loadInvTypes]);
+
+  // Combined loading state
+  const isLoading = resourcesLoading || invTypesLoading || !invTypes;
 
   // Form state
   const [timeHorizon, setTimeHorizon] = useState(90); // 3 months default
@@ -777,7 +791,7 @@ Confidence: ${pred.confidence}%`;
         )}
 
         {/* Results Summary */}
-        {!resourcesLoading && (
+        {!isLoading && (
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div className="text-text-secondary">
               Found <span className="text-accent-cyan font-medium">{filteredPredictions.length}</span> predictions
@@ -809,7 +823,7 @@ Confidence: ${pred.confidence}%`;
         )}
 
         {/* Predictions Table */}
-        {resourcesLoading ? (
+        {isLoading ? (
           <GlassmorphicCard>
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
