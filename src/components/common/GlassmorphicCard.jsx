@@ -7,7 +7,7 @@ export function GlassmorphicCard({
   className = '',
   hover = false,
   glow = false,
-  padding = 'p-6',
+  padding = 'p-4 sm:p-6',
   onClick,
 }) {
   const baseClasses = `

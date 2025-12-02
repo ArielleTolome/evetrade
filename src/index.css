@@ -102,6 +102,38 @@ body {
   overflow-x: hidden;
 }
 
+/* Mobile-optimized touch handling */
+@media (hover: none) and (pointer: coarse) {
+  /* Improve tap targets on touch devices */
+  button, a, select, input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+  }
+
+  /* Disable hover effects on touch */
+  .hover\:bg-white\/5:active {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Safe area padding for iOS devices with notch */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Custom xs breakpoint utilities */
+@media (min-width: 480px) {
+  .xs\:block { display: block; }
+  .xs\:hidden { display: none; }
+  .xs\:flex { display: flex; }
+  .xs\:grid { display: grid; }
+  .xs\:inline { display: inline; }
+  .xs\:inline-flex { display: inline-flex; }
+}
+
 ::selection {
   background-color: rgba(0, 240, 255, 0.3);
   color: #ffffff;

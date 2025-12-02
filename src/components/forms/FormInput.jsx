@@ -69,14 +69,15 @@ export const FormInput = forwardRef(function FormInput(
           max={max}
           step={step}
           className={`
-            w-full px-4 py-3 rounded-lg
+            w-full px-3 sm:px-4 py-3 rounded-lg
             bg-space-dark/50 dark:bg-space-dark/50 bg-white
             border ${error ? 'border-red-500' : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'}
-            text-text-primary dark:text-text-primary text-light-text
+            text-text-primary dark:text-text-primary text-light-text text-base sm:text-sm
             placeholder-text-secondary/50
             focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all duration-200
+            min-h-[48px] sm:min-h-[44px]
             ${prefix ? 'pl-8' : ''}
             ${suffix ? 'pr-12' : ''}
             ${inputClassName}

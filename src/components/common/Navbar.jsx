@@ -206,26 +206,27 @@ export function Navbar() {
         id="mobile-menu"
         ref={menuRef}
         className={`
-          md:hidden fixed inset-x-0 top-16 bottom-0 bg-space-dark/95 backdrop-blur-xl z-50 overflow-y-auto
+          md:hidden fixed inset-x-0 top-16 bottom-0 bg-space-dark/95 backdrop-blur-xl z-50
+          overflow-y-auto overscroll-contain
           transition-all duration-300 ease-in-out origin-top
           ${isMobileMenuOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}
         `}
         aria-hidden={!isMobileMenuOpen}
       >
-        <div className="px-4 py-6 space-y-2">
+        <div className="px-3 py-4 space-y-1 pb-safe">
           {navItems.map(({ path, label, icon }, index) => (
             <Link
               key={path}
               to={path}
               onClick={handleMenuClose}
-              style={{ animationDelay: `${index * 50}ms` }}
+              style={{ animationDelay: `${index * 30}ms` }}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium
-                transition-all duration-200
+                flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium
+                transition-all duration-200 min-h-[48px]
                 ${isMobileMenuOpen ? 'animate-fade-in-up' : ''}
                 ${location.pathname === path
                   ? 'bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5 border border-transparent'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-white/5 border border-transparent active:bg-white/10'
                 }
               `}
             >

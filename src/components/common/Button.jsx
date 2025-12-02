@@ -58,11 +58,11 @@ export function Button({
     `,
     };
 
-    // Size classes
+    // Size classes - ensuring min-height for touch targets on mobile
     const sizes = {
-        sm: 'text-xs px-3 py-1.5 rounded-md gap-1.5',
-        md: 'text-sm px-5 py-2.5 rounded-lg gap-2',
-        lg: 'text-base px-8 py-4 rounded-xl gap-3',
+        sm: 'text-xs px-3 py-2 rounded-md gap-1.5 min-h-[36px] sm:min-h-[32px]',
+        md: 'text-sm px-4 sm:px-5 py-2.5 rounded-lg gap-2 min-h-[44px]',
+        lg: 'text-base px-6 sm:px-8 py-3 sm:py-4 rounded-xl gap-3 min-h-[48px]',
     };
 
     // Loading spinner

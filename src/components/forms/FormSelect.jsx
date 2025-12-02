@@ -50,14 +50,15 @@ export const FormSelect = forwardRef(function FormSelect(
           disabled={disabled}
           required={required}
           className={`
-            w-full px-4 py-3 rounded-lg appearance-none
+            w-full px-3 sm:px-4 py-3 rounded-lg appearance-none
             bg-space-dark/50 dark:bg-space-dark/50 bg-white
             border ${error ? 'border-red-500' : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'}
-            text-text-primary dark:text-text-primary text-light-text
+            text-text-primary dark:text-text-primary text-light-text text-base sm:text-sm
             focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all duration-200
             cursor-pointer
+            min-h-[48px] sm:min-h-[44px]
             ${selectClassName}
           `}
           {...props}

@@ -340,36 +340,42 @@ export function TradingTable({
   return (
     <div className={`bg-space-dark/40 backdrop-blur-md rounded-xl border border-white/5 overflow-hidden flex flex-col shadow-xl ${className}`}>
       {/* Top Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 bg-space-mid/40 border-b border-white/5">
-        <div className="flex gap-2 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center p-3 sm:p-4 gap-3 sm:gap-4 bg-space-mid/40 border-b border-white/5">
+        <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-1">
           <Button
             onClick={copyToClipboard}
             variant="secondary"
             size="sm"
-            className="flex-1 sm:flex-none min-h-[44px]"
+            className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm"
           >
-            Copy
+            <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span className="hidden sm:inline">Copy</span>
           </Button>
           <Button
             onClick={exportCSV}
             variant="secondary"
             size="sm"
-            className="flex-1 sm:flex-none min-h-[44px]"
+            className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm"
           >
-            CSV
+            <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="hidden sm:inline">CSV</span>
           </Button>
         </div>
-        <div className="w-full sm:w-auto">
+        <div className="w-full sm:w-auto sm:max-w-xs order-1 sm:order-2">
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Search results..."
+            placeholder="Search..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
               setCurrentPage(0);
             }}
-            className="w-full sm:min-w-[240px] px-4 py-2 rounded-lg bg-space-black/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan placeholder-text-secondary/50"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg bg-space-black/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan placeholder-text-secondary/50 min-h-[44px]"
           />
         </div>
       </div>
@@ -397,8 +403,8 @@ export function TradingTable({
                   key={col.key}
                   onClick={() => handleSort(col.key)}
                   className={`
-                    bg-space-mid/60 text-accent-cyan font-display font-semibold text-xs uppercase tracking-wider
-                    px-4 py-4 border-b border-white/5
+                    bg-space-mid/60 text-accent-cyan font-display font-semibold text-[10px] sm:text-xs uppercase tracking-wider
+                    px-2 sm:px-4 py-3 sm:py-4 border-b border-white/5
                     whitespace-nowrap cursor-pointer select-none
                     hover:bg-white/5 transition-colors
                     ${sortConfig?.key === col.key ? 'text-accent-cyan' : 'text-text-secondary'}
@@ -502,7 +508,7 @@ export function TradingTable({
                       </td>
                     )}
                     {columns.filter(c => c.visible !== false).map(col => (
-                      <td key={col.key} className={`px-4 py-3 text-text-primary ${col.className || ''}`}>
+                      <td key={col.key} className={`px-2 sm:px-4 py-2.5 sm:py-3 text-text-primary text-xs sm:text-sm ${col.className || ''}`}>
                         {renderCell(row, col)}
                       </td>
                     ))}
@@ -546,13 +552,22 @@ export function TradingTable({
       </div>
 
       {/* Bottom Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center p-3 md:p-4 gap-3 md:gap-4 bg-space-mid/30 border-t border-accent-cyan/10 text-xs sm:text-sm text-text-secondary">
-        <div className="text-center sm:text-left">
-          Showing <span className="text-text-primary font-medium">{sortedData.length > 0 ? currentPage * itemsPerPage + 1 : 0}</span> to <span className="text-text-primary font-medium">{Math.min((currentPage + 1) * itemsPerPage, sortedData.length)}</span> of <span className="text-text-primary font-medium">{sortedData.length}</span> entries
-          {searchTerm && ` (filtered from ${data.length} total)`}
+      <div className="flex flex-col sm:flex-row justify-between items-center p-3 gap-3 bg-space-mid/30 border-t border-accent-cyan/10 text-xs text-text-secondary">
+        {/* Entry count - hidden on very small screens, abbreviated on mobile */}
+        <div className="hidden xs:block text-center sm:text-left">
+          <span className="hidden sm:inline">Showing </span>
+          <span className="text-text-primary font-medium">{sortedData.length > 0 ? currentPage * itemsPerPage + 1 : 0}</span>
+          <span className="hidden sm:inline"> to </span>
+          <span className="sm:hidden">-</span>
+          <span className="text-text-primary font-medium">{Math.min((currentPage + 1) * itemsPerPage, sortedData.length)}</span>
+          <span className="hidden sm:inline"> of </span>
+          <span className="sm:hidden">/</span>
+          <span className="text-text-primary font-medium">{sortedData.length}</span>
+          <span className="hidden sm:inline"> entries</span>
+          {searchTerm && <span className="hidden md:inline"> (filtered from {data.length} total)</span>}
         </div>
-        <div className="flex flex-wrap items-center gap-3 md:gap-4 justify-center">
-          <label className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-center w-full sm:w-auto">
+          <label className="hidden sm:flex items-center gap-2">
             Show
             <select
               value={itemsPerPage}
@@ -560,7 +575,7 @@ export function TradingTable({
                 setItemsPerPage(Number(e.target.value));
                 setCurrentPage(0);
               }}
-              className="px-2 py-1 rounded bg-space-black/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan cursor-pointer"
+              className="px-2 py-1.5 rounded bg-space-black/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan cursor-pointer min-h-[36px]"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -568,12 +583,12 @@ export function TradingTable({
               <option value={100}>100</option>
             </select>
           </label>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             <button
               type="button"
               onClick={() => goToPage(0)}
               disabled={currentPage === 0}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10"
               aria-label="First page"
             >
               «
@@ -582,19 +597,20 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 0}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10"
               aria-label="Previous page"
             >
               ‹
             </button>
-            <span className="px-2 text-text-primary whitespace-nowrap">
-              Page {currentPage + 1} of {totalPages || 1}
+            <span className="px-2 sm:px-3 text-text-primary whitespace-nowrap text-xs sm:text-sm">
+              <span className="sm:hidden">{currentPage + 1}/{totalPages || 1}</span>
+              <span className="hidden sm:inline">Page {currentPage + 1} of {totalPages || 1}</span>
             </span>
             <button
               type="button"
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10"
               aria-label="Next page"
             >
               ›
@@ -603,7 +619,7 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(totalPages - 1)}
               disabled={currentPage >= totalPages - 1}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10"
               aria-label="Last page"
             >
               »

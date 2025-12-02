@@ -1245,17 +1245,17 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
               <>
                 {/* Summary Stats */}
                 {orders.length > 0 && (
-                  <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                     <div className="text-center p-3 rounded-lg bg-space-dark/50">
-                      <div className="text-lg font-bold text-red-400">{formatISK(ordersStats.buyEscrow, false)}</div>
+                      <div className="text-base sm:text-lg font-bold text-red-400">{formatISK(ordersStats.buyEscrow, false)}</div>
                       <div className="text-xs text-text-secondary">Buy Escrow ({ordersStats.buyOrders})</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-space-dark/50">
-                      <div className="text-lg font-bold text-green-400">{formatISK(ordersStats.sellValue, false)}</div>
+                      <div className="text-base sm:text-lg font-bold text-green-400">{formatISK(ordersStats.sellValue, false)}</div>
                       <div className="text-xs text-text-secondary">Sell Value ({ordersStats.sellOrders})</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-space-dark/50">
-                      <div className="text-lg font-bold text-accent-gold">{formatISK(ordersStats.totalValue, false)}</div>
+                      <div className="text-base sm:text-lg font-bold text-accent-gold">{formatISK(ordersStats.totalValue, false)}</div>
                       <div className="text-xs text-text-secondary">Total Locked</div>
                     </div>
                   </div>
@@ -1594,7 +1594,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   const stationId = stationData?.station;
 
                   return (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                       {/* Quick Calculator */}
                       <div className="lg:col-span-1">
                         <QuickTradeCalculator
