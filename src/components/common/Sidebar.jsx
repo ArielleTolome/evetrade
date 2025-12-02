@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useEveAuth } from '../../hooks/useEveAuth';
+import { CharacterSwitcher } from './CharacterSwitcher';
 
 /**
  * Navigation items organized by category
@@ -39,6 +40,7 @@ const navSections = [
     id: 'personal',
     label: 'PERSONAL',
     items: [
+      { path: '/characters', label: 'Characters', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
       { path: '/portfolio', label: 'Portfolio', icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
       { path: '/watchlist', label: 'Watchlist', icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' },
       { path: '/saved-routes', label: 'Saved Routes', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z' },
@@ -65,69 +67,7 @@ function NavIcon({ path, className = 'w-5 h-5' }) {
   );
 }
 
-/**
- * User Profile Section
- */
-function UserProfile({ isCollapsed }) {
-  const { isAuthenticated, character, login, logout } = useEveAuth();
-
-  const getPortraitUrl = (characterId, size = 64) => {
-    return `https://images.evetech.net/characters/${characterId}/portrait?size=${size}`;
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <button
-        onClick={login}
-        className={`
-          w-full flex items-center gap-3 px-3 py-3 rounded-xl
-          bg-accent-cyan/10 hover:bg-accent-cyan/20
-          text-accent-cyan border border-accent-cyan/30
-          transition-all duration-200
-          ${isCollapsed ? 'justify-center' : ''}
-        `}
-      >
-        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-        </svg>
-        {!isCollapsed && <span className="text-sm font-medium">Login with EVE</span>}
-      </button>
-    );
-  }
-
-  return (
-    <div className={`
-      flex items-center gap-3 px-3 py-3 rounded-xl
-      bg-space-dark/50 border border-accent-cyan/20
-      ${isCollapsed ? 'justify-center' : ''}
-    `}>
-      {character?.id ? (
-        <img
-          src={getPortraitUrl(character.id, 64)}
-          alt={character.name}
-          className="w-10 h-10 rounded-full border-2 border-accent-cyan/30 flex-shrink-0"
-        />
-      ) : (
-        <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center flex-shrink-0">
-          <svg className="w-5 h-5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </div>
-      )}
-      {!isCollapsed && (
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-text-primary truncate">{character?.name}</div>
-          <button
-            onClick={logout}
-            className="text-xs text-text-secondary hover:text-red-400 transition-colors"
-          >
-            Log out
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+// UserProfile component replaced with CharacterSwitcher
 
 /**
  * Sidebar Navigation Component
@@ -169,9 +109,9 @@ export function Sidebar({ isCollapsed, onToggle }) {
         </button>
       </div>
 
-      {/* User Profile */}
+      {/* Character Switcher */}
       <div className="px-3 py-4 border-b border-white/5">
-        <UserProfile isCollapsed={isCollapsed} />
+        <CharacterSwitcher compact />
       </div>
 
       {/* Navigation */}
@@ -273,9 +213,9 @@ export function MobileNav() {
               </button>
             </div>
 
-            {/* User Profile */}
+            {/* Character Switcher */}
             <div className="px-4 py-4 border-b border-white/5">
-              <UserProfile isCollapsed={false} />
+              <CharacterSwitcher compact />
             </div>
 
             {/* Navigation */}

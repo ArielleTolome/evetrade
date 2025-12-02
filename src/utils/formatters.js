@@ -250,3 +250,31 @@ export function formatRelativeTime(date) {
     return 'Just now';
   }
 }
+
+/**
+ * Format a date and time in a readable format
+ * @description Converts a date to a localized date and time string.
+ * Useful for displaying timestamps on alerts, orders, and history items.
+ * @param {Date|string|number} date - The date to format (can be Date object, ISO string, or timestamp)
+ * @returns {string} Formatted date and time string
+ * @example
+ * formatDateTime('2024-01-15T10:30:00Z')
+ * // returns '1/15/2024, 10:30 AM'
+ */
+export function formatDateTime(date) {
+  if (!date) return 'N/A';
+
+  try {
+    const dateObj = new Date(date);
+    return dateObj.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch {
+    return 'Invalid date';
+  }
+}

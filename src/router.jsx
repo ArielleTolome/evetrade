@@ -24,6 +24,10 @@ const RouteOptimizationPage = lazy(() => import('./pages/RouteOptimizationPage')
 const MarketOrdersPage = lazy(() => import('./pages/MarketOrdersPage'));
 const OverviewPage = lazy(() => import('./pages/OverviewPage'));
 const TradeProfitsPage = lazy(() => import('./pages/TradeProfitsPage'));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const AlertsPage = lazy(() => import('./pages/AlertsPage'));
+const SmartTradingPage = lazy(() => import('./pages/SmartTradingPage'));
+const MultiCharacterPage = lazy(() => import('./pages/MultiCharacterPage'));
 
 /**
  * Lazy page wrapper with loading fallback
@@ -201,6 +205,38 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <TradeProfitsPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'analytics',
+        element: (
+          <LazyPage>
+            <AnalyticsPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'alerts',
+        element: (
+          <LazyPage>
+            <AlertsPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'smart-trading',
+        element: (
+          <LazyPage>
+            <SmartTradingPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'characters',
+        element: (
+          <LazyPage>
+            <MultiCharacterPage />
           </LazyPage>
         ),
       },

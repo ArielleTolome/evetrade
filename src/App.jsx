@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/react';
 import { ResourceProvider } from './hooks/useResources';
 import { ThemeProvider } from './store/ThemeContext';
 import { EveAuthProvider } from './hooks/useEveAuth';
+import { MultiCharacterProvider } from './hooks/useMultiCharacter';
 import { router } from './router';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
@@ -35,9 +36,11 @@ function App() {
     >
       <ThemeProvider>
         <EveAuthProvider>
-          <ResourceProvider>
-            <RouterProvider router={router} />
-          </ResourceProvider>
+          <MultiCharacterProvider>
+            <ResourceProvider>
+              <RouterProvider router={router} />
+            </ResourceProvider>
+          </MultiCharacterProvider>
         </EveAuthProvider>
       </ThemeProvider>
     </Sentry.ErrorBoundary>

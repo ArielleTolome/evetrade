@@ -60,6 +60,28 @@ export function MultiCharacterProvider({ children }) {
   const [error, setError] = useState(null);
   const [characterData, setCharacterData] = useState({});
 
+  // Listen for character added from EveAuth
+  useEffect(() => {
+    const handleCharacterAdded = (event) => {
+      const { characterId, authData } = event.detail;
+      addCharacter(authData).catch(console.error);
+    };
+
+    const handleLogout = () => {
+      setCharacters([]);
+      setActiveCharacterId(null);
+      setCharacterData({});
+    };
+
+    window.addEventListener('eveauth:character-added', handleCharacterAdded);
+    window.addEventListener('eveauth:logout', handleLogout);
+
+    return () => {
+      window.removeEventListener('eveauth:character-added', handleCharacterAdded);
+      window.removeEventListener('eveauth:logout', handleLogout);
+    };
+  }, []);
+
   // Persist characters to localStorage
   useEffect(() => {
     try {

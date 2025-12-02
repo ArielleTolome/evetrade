@@ -21,6 +21,8 @@ const EVE_SSO_CONFIG = {
 };
 
 const AUTH_STORAGE_KEY = 'eve_auth';
+const OLD_AUTH_STORAGE_KEY = 'eve_auth'; // Keep for migration
+const NEW_AUTH_STORAGE_KEY = 'eve_auth_multi';
 
 /**
  * Parse JWT token to extract character info
@@ -39,6 +41,43 @@ function parseJwt(token) {
   } catch {
     return null;
   }
+}
+
+/**
+ * Migrate old single-character auth to new multi-character format
+ */
+function migrateOldAuth() {
+  const oldAuth = localStorage.getItem(OLD_AUTH_STORAGE_KEY);
+  const newAuth = localStorage.getItem(NEW_AUTH_STORAGE_KEY);
+
+  // Only migrate if old auth exists and new doesn't
+  if (oldAuth && !newAuth) {
+    try {
+      const parsed = JSON.parse(oldAuth);
+      // Extract character info from token
+      const tokenData = parseJwt(parsed.accessToken);
+      if (tokenData) {
+        const characterId = tokenData.sub?.split(':')[2];
+        const migrated = {
+          characters: [{
+            id: characterId,
+            name: tokenData.name,
+            accessToken: parsed.accessToken,
+            refreshToken: parsed.refreshToken,
+            expiresAt: parsed.expiresAt,
+            addedAt: Date.now(),
+          }],
+          activeCharacterId: characterId,
+        };
+        localStorage.setItem(NEW_AUTH_STORAGE_KEY, JSON.stringify(migrated));
+        localStorage.removeItem(OLD_AUTH_STORAGE_KEY);
+        return migrated;
+      }
+    } catch (e) {
+      console.warn('Failed to migrate old auth:', e);
+    }
+  }
+  return null;
 }
 
 /**
@@ -74,39 +113,59 @@ const EveAuthContext = createContext(null);
 
 /**
  * EVE Auth Provider Component
+ * Now integrated with multi-character support
  */
 export function EveAuthProvider({ children }) {
   const [auth, setAuth] = useState(null);
   const [character, setCharacter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [multiCharAuth, setMultiCharAuth] = useState(null);
 
-  // Load auth from storage on mount
+  // Load auth from storage on mount - check for migration first
   useEffect(() => {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+    // Try to migrate old auth first
+    const migrated = migrateOldAuth();
+    if (migrated) {
+      setMultiCharAuth(migrated);
+      setAuth({
+        accessToken: migrated.characters[0].accessToken,
+        refreshToken: migrated.characters[0].refreshToken,
+        expiresAt: migrated.characters[0].expiresAt,
+      });
+      setCharacter({
+        id: migrated.characters[0].id,
+        name: migrated.characters[0].name,
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Load new multi-character auth
+    const stored = localStorage.getItem(NEW_AUTH_STORAGE_KEY);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        // Check if token is still valid
-        if (parsed.expiresAt > Date.now()) {
-          setAuth(parsed);
-          // Extract character info from token
-          const tokenData = parseJwt(parsed.accessToken);
-          if (tokenData) {
-            const characterId = tokenData.sub?.split(':')[2];
-            setCharacter({
-              id: characterId,
-              name: tokenData.name,
-            });
-          }
-        } else if (parsed.refreshToken) {
+        setMultiCharAuth(parsed);
+
+        // Set active character as current auth
+        const activeChar = parsed.characters.find(c => c.id === parsed.activeCharacterId);
+        if (activeChar && activeChar.expiresAt > Date.now()) {
+          setAuth({
+            accessToken: activeChar.accessToken,
+            refreshToken: activeChar.refreshToken,
+            expiresAt: activeChar.expiresAt,
+          });
+          setCharacter({
+            id: activeChar.id,
+            name: activeChar.name,
+          });
+        } else if (activeChar?.refreshToken) {
           // Token expired, try to refresh
-          refreshAccessToken(parsed.refreshToken);
-        } else {
-          localStorage.removeItem(AUTH_STORAGE_KEY);
+          refreshAccessToken(activeChar.refreshToken);
         }
       } catch {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem(NEW_AUTH_STORAGE_KEY);
       }
     }
     setLoading(false);
@@ -162,24 +221,64 @@ export function EveAuthProvider({ children }) {
     const data = await response.json();
     const expiresAt = Date.now() + data.expires_in * 1000;
 
-    const authData = {
+    // Extract character info from token
+    const tokenData = parseJwt(data.access_token);
+    if (!tokenData) {
+      throw new Error('Invalid token received');
+    }
+
+    const characterId = tokenData.sub?.split(':')[2];
+    if (!characterId) {
+      throw new Error('Could not extract character ID');
+    }
+
+    // Load or create multi-char auth structure
+    let multiAuth = multiCharAuth || { characters: [], activeCharacterId: null };
+
+    // Check if character already exists
+    const existingIndex = multiAuth.characters.findIndex(c => c.id === characterId);
+    const newCharData = {
+      id: characterId,
+      name: tokenData.name,
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
       expiresAt,
+      addedAt: existingIndex >= 0 ? multiAuth.characters[existingIndex].addedAt : Date.now(),
+      lastUpdated: Date.now(),
     };
 
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
-    setAuth(authData);
-
-    // Extract character info
-    const tokenData = parseJwt(data.access_token);
-    if (tokenData) {
-      const characterId = tokenData.sub?.split(':')[2];
-      setCharacter({
-        id: characterId,
-        name: tokenData.name,
-      });
+    if (existingIndex >= 0) {
+      // Update existing character
+      multiAuth.characters[existingIndex] = newCharData;
+    } else {
+      // Add new character
+      multiAuth.characters.push(newCharData);
     }
+
+    // Set as active if first character or if specifically adding this one
+    if (!multiAuth.activeCharacterId || multiAuth.characters.length === 1) {
+      multiAuth.activeCharacterId = characterId;
+    }
+
+    // Save to localStorage
+    localStorage.setItem(NEW_AUTH_STORAGE_KEY, JSON.stringify(multiAuth));
+    setMultiCharAuth(multiAuth);
+
+    // Update current auth state
+    setAuth({
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresAt,
+    });
+    setCharacter({
+      id: characterId,
+      name: tokenData.name,
+    });
+
+    // Dispatch event for MultiCharacterProvider to pick up
+    window.dispatchEvent(new CustomEvent('eveauth:character-added', {
+      detail: { characterId, authData: newCharData }
+    }));
   };
 
   // Refresh access token
@@ -257,12 +356,16 @@ export function EveAuthProvider({ children }) {
     window.location.href = `${EVE_SSO_CONFIG.authUrl}?${params}`;
   }, []);
 
-  // Logout
+  // Logout (removes all characters)
   const logout = useCallback(() => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem(NEW_AUTH_STORAGE_KEY);
     setAuth(null);
     setCharacter(null);
+    setMultiCharAuth(null);
     setError(null);
+    // Notify MultiCharacterProvider
+    window.dispatchEvent(new CustomEvent('eveauth:logout'));
   }, []);
 
   // Get valid access token (refresh if needed)
