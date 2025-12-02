@@ -276,45 +276,45 @@ export function MarketOrdersPage() {
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary"
+              className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary min-h-[44px]"
             >
               <option value="all">All Orders ({orders.length})</option>
               <option value="sell">Sell Orders ({sellOrders.length})</option>
               <option value="buy">Buy Orders ({buyOrders.length})</option>
             </select>
 
-            <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer min-h-[44px]">
               <input
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="rounded border-accent-cyan/30 bg-space-dark/50 text-accent-cyan focus:ring-accent-cyan"
+                className="w-5 h-5 sm:w-4 sm:h-4 rounded border-accent-cyan/30 bg-space-dark/50 text-accent-cyan focus:ring-accent-cyan"
               />
               Auto-refresh (5m)
             </label>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-3">
             {lastRefresh && (
               <span className="text-xs text-text-secondary">
-                Last update: {formatRelativeTime(lastRefresh)}
+                Updated: {formatRelativeTime(lastRefresh)}
               </span>
             )}
             <Button
               onClick={loadOrders}
               disabled={loading}
               variant="secondary"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 min-h-[44px] px-4"
             >
               <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
           </div>
         </div>
@@ -328,15 +328,17 @@ export function MarketOrdersPage() {
 
         {/* Sell Orders Section */}
         <GlassmorphicCard className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-display text-green-400">Selling</h2>
-              <span className="text-sm text-text-secondary">
-                Active Orders: <span className="text-text-primary font-bold">{stats.sellCount}</span>
-              </span>
-              <span className="text-sm text-text-secondary">
-                Total ISK: <span className="text-green-400 font-bold">{formatISK(stats.sellTotal, false)}</span>
-              </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <h2 className="text-lg sm:text-xl font-display text-green-400">Selling</h2>
+              <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-text-secondary">
+                <span>
+                  Orders: <span className="text-text-primary font-bold">{stats.sellCount}</span>
+                </span>
+                <span>
+                  Total: <span className="text-green-400 font-bold">{formatISK(stats.sellTotal, false)}</span>
+                </span>
+              </div>
             </div>
             {priceLoading && (
               <span className="text-xs text-accent-cyan flex items-center gap-2">
@@ -353,55 +355,104 @@ export function MarketOrdersPage() {
               <div className="w-6 h-6 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
             </div>
           ) : sellOrders.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-text-secondary border-b border-accent-cyan/20">
-                    <th className="text-left py-2 px-3">Type</th>
-                    <th className="text-right py-2 px-3">Price</th>
-                    <th className="text-left py-2 px-3">Price Status</th>
-                    <th className="text-right py-2 px-3">Volume</th>
-                    <th className="text-right py-2 px-3">Total</th>
-                    <th className="text-right py-2 px-3">Expires</th>
-                    <th className="text-left py-2 px-3">Station</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sellOrders.map((order) => {
-                    const status = priceStatus[order.order_id] || { status: 'unknown', priceDiff: 0 };
-                    const expiresDate = new Date(order.issued);
-                    expiresDate.setDate(expiresDate.getDate() + order.duration);
-                    const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
+            <>
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {sellOrders.map((order) => {
+                  const status = priceStatus[order.order_id] || { status: 'unknown', priceDiff: 0 };
+                  const expiresDate = new Date(order.issued);
+                  expiresDate.setDate(expiresDate.getDate() + order.duration);
+                  const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
 
-                    return (
-                      <tr key={order.order_id} className="border-b border-accent-cyan/10 hover:bg-white/5">
-                        <td className="py-2 px-3 text-text-primary">
-                          {typeNames[order.type_id] || `Type ${order.type_id}`}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-text-primary">
-                          {formatISK(order.price, false)}
-                        </td>
-                        <td className="py-2 px-3">
-                          <PriceStatusBadge status={status.status} priceDiff={status.priceDiff} />
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-text-secondary">
-                          {formatNumber(order.volume_remain, 0)}/{formatNumber(order.volume_total, 0)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-green-400">
-                          {formatISK(order.price * order.volume_remain, false)}
-                        </td>
-                        <td className={`py-2 px-3 text-right ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'}`}>
-                          {daysLeft}d {Math.floor((expiresDate - new Date()) / (1000 * 60 * 60) % 24)}h
-                        </td>
-                        <td className="py-2 px-3 text-text-secondary text-xs truncate max-w-[200px]" title={locationNames[order.location_id]}>
-                          {locationNames[order.location_id] || `Location ${order.location_id}`}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                  return (
+                    <div key={order.order_id} className="p-4 bg-white/5 rounded-xl border border-accent-cyan/10">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-text-primary font-medium truncate">
+                            {typeNames[order.type_id] || `Type ${order.type_id}`}
+                          </h3>
+                          <p className="text-xs text-text-secondary truncate mt-0.5">
+                            {locationNames[order.location_id] || `Location ${order.location_id}`}
+                          </p>
+                        </div>
+                        <PriceStatusBadge status={status.status} priceDiff={status.priceDiff} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-text-secondary text-xs">Price</span>
+                          <p className="font-mono text-text-primary">{formatISK(order.price, false)}</p>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary text-xs">Total Value</span>
+                          <p className="font-mono text-green-400">{formatISK(order.price * order.volume_remain, false)}</p>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary text-xs">Volume</span>
+                          <p className="font-mono text-text-secondary">{formatNumber(order.volume_remain, 0)}/{formatNumber(order.volume_total, 0)}</p>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary text-xs">Expires</span>
+                          <p className={`font-mono ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'}`}>
+                            {daysLeft}d {Math.floor((expiresDate - new Date()) / (1000 * 60 * 60) % 24)}h
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-text-secondary border-b border-accent-cyan/20">
+                      <th className="text-left py-2 px-3">Type</th>
+                      <th className="text-right py-2 px-3">Price</th>
+                      <th className="text-left py-2 px-3">Price Status</th>
+                      <th className="text-right py-2 px-3">Volume</th>
+                      <th className="text-right py-2 px-3">Total</th>
+                      <th className="text-right py-2 px-3">Expires</th>
+                      <th className="text-left py-2 px-3">Station</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sellOrders.map((order) => {
+                      const status = priceStatus[order.order_id] || { status: 'unknown', priceDiff: 0 };
+                      const expiresDate = new Date(order.issued);
+                      expiresDate.setDate(expiresDate.getDate() + order.duration);
+                      const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                      return (
+                        <tr key={order.order_id} className="border-b border-accent-cyan/10 hover:bg-white/5">
+                          <td className="py-2 px-3 text-text-primary">
+                            {typeNames[order.type_id] || `Type ${order.type_id}`}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-text-primary">
+                            {formatISK(order.price, false)}
+                          </td>
+                          <td className="py-2 px-3">
+                            <PriceStatusBadge status={status.status} priceDiff={status.priceDiff} />
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-text-secondary">
+                            {formatNumber(order.volume_remain, 0)}/{formatNumber(order.volume_total, 0)}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-green-400">
+                            {formatISK(order.price * order.volume_remain, false)}
+                          </td>
+                          <td className={`py-2 px-3 text-right ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'}`}>
+                            {daysLeft}d {Math.floor((expiresDate - new Date()) / (1000 * 60 * 60) % 24)}h
+                          </td>
+                          <td className="py-2 px-3 text-text-secondary text-xs truncate max-w-[200px]" title={locationNames[order.location_id]}>
+                            {locationNames[order.location_id] || `Location ${order.location_id}`}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : (
             <div className="text-center py-8 text-text-secondary">
               No active sell orders
@@ -411,20 +462,22 @@ export function MarketOrdersPage() {
 
         {/* Buy Orders Section */}
         <GlassmorphicCard>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <h2 className="text-xl font-display text-red-400">Buying</h2>
-              <span className="text-sm text-text-secondary">
-                Active Orders: <span className="text-text-primary font-bold">{stats.buyCount}</span>
+          <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <h2 className="text-lg sm:text-xl font-display text-red-400">Buying</h2>
+              <span className="text-xs sm:text-sm text-text-secondary">
+                Orders: <span className="text-text-primary font-bold">{stats.buyCount}</span>
               </span>
-              <span className="text-sm text-text-secondary">
-                Total ISK: <span className="text-red-400 font-bold">{formatISK(stats.buyTotal, false)}</span>
+            </div>
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-text-secondary">
+              <span>
+                Total: <span className="text-red-400 font-bold">{formatISK(stats.buyTotal, false)}</span>
               </span>
-              <span className="text-sm text-text-secondary">
-                Total Escrow: <span className="text-accent-cyan font-bold">{formatISK(stats.buyEscrow, false)}</span>
+              <span>
+                Escrow: <span className="text-accent-cyan font-bold">{formatISK(stats.buyEscrow, false)}</span>
               </span>
-              <span className="text-sm text-text-secondary">
-                Remaining to cover: <span className={stats.remainingToCover > 0 ? 'text-yellow-400' : 'text-green-400'} >{formatISK(stats.remainingToCover, false)}</span>
+              <span className="col-span-2 sm:col-span-1">
+                To cover: <span className={stats.remainingToCover > 0 ? 'text-yellow-400' : 'text-green-400'}>{formatISK(stats.remainingToCover, false)}</span>
               </span>
             </div>
           </div>
@@ -434,59 +487,112 @@ export function MarketOrdersPage() {
               <div className="w-6 h-6 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
             </div>
           ) : buyOrders.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-text-secondary border-b border-accent-cyan/20">
-                    <th className="text-left py-2 px-3">Type</th>
-                    <th className="text-right py-2 px-3">Price</th>
-                    <th className="text-left py-2 px-3">Price Status</th>
-                    <th className="text-right py-2 px-3">Volume</th>
-                    <th className="text-right py-2 px-3">Total</th>
-                    <th className="text-right py-2 px-3">Escrow</th>
-                    <th className="text-right py-2 px-3">Expires</th>
-                    <th className="text-left py-2 px-3">Station</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {buyOrders.map((order) => {
-                    const status = priceStatus[order.order_id] || { status: 'unknown', priceDiff: 0 };
-                    const expiresDate = new Date(order.issued);
-                    expiresDate.setDate(expiresDate.getDate() + order.duration);
-                    const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
+            <>
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {buyOrders.map((order) => {
+                  const status = priceStatus[order.order_id] || { status: 'unknown', priceDiff: 0 };
+                  const expiresDate = new Date(order.issued);
+                  expiresDate.setDate(expiresDate.getDate() + order.duration);
+                  const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
 
-                    return (
-                      <tr key={order.order_id} className="border-b border-accent-cyan/10 hover:bg-white/5">
-                        <td className="py-2 px-3 text-text-primary">
-                          {typeNames[order.type_id] || `Type ${order.type_id}`}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-text-primary">
-                          {formatISK(order.price, false)}
-                        </td>
-                        <td className="py-2 px-3">
-                          <PriceStatusBadge status={status.status} priceDiff={status.priceDiff} />
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-text-secondary">
-                          {formatNumber(order.volume_remain, 0)}/{formatNumber(order.volume_total, 0)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-red-400">
-                          {formatISK(order.price * order.volume_remain, false)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono text-accent-cyan">
-                          {formatISK(order.escrow || 0, false)}
-                        </td>
-                        <td className={`py-2 px-3 text-right ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'}`}>
-                          {daysLeft}d {Math.floor((expiresDate - new Date()) / (1000 * 60 * 60) % 24)}h
-                        </td>
-                        <td className="py-2 px-3 text-text-secondary text-xs truncate max-w-[200px]" title={locationNames[order.location_id]}>
-                          {locationNames[order.location_id] || `Location ${order.location_id}`}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                  return (
+                    <div key={order.order_id} className="p-4 bg-white/5 rounded-xl border border-accent-cyan/10">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-text-primary font-medium truncate">
+                            {typeNames[order.type_id] || `Type ${order.type_id}`}
+                          </h3>
+                          <p className="text-xs text-text-secondary truncate mt-0.5">
+                            {locationNames[order.location_id] || `Location ${order.location_id}`}
+                          </p>
+                        </div>
+                        <PriceStatusBadge status={status.status} priceDiff={status.priceDiff} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-text-secondary text-xs">Price</span>
+                          <p className="font-mono text-text-primary">{formatISK(order.price, false)}</p>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary text-xs">Total Value</span>
+                          <p className="font-mono text-red-400">{formatISK(order.price * order.volume_remain, false)}</p>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary text-xs">Volume</span>
+                          <p className="font-mono text-text-secondary">{formatNumber(order.volume_remain, 0)}/{formatNumber(order.volume_total, 0)}</p>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary text-xs">Escrow</span>
+                          <p className="font-mono text-accent-cyan">{formatISK(order.escrow || 0, false)}</p>
+                        </div>
+                        <div className="col-span-2 flex justify-between items-center pt-2 border-t border-accent-cyan/10">
+                          <span className="text-text-secondary text-xs">Expires</span>
+                          <span className={`font-mono text-sm ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'}`}>
+                            {daysLeft}d {Math.floor((expiresDate - new Date()) / (1000 * 60 * 60) % 24)}h
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-text-secondary border-b border-accent-cyan/20">
+                      <th className="text-left py-2 px-3">Type</th>
+                      <th className="text-right py-2 px-3">Price</th>
+                      <th className="text-left py-2 px-3">Price Status</th>
+                      <th className="text-right py-2 px-3">Volume</th>
+                      <th className="text-right py-2 px-3">Total</th>
+                      <th className="text-right py-2 px-3">Escrow</th>
+                      <th className="text-right py-2 px-3">Expires</th>
+                      <th className="text-left py-2 px-3">Station</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {buyOrders.map((order) => {
+                      const status = priceStatus[order.order_id] || { status: 'unknown', priceDiff: 0 };
+                      const expiresDate = new Date(order.issued);
+                      expiresDate.setDate(expiresDate.getDate() + order.duration);
+                      const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                      return (
+                        <tr key={order.order_id} className="border-b border-accent-cyan/10 hover:bg-white/5">
+                          <td className="py-2 px-3 text-text-primary">
+                            {typeNames[order.type_id] || `Type ${order.type_id}`}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-text-primary">
+                            {formatISK(order.price, false)}
+                          </td>
+                          <td className="py-2 px-3">
+                            <PriceStatusBadge status={status.status} priceDiff={status.priceDiff} />
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-text-secondary">
+                            {formatNumber(order.volume_remain, 0)}/{formatNumber(order.volume_total, 0)}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-red-400">
+                            {formatISK(order.price * order.volume_remain, false)}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono text-accent-cyan">
+                            {formatISK(order.escrow || 0, false)}
+                          </td>
+                          <td className={`py-2 px-3 text-right ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'}`}>
+                            {daysLeft}d {Math.floor((expiresDate - new Date()) / (1000 * 60 * 60) % 24)}h
+                          </td>
+                          <td className="py-2 px-3 text-text-secondary text-xs truncate max-w-[200px]" title={locationNames[order.location_id]}>
+                            {locationNames[order.location_id] || `Location ${order.location_id}`}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : (
             <div className="text-center py-8 text-text-secondary">
               No active buy orders

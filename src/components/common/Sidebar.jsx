@@ -190,12 +190,12 @@ export function MobileNav() {
     <>
       {/* Mobile Menu Overlay */}
       {showMenu && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-space-dark/95 backdrop-blur-xl">
+        <div className="lg:hidden fixed inset-0 z-50 bg-space-dark/98 backdrop-blur-xl animate-fade-in">
           <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 h-16 border-b border-white/5">
+            <div className="flex items-center justify-between px-4 h-16 border-b border-accent-cyan/10 bg-space-dark/50">
               <Link to="/" onClick={() => setShowMenu(false)} className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-accent-cyan to-accent-purple rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-accent-cyan to-accent-purple rounded-xl flex items-center justify-center shadow-lg shadow-accent-cyan/20">
                   <span className="font-display font-bold text-space-black text-sm">ET</span>
                 </div>
                 <span className="font-display text-xl font-bold">
@@ -205,7 +205,7 @@ export function MobileNav() {
               </Link>
               <button
                 onClick={() => setShowMenu(false)}
-                className="p-2 rounded-lg text-text-secondary hover:text-text-primary"
+                className="p-3 rounded-xl text-text-secondary hover:text-accent-cyan active:bg-accent-cyan/10 transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -214,15 +214,15 @@ export function MobileNav() {
             </div>
 
             {/* Character Switcher */}
-            <div className="px-4 py-4 border-b border-white/5">
+            <div className="px-4 py-4 border-b border-accent-cyan/10">
               <CharacterSwitcher compact />
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-4 py-4">
+            <nav className="flex-1 overflow-y-auto px-4 py-4 pb-safe overscroll-contain">
               {navSections.map((section) => (
                 <div key={section.id} className="mb-6">
-                  <h3 className="px-3 mb-2 text-xs font-semibold text-text-secondary tracking-wider">
+                  <h3 className="px-3 mb-2 text-xs font-semibold text-accent-cyan/70 tracking-wider uppercase">
                     {section.label}
                   </h3>
                   <ul className="space-y-1">
@@ -234,16 +234,19 @@ export function MobileNav() {
                             to={item.path}
                             onClick={() => setShowMenu(false)}
                             className={`
-                              flex items-center gap-3 px-3 py-3 rounded-xl
-                              transition-all duration-200
+                              flex items-center gap-3 px-4 py-3.5 rounded-xl min-h-[52px]
+                              transition-all duration-200 active:scale-[0.98]
                               ${isActive
-                                ? 'bg-accent-cyan/15 text-accent-cyan'
-                                : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                                ? 'bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/20 shadow-lg shadow-accent-cyan/5'
+                                : 'text-text-secondary active:bg-white/10'
                               }
                             `}
                           >
-                            <NavIcon path={item.icon} className="w-5 h-5" />
+                            <NavIcon path={item.icon} className={`w-5 h-5 ${isActive ? 'text-accent-cyan' : ''}`} />
                             <span className="text-sm font-medium">{item.label}</span>
+                            {isActive && (
+                              <div className="ml-auto w-2 h-2 bg-accent-cyan rounded-full animate-pulse" />
+                            )}
                           </Link>
                         </li>
                       );
@@ -252,13 +255,20 @@ export function MobileNav() {
                 </div>
               ))}
             </nav>
+
+            {/* Version Footer */}
+            <div className="px-4 py-3 border-t border-accent-cyan/10 bg-space-dark/50 pb-safe">
+              <div className="text-center text-xs text-text-secondary">
+                EVETrade v2.0 • Market data updates every 5 min
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Bottom Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-space-dark/95 backdrop-blur-xl border-t border-white/5 safe-area-bottom">
-        <div className="flex items-center justify-around h-16">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-space-dark/98 backdrop-blur-xl border-t border-accent-cyan/10 pb-safe">
+        <div className="flex items-center justify-around h-16 px-1">
           {mobileNavItems.map((item) => {
             const isActive = location.pathname === item.path;
 
@@ -267,10 +277,10 @@ export function MobileNav() {
                 <button
                   key={item.path}
                   onClick={() => setShowMenu(true)}
-                  className="flex flex-col items-center justify-center gap-1 px-3 py-2 text-text-secondary"
+                  className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] px-2 py-1.5 rounded-xl text-text-secondary active:bg-white/10 transition-colors"
                 >
                   <NavIcon path={item.icon} className="w-6 h-6" />
-                  <span className="text-xs">{item.label}</span>
+                  <span className="text-[10px] font-medium">{item.label}</span>
                 </button>
               );
             }
@@ -280,13 +290,21 @@ export function MobileNav() {
                 key={item.path}
                 to={item.path}
                 className={`
-                  flex flex-col items-center justify-center gap-1 px-3 py-2
-                  transition-colors
-                  ${isActive ? 'text-accent-cyan' : 'text-text-secondary'}
+                  flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] px-2 py-1.5 rounded-xl
+                  transition-all duration-200 active:scale-95
+                  ${isActive
+                    ? 'text-accent-cyan bg-accent-cyan/10'
+                    : 'text-text-secondary active:bg-white/10'
+                  }
                 `}
               >
-                <NavIcon path={item.icon} className="w-6 h-6" />
-                <span className="text-xs">{item.label}</span>
+                <div className={`relative ${isActive ? 'animate-pulse' : ''}`}>
+                  <NavIcon path={item.icon} className="w-6 h-6" />
+                  {isActive && (
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-accent-cyan rounded-full" />
+                  )}
+                </div>
+                <span className={`text-[10px] font-medium ${isActive ? 'text-accent-cyan' : ''}`}>{item.label}</span>
               </Link>
             );
           })}

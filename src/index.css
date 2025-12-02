@@ -149,6 +149,39 @@ html, body {
     -webkit-user-select: auto;
     user-select: auto;
   }
+
+  /* PWA status bar padding */
+  .pwa-safe-top {
+    padding-top: env(safe-area-inset-top, 20px);
+  }
+
+  /* Improve PWA navigation feel */
+  a, button {
+    -webkit-tap-highlight-color: rgba(0, 212, 255, 0.1);
+  }
+
+  /* Disable pull-to-refresh when not at top */
+  html:not(:has(:target)) {
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* iOS rubber-banding fix for PWA */
+@supports (-webkit-touch-callout: none) {
+  body {
+    /* Prevent iOS from capturing swipes */
+    overscroll-behavior: none;
+  }
+
+  /* Fix for input zoom on iOS */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Touch action for better scroll performance */
