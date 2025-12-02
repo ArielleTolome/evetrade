@@ -1,22 +1,7 @@
 import { Link } from 'react-router-dom';
-import * as Sentry from '@sentry/react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { useResources } from '../hooks/useResources';
-
-// Test button for Sentry error tracking - remove after verification
-function SentryTestButton() {
-  return (
-    <button
-      onClick={() => {
-        throw new Error('This is your first Sentry test error!');
-      }}
-      className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm"
-    >
-      Test Sentry Error
-    </button>
-  );
-}
 
 const tradingModes = [
   {
@@ -56,12 +41,12 @@ export function HomePage() {
         <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-accent-purple/5 rounded-full blur-[80px] pointer-events-none animate-float"></div>
 
         {/* Hero Section */}
-        <div className="text-center mb-16 animate-fade-in relative z-10">
-          <h1 className="font-display text-5xl md:text-7xl font-bold mb-6">
+        <div className="text-center mb-12 md:mb-16 animate-fade-in relative z-10">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-bold mb-4 md:mb-6 px-2">
             <span className="text-gradient">EVE</span>
             <span className="text-text-primary dark:text-text-primary text-light-text">Trade</span>
           </h1>
-          <p className="text-xl md:text-2xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-text-secondary max-w-2xl mx-auto leading-relaxed px-4">
             Maximize your ISK. Discover the most profitable trades across New Eden.
           </p>
 
@@ -120,29 +105,25 @@ export function HomePage() {
         </div>
 
         {/* Quick Stats / Features */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center animate-fade-in relative z-10" style={{ animationDelay: '400ms' }}>
+        <div className="mt-12 md:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center animate-fade-in relative z-10" style={{ animationDelay: '400ms' }}>
           <div className="group cursor-default">
-            <div className="text-3xl font-display font-bold text-accent-cyan group-hover:scale-110 transition-transform">100+</div>
-            <div className="text-text-secondary text-sm mt-1">Regions</div>
+            <div className="text-2xl sm:text-3xl font-display font-bold text-accent-cyan group-hover:scale-110 transition-transform">100+</div>
+            <div className="text-text-secondary text-xs sm:text-sm mt-1">Regions</div>
           </div>
           <div className="group cursor-default">
-            <div className="text-3xl font-display font-bold text-accent-gold group-hover:scale-110 transition-transform">5000+</div>
-            <div className="text-text-secondary text-sm mt-1">Stations</div>
+            <div className="text-2xl sm:text-3xl font-display font-bold text-accent-gold group-hover:scale-110 transition-transform">5000+</div>
+            <div className="text-text-secondary text-xs sm:text-sm mt-1">Stations</div>
           </div>
           <div className="group cursor-default">
-            <div className="text-3xl font-display font-bold text-accent-purple group-hover:scale-110 transition-transform">Real-time</div>
-            <div className="text-text-secondary text-sm mt-1">Market Data</div>
+            <div className="text-xl sm:text-3xl font-display font-bold text-accent-purple group-hover:scale-110 transition-transform">Real-time</div>
+            <div className="text-text-secondary text-xs sm:text-sm mt-1">Market Data</div>
           </div>
           <div className="group cursor-default">
-            <div className="text-3xl font-display font-bold text-green-400 group-hover:scale-110 transition-transform">Free</div>
-            <div className="text-text-secondary text-sm mt-1">Forever</div>
+            <div className="text-2xl sm:text-3xl font-display font-bold text-green-400 group-hover:scale-110 transition-transform">Free</div>
+            <div className="text-text-secondary text-xs sm:text-sm mt-1">Forever</div>
           </div>
         </div>
 
-        {/* Sentry Test Button - Remove after verification */}
-        <div className="mt-8 animate-fade-in relative z-10" style={{ animationDelay: '500ms' }}>
-          <SentryTestButton />
-        </div>
       </div>
     </PageLayout>
   );

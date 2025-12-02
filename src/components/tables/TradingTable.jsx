@@ -126,6 +126,10 @@ export function TradingTable({
   showQualityIndicators = false,
   expandableRowContent = null,
   searchInputRef = null,
+  onCreateAlert = null,
+  onAddToWatchlist = null,
+  isItemWatched = null,
+  selectedRowIndex = -1,
 }) {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -334,19 +338,19 @@ export function TradingTable({
   return (
     <div className={`bg-space-dark/30 rounded-xl border border-accent-cyan/10 overflow-hidden flex flex-col ${className}`}>
       {/* Top Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 bg-space-mid/50 border-b border-accent-cyan/10">
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-center p-3 md:p-4 gap-3 md:gap-4 bg-space-mid/50 border-b border-accent-cyan/10">
+        <div className="flex gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={copyToClipboard}
-            className="px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50 focus:outline-none focus:ring-2 focus:ring-accent-cyan/50"
+            className="flex-1 sm:flex-none px-3 md:px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50 focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 min-h-[44px]"
           >
             Copy
           </button>
           <button
             type="button"
             onClick={exportCSV}
-            className="px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50 focus:outline-none focus:ring-2 focus:ring-accent-cyan/50"
+            className="flex-1 sm:flex-none px-3 md:px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50 focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 min-h-[44px]"
           >
             CSV
           </button>
@@ -374,6 +378,16 @@ export function TradingTable({
               {expandableRowContent && (
                 <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-10"></th>
               )}
+              {onAddToWatchlist && (
+                <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-20 text-center">
+                  <div className="flex items-center justify-center" title="Watchlist">
+                    <svg className="w-4 h-4 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </div>
+                </th>
+              )}
               {columns.filter(c => c.visible !== false).map(col => (
                 <th
                   key={col.key}
@@ -396,6 +410,11 @@ export function TradingTable({
                   </div>
                 </th>
               ))}
+              {onCreateAlert && (
+                <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-10 text-center">
+                  <span className="text-accent-cyan font-display font-semibold text-xs">Alert</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-accent-cyan/5">
@@ -411,6 +430,9 @@ export function TradingTable({
                 fair: 'bg-cyan-400/5 border-l-2 border-cyan-400/30 hover:bg-cyan-400/10',
               };
 
+              // Check if this row is selected via keyboard navigation
+              const isSelected = selectedRowIndex === idx;
+
               return (
                 <>
                   <tr
@@ -418,7 +440,8 @@ export function TradingTable({
                     onClick={() => onRowClick?.(row, idx)}
                     className={`
                       transition-colors
-                      ${qualityTier ? qualityClasses[qualityTier] : 'hover:bg-accent-cyan/5'}
+                      ${isSelected ? 'bg-accent-cyan/20 ring-2 ring-accent-cyan/50' : ''}
+                      ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-accent-cyan/5' : ''}
                       ${onRowClick ? 'cursor-pointer' : ''}
                     `}
                   >
@@ -441,15 +464,73 @@ export function TradingTable({
                         </button>
                       </td>
                     )}
+                    {onAddToWatchlist && (
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddToWatchlist(row);
+                          }}
+                          disabled={isItemWatched && isItemWatched(row['Item ID'] || row.itemId)}
+                          className={`p-2 rounded-lg transition-all ${
+                            isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
+                              ? 'bg-accent-purple/20 text-accent-purple/50 cursor-not-allowed'
+                              : 'bg-accent-purple/10 border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/20 hover:border-accent-purple/50'
+                          }`}
+                          title={
+                            isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
+                              ? 'Already in watchlist'
+                              : 'Add to watchlist'
+                          }
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {isItemWatched && isItemWatched(row['Item ID'] || row.itemId) ? (
+                              <>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </>
+                            ) : (
+                              <>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                              </>
+                            )}
+                          </svg>
+                        </button>
+                      </td>
+                    )}
                     {columns.filter(c => c.visible !== false).map(col => (
                       <td key={col.key} className={`px-4 py-3 text-text-primary ${col.className || ''}`}>
                         {renderCell(row, col)}
                       </td>
                     ))}
+                    {onCreateAlert && (
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCreateAlert({
+                              itemName: row['Item'] || row.item,
+                              itemId: row['Item ID'] || row.itemId,
+                              type: 'margin',
+                              condition: 'above',
+                              threshold: (row['Gross Margin'] || row.margin || 5),
+                            });
+                          }}
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-accent-gold/10 border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/20 hover:border-accent-gold/50 transition-all"
+                          title="Set price alert"
+                          aria-label="Set price alert"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                          </svg>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                   {expandableRowContent && isExpanded && (
                     <tr key={`${rowId}-expanded`} className="bg-space-dark/20">
-                      <td colSpan={columns.filter(c => c.visible !== false).length + 1} className="px-4 py-3">
+                      <td colSpan={columns.filter(c => c.visible !== false).length + (expandableRowContent ? 1 : 0) + (onAddToWatchlist ? 1 : 0) + (onCreateAlert ? 1 : 0)} className="px-4 py-3">
                         {expandableRowContent(row, idx)}
                       </td>
                     </tr>
@@ -462,12 +543,12 @@ export function TradingTable({
       </div>
 
       {/* Bottom Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 bg-space-mid/30 border-t border-accent-cyan/10 text-sm text-text-secondary">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-center p-3 md:p-4 gap-3 md:gap-4 bg-space-mid/30 border-t border-accent-cyan/10 text-xs sm:text-sm text-text-secondary">
+        <div className="text-center sm:text-left">
           Showing <span className="text-text-primary font-medium">{sortedData.length > 0 ? currentPage * itemsPerPage + 1 : 0}</span> to <span className="text-text-primary font-medium">{Math.min((currentPage + 1) * itemsPerPage, sortedData.length)}</span> of <span className="text-text-primary font-medium">{sortedData.length}</span> entries
           {searchTerm && ` (filtered from ${data.length} total)`}
         </div>
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 md:gap-4 justify-center">
           <label className="flex items-center gap-2">
             Show
             <select
@@ -489,7 +570,7 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(0)}
               disabled={currentPage === 0}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="First page"
             >
               «
@@ -498,19 +579,19 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 0}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Previous page"
             >
               ‹
             </button>
-            <span className="px-2 text-text-primary">
+            <span className="px-2 text-text-primary whitespace-nowrap">
               Page {currentPage + 1} of {totalPages || 1}
             </span>
             <button
               type="button"
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Next page"
             >
               ›
@@ -519,7 +600,7 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(totalPages - 1)}
               disabled={currentPage >= totalPages - 1}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Last page"
             >
               »

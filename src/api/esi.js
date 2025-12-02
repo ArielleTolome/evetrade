@@ -135,6 +135,56 @@ export async function getStructureInfo(structureId, accessToken) {
 }
 
 /**
+ * Get solar system information
+ */
+export async function getSystemInfo(systemId) {
+  return esiRequest(`/universe/systems/${systemId}/`);
+}
+
+/**
+ * Get constellation information
+ */
+export async function getConstellationInfo(constellationId) {
+  return esiRequest(`/universe/constellations/${constellationId}/`);
+}
+
+/**
+ * Get region information
+ */
+export async function getRegionInfo(regionId) {
+  return esiRequest(`/universe/regions/${regionId}/`);
+}
+
+/**
+ * Get region ID from solar system ID (requires chained lookups)
+ * Returns { regionId, regionName, systemName, constellationName }
+ */
+export async function getRegionFromSystem(systemId) {
+  try {
+    // Get system info to find constellation
+    const systemInfo = await getSystemInfo(systemId);
+    if (!systemInfo?.constellation_id) return null;
+
+    // Get constellation info to find region
+    const constellationInfo = await getConstellationInfo(systemInfo.constellation_id);
+    if (!constellationInfo?.region_id) return null;
+
+    // Get region info for name
+    const regionInfo = await getRegionInfo(constellationInfo.region_id);
+
+    return {
+      regionId: constellationInfo.region_id,
+      regionName: regionInfo?.name || null,
+      systemName: systemInfo.name,
+      constellationName: constellationInfo.name,
+    };
+  } catch (err) {
+    console.warn(`Failed to get region from system ${systemId}:`, err);
+    return null;
+  }
+}
+
+/**
  * Get market prices (all items)
  */
 export async function getMarketPrices() {
@@ -228,6 +278,10 @@ export default {
   getTypeInfo,
   getStationInfo,
   getStructureInfo,
+  getSystemInfo,
+  getConstellationInfo,
+  getRegionInfo,
+  getRegionFromSystem,
   getMarketPrices,
   getTypeNames,
   getMarketHistory,

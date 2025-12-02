@@ -10,6 +10,9 @@ import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
+import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
+import { TradeRoutePresets } from '../components/common/TradeHubPresets';
+import { ActionableError } from '../components/common/ActionableError';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { fetchStationHauling } from '../api/trading';
@@ -30,7 +33,7 @@ import { getStationData } from '../utils/stations';
 export function StationHaulingPage() {
   const navigate = useNavigate();
   const { universeList, loading: resourcesLoading } = useResources();
-  const { data, loading, error, execute } = useApiCall(fetchStationHauling);
+  const { data, loading, error, lastUpdated, execute } = useApiCall(fetchStationHauling);
   const { saveRoute } = usePortfolio();
   const { isAuthenticated, character, getAccessToken } = useEveAuth();
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -380,8 +383,22 @@ export function StationHaulingPage() {
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Quick Route Presets */}
+            <TradeRoutePresets
+              fromStation={form.fromStations[0]}
+              toStation={form.toStations[0]}
+              onRouteSelect={(from, to) => {
+                setForm(prev => ({
+                  ...prev,
+                  fromStations: [from],
+                  toStations: [to],
+                }));
+              }}
+              className="pb-4 border-b border-accent-cyan/10"
+            />
+
             {/* Station Selection */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* From Stations */}
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-text-secondary">
@@ -398,7 +415,7 @@ export function StationHaulingPage() {
                   <button
                     type="button"
                     onClick={() => addStation('from', fromInput)}
-                    className="btn-secondary px-4"
+                    className="btn-secondary px-3 md:px-4 min-h-[44px]"
                   >
                     Add
                   </button>
@@ -447,7 +464,7 @@ export function StationHaulingPage() {
                   <button
                     type="button"
                     onClick={() => addStation('to', toInput)}
-                    className="btn-secondary px-4"
+                    className="btn-secondary px-3 md:px-4 min-h-[44px]"
                   >
                     Add
                   </button>
@@ -482,7 +499,7 @@ export function StationHaulingPage() {
             </div>
 
             {/* Other Parameters */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <FormInput
                 label="Minimum Profit"
                 type="number"
@@ -513,7 +530,7 @@ export function StationHaulingPage() {
               />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
               <FormSelect
                 label="Sales Tax Level"
                 value={form.tax}
@@ -537,7 +554,7 @@ export function StationHaulingPage() {
             <button
               type="submit"
               disabled={loading || resourcesLoading}
-              className="btn-primary w-full py-4 text-lg"
+              className="btn-primary w-full py-3 md:py-4 text-base md:text-lg min-h-[44px]"
             >
               {loading ? 'Searching...' : 'Find Trades'}
             </button>
@@ -547,8 +564,8 @@ export function StationHaulingPage() {
         {/* EVE Auth Info Panel */}
         {isAuthenticated && (
           <GlassmorphicCard className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-6 text-sm">
                 <div>
                   <div className="text-sm text-text-secondary mb-1">Character</div>
                   <div className="text-text-primary font-medium">{character?.name}</div>
@@ -587,9 +604,11 @@ export function StationHaulingPage() {
 
         {/* Error */}
         {error && (
-          <div className="mb-8 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
-            <strong>Error:</strong> {typeof error === 'string' ? error : error.message || 'An error occurred'}
-          </div>
+          <ActionableError
+            error={error}
+            onRetry={() => handleSubmit({ preventDefault: () => {} })}
+            className="mb-8"
+          />
         )}
 
         {/* Loading */}
@@ -618,23 +637,32 @@ export function StationHaulingPage() {
             ) : (
               <>
                 {/* Action Bar */}
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                  <div className="text-text-secondary">
-                    Found <span className="text-accent-cyan font-medium">{filteredData.length}</span> profitable trades
-                    {showOnlyWithAssets && isAuthenticated && data.length !== filteredData.length && (
-                      <span className="ml-2 text-text-secondary/70">
-                        ({data.length} total)
-                      </span>
-                    )}
+                <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 md:gap-4 flex-wrap">
+                    <div className="text-text-secondary text-sm">
+                      Found <span className="text-accent-cyan font-medium">{filteredData.length}</span> profitable trades
+                      {showOnlyWithAssets && isAuthenticated && data.length !== filteredData.length && (
+                        <span className="ml-2 text-text-secondary/70">
+                          ({data.length} total)
+                        </span>
+                      )}
+                    </div>
+                    <DataFreshnessIndicator
+                      lastUpdated={lastUpdated}
+                      onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+                      isLoading={loading}
+                      compact
+                    />
                   </div>
                   <button
                     onClick={() => setShowSaveModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors"
+                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                     </svg>
-                    Save Route
+                    <span className="hidden sm:inline">Save Route</span>
+                    <span className="sm:hidden">Save</span>
                   </button>
                 </div>
 
@@ -682,13 +710,13 @@ export function StationHaulingPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveRoute}
-                className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors min-h-[44px]"
               >
                 Save
               </button>

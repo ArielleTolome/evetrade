@@ -4,11 +4,22 @@ import { FormInput } from '../forms/FormInput';
 
 /**
  * Price Alert Panel Component
- * Manages price alerts for trading items
+ * Manages price alerts for trading items with notification settings
  */
-export function PriceAlertPanel({ alerts, onCreateAlert, onRemoveAlert, onResetAlert, onClearAll }) {
+export function PriceAlertPanel({
+  alerts,
+  onCreateAlert,
+  onRemoveAlert,
+  onResetAlert,
+  onClearAll,
+  settings = {},
+  notificationPermission = 'default',
+  onUpdateSettings,
+  onRequestNotificationPermission,
+}) {
   const [isCreating, setIsCreating] = useState(false);
   const [showTriggered, setShowTriggered] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [formData, setFormData] = useState({
     itemName: '',
     itemId: '',
@@ -135,6 +146,17 @@ export function PriceAlertPanel({ alerts, onCreateAlert, onRemoveAlert, onResetA
             )}
             <button
               type="button"
+              onClick={() => setShowSettings(!showSettings)}
+              className="px-3 py-2 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-secondary text-sm hover:bg-space-mid hover:text-text-primary transition-all"
+              title="Alert Settings"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            <button
+              type="button"
               onClick={() => setIsCreating(!isCreating)}
               className="px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50"
             >
@@ -146,6 +168,97 @@ export function PriceAlertPanel({ alerts, onCreateAlert, onRemoveAlert, onResetA
 
       {/* Content */}
       <div className="p-6">
+        {/* Alert Settings */}
+        {showSettings && (
+          <div className="mb-6 p-4 bg-space-mid/30 rounded-lg border border-accent-cyan/10">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Alert Settings</h3>
+
+            <div className="space-y-4">
+              {/* Browser Notifications */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <label className="text-sm font-medium text-text-primary">
+                      Browser Notifications
+                    </label>
+                    {notificationPermission === 'granted' && (
+                      <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
+                        Enabled
+                      </span>
+                    )}
+                    {notificationPermission === 'denied' && (
+                      <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-medium">
+                        Blocked
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-secondary">
+                    Show desktop notifications when alerts trigger
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {notificationPermission === 'default' && (
+                    <button
+                      type="button"
+                      onClick={onRequestNotificationPermission}
+                      className="px-3 py-1.5 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-xs font-medium transition-all hover:bg-accent-cyan/20"
+                    >
+                      Enable
+                    </button>
+                  )}
+                  {notificationPermission === 'granted' && (
+                    <input
+                      type="checkbox"
+                      checked={settings.browserNotifications}
+                      onChange={(e) => onUpdateSettings?.({ browserNotifications: e.target.checked })}
+                      className="w-4 h-4 rounded border-accent-cyan/20 text-accent-cyan focus:ring-accent-cyan"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Sound Notifications */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <label className="text-sm font-medium text-text-primary mb-1 block">
+                    Sound Notifications
+                  </label>
+                  <p className="text-xs text-text-secondary">
+                    Play a sound when alerts trigger
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.soundEnabled}
+                  onChange={(e) => onUpdateSettings?.({ soundEnabled: e.target.checked })}
+                  className="w-4 h-4 rounded border-accent-cyan/20 text-accent-cyan focus:ring-accent-cyan mt-0.5"
+                />
+              </div>
+
+              {/* Sound Volume */}
+              {settings.soundEnabled && (
+                <div className="pl-4 border-l-2 border-accent-cyan/20">
+                  <label className="text-sm font-medium text-text-primary mb-2 block">
+                    Volume: {Math.round((settings.soundVolume || 0.5) * 100)}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={settings.soundVolume || 0.5}
+                    onChange={(e) => onUpdateSettings?.({ soundVolume: parseFloat(e.target.value) })}
+                    className="w-full h-2 bg-space-dark rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, rgb(6 182 212) 0%, rgb(6 182 212) ${(settings.soundVolume || 0.5) * 100}%, rgb(15 23 42) ${(settings.soundVolume || 0.5) * 100}%, rgb(15 23 42) 100%)`
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Create Alert Form */}
         {isCreating && (
           <form onSubmit={handleSubmit} className="mb-6 p-4 bg-space-mid/30 rounded-lg border border-accent-cyan/10">

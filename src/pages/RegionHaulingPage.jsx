@@ -10,10 +10,13 @@ import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
+import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
+import { RegionPresets } from '../components/common/TradeHubPresets';
+import { ActionableError } from '../components/common/ActionableError';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { fetchRegionHauling } from '../api/trading';
-import { getCharacterAssets, getWalletBalance, getTypeNames, getStationInfo, getStructureInfo } from '../api/esi';
+import { getCharacterAssets, getWalletBalance, getTypeNames, getStationInfo, getStructureInfo, getRegionFromSystem } from '../api/esi';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 import {
   TAX_OPTIONS,
@@ -30,7 +33,7 @@ import { getRegionData } from '../utils/stations';
 export function RegionHaulingPage() {
   const navigate = useNavigate();
   const { universeList, nearbyRegions, loading: resourcesLoading } = useResources();
-  const { data, loading, error, execute } = useApiCall(fetchRegionHauling);
+  const { data, loading, error, lastUpdated, execute } = useApiCall(fetchRegionHauling);
   const { saveRoute } = usePortfolio();
   const { isAuthenticated, character, getAccessToken } = useEveAuth();
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -143,8 +146,9 @@ export function RegionHaulingPage() {
             const structure = await getStructureInfo(locationId, accessToken);
             locationMap[locationId] = structure.name || `Structure ${locationId}`;
             if (structure.solar_system_id) {
-              // Would need to get system info then region, for now use universeList
-              regionMap[locationId] = null; // TODO: map structure to region
+              // Map structure's solar system to region
+              const regionData = await getRegionFromSystem(structure.solar_system_id);
+              regionMap[locationId] = regionData?.regionName || null;
             }
           } else {
             const station = await getStationInfo(locationId);
@@ -424,7 +428,7 @@ export function RegionHaulingPage() {
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Region Selection */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-4">
                 <RegionAutocomplete
                   label="Origin Region"
@@ -432,6 +436,11 @@ export function RegionHaulingPage() {
                   onChange={(v) => updateForm('fromRegion', v)}
                   placeholder="The Forge, Domain, Sinq Laison..."
                   required
+                />
+                <RegionPresets
+                  selectedRegion={form.fromRegion}
+                  onRegionSelect={(region) => updateForm('fromRegion', region)}
+                  compact
                 />
                 <FormSelect
                   label="Trade Preference"
@@ -499,7 +508,7 @@ export function RegionHaulingPage() {
             </div>
 
             {/* Other Parameters */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <FormInput
                 label="Minimum Profit"
                 type="number"
@@ -530,7 +539,7 @@ export function RegionHaulingPage() {
               />
             </div>
 
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <FormSelect
                 label="Sales Tax Level"
                 value={form.tax}
@@ -560,7 +569,7 @@ export function RegionHaulingPage() {
             <button
               type="submit"
               disabled={loading || resourcesLoading}
-              className="btn-primary w-full py-4 text-lg"
+              className="btn-primary w-full py-3 md:py-4 text-base md:text-lg min-h-[44px]"
             >
               {loading ? 'Searching...' : 'Find Trades'}
             </button>
@@ -570,8 +579,8 @@ export function RegionHaulingPage() {
         {/* EVE Auth Info Panel */}
         {isAuthenticated && (
           <GlassmorphicCard className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-6 text-sm">
                 <div>
                   <div className="text-sm text-text-secondary mb-1">Character</div>
                   <div className="text-text-primary font-medium">{character?.name}</div>
@@ -610,9 +619,11 @@ export function RegionHaulingPage() {
 
         {/* Error */}
         {error && (
-          <div className="mb-8 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
-            <strong>Error:</strong> {typeof error === 'string' ? error : error.message || 'An error occurred'}
-          </div>
+          <ActionableError
+            error={error}
+            onRetry={() => handleSubmit({ preventDefault: () => {} })}
+            className="mb-8"
+          />
         )}
 
         {/* Loading */}
@@ -641,23 +652,32 @@ export function RegionHaulingPage() {
             ) : (
               <>
                 {/* Action Bar */}
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                  <div className="text-text-secondary">
-                    Found <span className="text-accent-cyan font-medium">{filteredData.length}</span> profitable trades
-                    {showOnlyWithAssets && isAuthenticated && data.length !== filteredData.length && (
-                      <span className="ml-2 text-text-secondary/70">
-                        ({data.length} total)
-                      </span>
-                    )}
+                <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 md:gap-4 flex-wrap">
+                    <div className="text-text-secondary text-sm">
+                      Found <span className="text-accent-cyan font-medium">{filteredData.length}</span> profitable trades
+                      {showOnlyWithAssets && isAuthenticated && data.length !== filteredData.length && (
+                        <span className="ml-2 text-text-secondary/70">
+                          ({data.length} total)
+                        </span>
+                      )}
+                    </div>
+                    <DataFreshnessIndicator
+                      lastUpdated={lastUpdated}
+                      onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+                      isLoading={loading}
+                      compact
+                    />
                   </div>
                   <button
                     onClick={() => setShowSaveModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors"
+                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                     </svg>
-                    Save Route
+                    <span className="hidden sm:inline">Save Route</span>
+                    <span className="sm:hidden">Save</span>
                   </button>
                 </div>
 
@@ -705,13 +725,13 @@ export function RegionHaulingPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveRoute}
-                className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors min-h-[44px]"
               >
                 Save
               </button>

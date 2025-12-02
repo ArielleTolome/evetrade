@@ -11,7 +11,7 @@ import { FormInput, FormSelect, StationAutocomplete } from '../components/forms'
 import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { SmartFilters } from '../components/common/SmartFilters';
-import { VolumeIndicator } from '../components/common/VolumeIndicator';
+import { VolumeIndicator, VolumeTrendIndicator } from '../components/common/VolumeIndicator';
 import { ProfitPerHour } from '../components/common/ProfitPerHour';
 import { TradeRiskScore } from '../components/common/TradeRiskScore';
 import { SessionSummary } from '../components/common/SessionSummary';
@@ -20,9 +20,12 @@ import { CompetitionAnalysis } from '../components/common/CompetitionAnalysis';
 import { ItemTierBadge } from '../components/common/ItemTierBadge';
 import { AdvancedSortPanel, applySorts } from '../components/common/AdvancedSortPanel';
 import { BulkActionsBar, SelectionCheckbox } from '../components/common/BulkActionsBar';
+import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
 import { TradingDashboard } from '../components/common/TradingDashboard';
 import { TradeOpportunityScore, TradeOpportunityBadge } from '../components/common/TradeOpportunityScore';
 import { QuickFiltersBar, useQuickFilters } from '../components/common/QuickFiltersBar';
+import { TradeHubPresets } from '../components/common/TradeHubPresets';
+import { ActionableError } from '../components/common/ActionableError';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { useTradeForm } from '../hooks/useTradeForm';
@@ -98,7 +101,7 @@ const ITEM_CATEGORIES = {
 export function StationTradingPage() {
   const navigate = useNavigate();
   const { universeList, loading: resourcesLoading, loadInvTypes, invTypes } = useResources();
-  const { data, loading, error, execute } = useApiCall(fetchStationTrading);
+  const { data, loading, error, lastUpdated, execute } = useApiCall(fetchStationTrading);
   const { saveRoute } = usePortfolio();
   const { isAuthenticated, character, getAccessToken } = useEveAuth();
   const { favorites, isFavorite, toggleFavorite } = useFavorites();
@@ -553,14 +556,17 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         setToastMessage('Refreshing data...');
       }
     },
-    // Focus search box (/ or Ctrl+K)
+    // Focus search box (/ or Ctrl+K or Ctrl+F)
     '/': () => {
       searchInputRef.current?.focus();
     },
     'ctrl+k': () => {
       searchInputRef.current?.focus();
     },
-    // Clear search / close modals (Escape)
+    'ctrl+f': () => {
+      searchInputRef.current?.focus();
+    },
+    // Clear search / close modals / deselect (Escape)
     'escape': () => {
       if (searchInputRef.current === document.activeElement) {
         searchInputRef.current.value = '';
@@ -568,16 +574,33 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       }
       if (showSaveModal) setShowSaveModal(false);
       if (showOrders) setShowOrders(false);
+      if (selectedRowIndex >= 0) setSelectedRowIndex(-1);
+    },
+    // Navigate table rows (arrow keys)
+    'arrowdown': () => {
+      const trades = Array.isArray(sortedData) ? sortedData : [];
+      if (trades.length > 0) {
+        setSelectedRowIndex(prev => prev < 0 ? 0 : Math.min(prev + 1, trades.length - 1));
+      }
+    },
+    'arrowup': () => {
+      const trades = Array.isArray(sortedData) ? sortedData : [];
+      if (trades.length > 0 && selectedRowIndex >= 0) {
+        setSelectedRowIndex(prev => Math.max(prev - 1, 0));
+      }
     },
     // Navigate table rows (j/k vim style)
     'j': () => {
       const trades = Array.isArray(sortedData) ? sortedData : [];
       if (trades.length > 0) {
-        setSelectedRowIndex(prev => Math.min(prev + 1, trades.length - 1));
+        setSelectedRowIndex(prev => prev < 0 ? 0 : Math.min(prev + 1, trades.length - 1));
       }
     },
     'k': () => {
-      setSelectedRowIndex(prev => Math.max(prev - 1, 0));
+      const trades = Array.isArray(sortedData) ? sortedData : [];
+      if (trades.length > 0 && selectedRowIndex >= 0) {
+        setSelectedRowIndex(prev => Math.max(prev - 1, 0));
+      }
     },
     // Open selected trade details (Enter)
     'enter': () => {
@@ -586,8 +609,8 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         handleRowClick(trades[selectedRowIndex]);
       }
     },
-    // Copy selected trade (c)
-    'c': () => {
+    // Copy selected trade (Ctrl+C)
+    'ctrl+c': () => {
       const trades = Array.isArray(sortedData) ? sortedData : [];
       if (selectedRowIndex >= 0 && selectedRowIndex < trades.length) {
         copyRowToClipboard(trades[selectedRowIndex]);
@@ -600,17 +623,63 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         copyMultibuyFormat(trades);
       }
     },
+    // Toggle watchlist panel (w key)
+    'w': () => {
+      setShowFavoritesOnly(prev => !prev);
+      setToastMessage(`Watchlist ${!showFavoritesOnly ? 'shown' : 'hidden'}`);
+    },
+    // Add selected item to watchlist (a key)
+    'a': () => {
+      const trades = Array.isArray(sortedData) ? sortedData : [];
+      if (selectedRowIndex >= 0 && selectedRowIndex < trades.length) {
+        const itemId = trades[selectedRowIndex]['Item ID'] || trades[selectedRowIndex].itemId;
+        const wasInWatchlist = isFavorite(itemId);
+        toggleFavorite(itemId);
+        setToastMessage(`${wasInWatchlist ? 'Removed from' : 'Added to'} watchlist`);
+      }
+    },
+    // Quick filter presets (1-5 keys)
+    '1': () => {
+      if (quickFilterIds.length > 0 && data !== null) {
+        setQuickFilterIds([quickFilterIds[0]]);
+        setToastMessage('Quick filter 1 applied');
+      }
+    },
+    '2': () => {
+      if (quickFilterIds.length > 1 && data !== null) {
+        setQuickFilterIds([quickFilterIds[1]]);
+        setToastMessage('Quick filter 2 applied');
+      }
+    },
+    '3': () => {
+      if (quickFilterIds.length > 2 && data !== null) {
+        setQuickFilterIds([quickFilterIds[2]]);
+        setToastMessage('Quick filter 3 applied');
+      }
+    },
+    '4': () => {
+      if (quickFilterIds.length > 3 && data !== null) {
+        setQuickFilterIds([quickFilterIds[3]]);
+        setToastMessage('Quick filter 4 applied');
+      }
+    },
+    '5': () => {
+      if (quickFilterIds.length > 4 && data !== null) {
+        setQuickFilterIds([quickFilterIds[4]]);
+        setToastMessage('Quick filter 5 applied');
+      }
+    },
     // Toggle high quality filter (h)
     'h': () => {
       setHighQualityOnly(prev => !prev);
       setToastMessage(`High quality filter ${!highQualityOnly ? 'enabled' : 'disabled'}`);
     },
-    // Toggle dashboard view (d)
-    'd': () => {
+    // Toggle dashboard view (b for board)
+    'b': () => {
       setShowDashboard(prev => !prev);
       setToastMessage(`Dashboard ${!showDashboard ? 'shown' : 'hidden'}`);
     },
-  }), [form.station, data, handleSubmit, showSaveModal, showOrders, sortedData, selectedRowIndex, showFavoritesOnly, highQualityOnly, showDashboard, copyRowToClipboard, copyMultibuyFormat, handleRowClick]);
+  }), [form.station, data, handleSubmit, showSaveModal, showOrders, sortedData, selectedRowIndex, showFavoritesOnly, highQualityOnly, showDashboard, copyRowToClipboard, copyMultibuyFormat, handleRowClick, toggleFavorite, isFavorite, quickFilterIds]);
 
   // Initialize keyboard shortcuts
   const { showHelp, setShowHelp } = useKeyboardShortcuts(keyboardHandlers);
@@ -618,21 +687,24 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
   // Define custom shortcuts for help modal
   const customShortcuts = useMemo(() => [
     {
-      category: 'Filtering',
+      category: 'Station Trading - Filtering',
       items: [
         { keys: ['f'], description: 'Toggle favorites filter' },
+        { keys: ['w'], description: 'Toggle watchlist panel' },
         { keys: ['h'], description: 'Toggle high quality filter' },
-        { keys: ['d'], description: 'Toggle dashboard view' },
+        { keys: ['b'], description: 'Toggle dashboard view' },
+        { keys: ['1-5'], description: 'Apply quick filter preset' },
       ],
     },
     {
-      category: 'Actions',
+      category: 'Station Trading - Actions',
       items: [
         { keys: ['r'], description: 'Refresh data' },
-        { keys: ['/', 'Ctrl+K'], description: 'Focus search' },
-        { keys: ['j', 'k'], description: 'Navigate up/down' },
-        { keys: ['Enter'], description: 'Open selected trade' },
-        { keys: ['c'], description: 'Copy selected trade' },
+        { keys: ['/', 'Ctrl+F', 'Ctrl+K'], description: 'Focus search' },
+        { keys: ['↑', '↓', 'j', 'k'], description: 'Navigate table rows' },
+        { keys: ['Enter'], description: 'Open selected trade details' },
+        { keys: ['Ctrl+C'], description: 'Copy selected trade' },
+        { keys: ['a'], description: 'Add selected to watchlist' },
         { keys: ['m'], description: 'Copy multibuy format' },
       ],
     },
@@ -763,6 +835,23 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         label: 'Volume',
         type: 'num',
         render: (data, row) => {
+          const typeId = row['Item ID'] || row.itemId;
+          const stationData = getStationData(form.station, universeList);
+          const regionId = stationData?.region;
+
+          // Use VolumeTrendIndicator if we have the required data
+          if (typeId && regionId) {
+            return (
+              <VolumeTrendIndicator
+                typeId={typeId}
+                regionId={regionId}
+                currentVolume={data}
+                compact={true}
+              />
+            );
+          }
+
+          // Fallback to basic VolumeIndicator
           const maxVolume = Math.max(...(Array.isArray(sortedData) ? sortedData : []).map(t => t.Volume || 0), 1000);
           return <VolumeIndicator volume={data} maxVolume={maxVolume} compact={true} />;
         },
@@ -896,15 +985,22 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Primary Fields */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <StationAutocomplete
-                label="Station"
-                value={form.station}
-                onChange={(v) => updateForm('station', v)}
-                placeholder="Jita IV - Moon 4 - Caldari Navy Assembly Plant"
-                error={errors.station}
-                required
-              />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <div className="space-y-3">
+                <StationAutocomplete
+                  label="Station"
+                  value={form.station}
+                  onChange={(v) => updateForm('station', v)}
+                  placeholder="Jita IV - Moon 4 - Caldari Navy Assembly Plant"
+                  error={errors.station}
+                  required
+                />
+                <TradeHubPresets
+                  selectedStation={form.station}
+                  onStationSelect={(station) => updateForm('station', station)}
+                  compact
+                />
+              </div>
 
               <FormInput
                 label="Minimum Profit"
@@ -961,7 +1057,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
             {/* Advanced Filters (Collapsible) */}
             {showAdvanced && (
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fadeIn">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fadeIn">
                 <FormSelect
                   label="Sales Tax Level"
                   value={form.tax}
@@ -1008,7 +1104,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
             <button
               type="submit"
               disabled={loading || resourcesLoading}
-              className="btn-primary w-full py-4 text-lg"
+              className="btn-primary w-full py-3 md:py-4 text-base md:text-lg min-h-[44px]"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -1024,9 +1120,9 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
         {/* Wallet Balance & Tax Rate Indicator */}
         {isAuthenticated && (
-          <div className="mb-6 flex flex-wrap items-center gap-4 text-sm">
+          <div className="mb-6 flex flex-wrap items-center gap-2 md:gap-4 text-xs sm:text-sm">
             {walletBalance !== null && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-accent-gold/10 border border-accent-gold/20 rounded-lg">
+              <div className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-gold/10 border border-accent-gold/20 rounded-lg">
                 <svg className="w-4 h-4 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -1216,9 +1312,11 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
         {/* Error Display */}
         {error && (
-          <div className="mb-8 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
-            <strong>Error:</strong> {typeof error === 'string' ? error : error.message || 'An error occurred'}
-          </div>
+          <ActionableError
+            error={error}
+            onRetry={() => handleSubmit({ preventDefault: () => {} })}
+            className="mb-8"
+          />
         )}
 
         {/* Loading State */}
@@ -1313,9 +1411,9 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
               />
 
               {/* Action Bar */}
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-4 flex-wrap">
-                  <div className="text-text-secondary">
+              <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2 md:gap-4 flex-wrap">
+                  <div className="text-text-secondary text-sm">
                     Found <span className="text-accent-cyan font-medium">{trades.length}</span> profitable trades
                     {categoryFilter !== 'all' && allTrades.length !== trades.length && (
                       <span className="ml-2 text-text-secondary/70">
@@ -1323,6 +1421,12 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                       </span>
                     )}
                   </div>
+                  <DataFreshnessIndicator
+                    lastUpdated={lastUpdated}
+                    onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+                    isLoading={loading}
+                    compact
+                  />
                   {favorites.length > 0 && (
                     <button
                       onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
@@ -1369,20 +1473,21 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                     <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">h</kbd>
                   </button>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full sm:w-auto">
                   <button
                     onClick={() => copyAllResults(trades)}
-                    className="flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-sm"
+                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
                     title="Copy all results as table"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Copy All
+                    <span className="hidden sm:inline">Copy All</span>
+                    <span className="sm:hidden">Copy</span>
                   </button>
                   <button
                     onClick={() => copyMultibuyFormat(trades)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors text-sm"
+                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors text-xs md:text-sm min-h-[44px]"
                     title="Copy in EVE Online multibuy format"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1392,12 +1497,13 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   </button>
                   <button
                     onClick={() => setShowSaveModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-sm"
+                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                     </svg>
-                    Save Route
+                    <span className="hidden sm:inline">Save Route</span>
+                    <span className="sm:hidden">Save</span>
                   </button>
                 </div>
               </div>
@@ -1441,6 +1547,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                 emptyMessage="No trades found matching your criteria"
                 showQualityIndicators={true}
                 searchInputRef={searchInputRef}
+                selectedRowIndex={selectedRowIndex}
                 expandableRowContent={(row) => (
                   <QuickTradeCalculator
                     buyPrice={row['Buy Price']}
@@ -1511,13 +1618,13 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
             <div className="flex gap-3">
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveRoute}
-                className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors min-h-[44px]"
               >
                 Save
               </button>

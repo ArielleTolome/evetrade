@@ -60,8 +60,14 @@ export function useKeyboardShortcuts(customHandlers = {}, options = {}) {
     // Check for custom handler first
     const customHandler = handlersRef.current[shortcut] || handlersRef.current[key];
     if (customHandler) {
-      // Allow Escape and focus shortcuts (/, ctrl+k) to work in inputs
-      const allowInInput = key === 'escape' || key === '/' || shortcut === 'ctrl+k';
+      // Allow Escape, focus shortcuts (/, ctrl+k, ctrl+f), and arrow keys to work in specific contexts
+      const allowInInput = key === 'escape' ||
+                          key === '/' ||
+                          shortcut === 'ctrl+k' ||
+                          shortcut === 'ctrl+f' ||
+                          key === 'arrowup' ||
+                          key === 'arrowdown' ||
+                          key === 'enter';
       if (ignoreInputs && isInput && !allowInInput) {
         return;
       }
@@ -164,12 +170,36 @@ export function KeyboardShortcutsHelp({ isOpen, onClose, customShortcuts = [] })
         { keys: ['g', 'c'], description: 'Go to Calculator' },
       ],
     },
+    {
+      category: 'Table Navigation',
+      items: [
+        { keys: ['↑', '↓'], description: 'Navigate up/down table rows' },
+        { keys: ['j', 'k'], description: 'Navigate down/up (Vim style)' },
+        { keys: ['Enter'], description: 'Open details for selected row' },
+      ],
+    },
+    {
+      category: 'Quick Filters',
+      items: [
+        { keys: ['1-5'], description: 'Apply quick filter presets (on trading pages)' },
+      ],
+    },
+    {
+      category: 'Actions',
+      items: [
+        { keys: ['Ctrl+F', '/'], description: 'Focus search input' },
+        { keys: ['Ctrl+C'], description: 'Copy selected trade to clipboard' },
+        { keys: ['r'], description: 'Refresh data' },
+        { keys: ['w'], description: 'Toggle watchlist panel' },
+        { keys: ['a'], description: 'Add selected item to watchlist' },
+      ],
+    },
     ...customShortcuts,
     {
       category: 'General',
       items: [
         { keys: ['?'], description: 'Toggle this help' },
-        { keys: ['Esc'], description: 'Close modal/menu' },
+        { keys: ['Esc'], description: 'Close modal/panel, deselect, clear search' },
       ],
     },
   ];

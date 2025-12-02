@@ -9,6 +9,7 @@ export function useApiCall(apiFunction) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const abortControllerRef = useRef(null);
 
   // Cleanup: abort any pending requests when component unmounts
@@ -41,6 +42,7 @@ export function useApiCall(apiFunction) {
         // Only update state if request wasn't aborted
         if (!abortController.signal.aborted) {
           setData(result);
+          setLastUpdated(new Date());
         }
         return result;
       } catch (err) {
@@ -68,6 +70,7 @@ export function useApiCall(apiFunction) {
   const reset = useCallback(() => {
     setData(null);
     setError(null);
+    setLastUpdated(null);
   }, []);
 
   const cancel = useCallback(() => {
@@ -82,6 +85,7 @@ export function useApiCall(apiFunction) {
     data,
     loading,
     error,
+    lastUpdated,
     execute,
     reset,
     cancel,

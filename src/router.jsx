@@ -16,6 +16,7 @@ const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
 const NotesPage = lazy(() => import('./pages/NotesPage'));
+const ToolsPage = lazy(() => import('./pages/ToolsPage'));
 
 /**
  * Lazy page wrapper with loading fallback
@@ -133,6 +134,14 @@ export const router = createBrowserRouter([
     element: (
       <LazyPage>
         <NotesPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/tools',
+    element: (
+      <LazyPage>
+        <ToolsPage />
       </LazyPage>
     ),
   },

@@ -7,10 +7,14 @@ A comprehensive price alert system for EVETrade with localStorage persistence, t
 - **Create Alerts**: Set alerts for specific items based on price, margin, volume, or profit
 - **Multiple Conditions**: Alert when values are above, below, or equal to thresholds
 - **LocalStorage Persistence**: Alerts survive page refreshes and browser restarts
+- **Browser Notifications**: Desktop notifications when alerts trigger (with permission)
+- **Sound Alerts**: Customizable audio notifications with volume control
 - **Toast Notifications**: Visual notifications when alerts are triggered
+- **Quick Alert Creation**: Create alerts directly from trading table rows
 - **Alert Management**: Full CRUD operations for alerts
 - **One-Time or Recurring**: Choose whether alerts trigger once or repeatedly
 - **Visual Feedback**: Badges, icons, and color coding for alert states
+- **Settings Panel**: Configure notification preferences (sound, browser notifications)
 
 ## Components
 
@@ -22,24 +26,30 @@ The core hook that manages all alert state and operations.
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
 
 const {
-  alerts,              // Array of all alerts
-  triggeredAlerts,     // Array of recently triggered alerts
-  activeCount,         // Number of active (not triggered) alerts
-  triggeredCount,      // Number of triggered alerts
-  createAlert,         // Function to create new alert
-  removeAlert,         // Function to delete an alert
-  updateAlert,         // Function to update an alert
-  resetAlert,          // Function to reset a triggered alert
-  checkAlerts,         // Function to check alerts against data
-  clearTriggered,      // Function to clear all triggered alerts
-  dismissTriggered,    // Function to dismiss a specific triggered alert
-  clearAllAlerts,      // Function to clear all alerts
+  alerts,                        // Array of all alerts
+  triggeredAlerts,               // Array of recently triggered alerts
+  activeCount,                   // Number of active (not triggered) alerts
+  triggeredCount,                // Number of triggered alerts
+  settings,                      // Alert settings (sound, notifications)
+  notificationPermission,        // Browser notification permission status
+  createAlert,                   // Function to create new alert
+  addAlert,                      // Alias for createAlert
+  removeAlert,                   // Function to delete an alert
+  updateAlert,                   // Function to update an alert
+  resetAlert,                    // Function to reset a triggered alert
+  checkAlerts,                   // Function to check alerts against data
+  getAlerts,                     // Function to get all alerts
+  clearTriggered,                // Function to clear all triggered alerts
+  dismissTriggered,              // Function to dismiss a specific triggered alert
+  clearAllAlerts,                // Function to clear all alerts
+  updateSettings,                // Function to update alert settings
+  requestNotificationPermission, // Function to request browser notification permission
 } = usePriceAlerts();
 ```
 
 ### 2. `PriceAlertPanel` Component
 
-Main UI component for managing alerts.
+Main UI component for managing alerts with settings panel.
 
 ```jsx
 import { PriceAlertPanel } from '../components/common/PriceAlertPanel';
@@ -50,8 +60,18 @@ import { PriceAlertPanel } from '../components/common/PriceAlertPanel';
   onRemoveAlert={removeAlert}
   onResetAlert={resetAlert}
   onClearAll={clearAllAlerts}
+  settings={settings}
+  notificationPermission={notificationPermission}
+  onUpdateSettings={updateSettings}
+  onRequestNotificationPermission={requestNotificationPermission}
 />
 ```
+
+**New Props:**
+- `settings` - Alert notification settings object
+- `notificationPermission` - Browser notification permission status
+- `onUpdateSettings` - Callback to update settings
+- `onRequestNotificationPermission` - Callback to request browser notification permission
 
 ### 3. `AlertNotification` Component
 
@@ -171,34 +191,31 @@ createAlert({
 
 ### Quick Alert from Table Row
 
+The `TradingTable` component now supports quick alert creation directly from rows:
+
 ```jsx
-function TradingTableRow({ trade }) {
+import { TradingTable } from '../components/tables/TradingTable';
+import { usePriceAlerts } from '../hooks/usePriceAlerts';
+
+function TradingPage() {
   const { createAlert } = usePriceAlerts();
-  
-  const handleQuickAlert = () => {
-    createAlert({
-      itemName: trade['Item'],
-      itemId: trade['Item ID'],
-      type: 'margin',
-      condition: 'above',
-      threshold: trade['Gross Margin'] * 1.1, // 10% higher
-      oneTime: false,
-    });
-  };
+  const [trades, setTrades] = useState([]);
 
   return (
-    <tr>
-      <td>{trade['Item']}</td>
-      <td>{trade['Gross Margin']}%</td>
-      <td>
-        <button onClick={handleQuickAlert}>
-          Create Alert
-        </button>
-      </td>
-    </tr>
+    <TradingTable
+      data={trades}
+      columns={columns}
+      onCreateAlert={createAlert}  // Enable quick alert buttons
+    />
   );
 }
 ```
+
+The table will automatically add an "Alert" column with bell icons. When clicked, it creates an alert with:
+- Item name and ID from the row
+- Alert type set to 'margin'
+- Condition set to 'above'
+- Threshold set to the current margin value
 
 ### Alert with Custom Notification
 
@@ -209,13 +226,42 @@ const { addToast } = useToast();
 useEffect(() => {
   if (trades.length > 0) {
     const triggered = checkAlerts(trades);
-    
+
     triggered.forEach(alert => {
       const message = `${alert.itemName}: ${alert.type} is ${alert.condition} ${formatThreshold(alert.threshold, alert.type)}`;
       addToast(message, 'alert', 8000);
     });
   }
 }, [trades, checkAlerts, addToast]);
+```
+
+### Managing Notification Settings
+
+```jsx
+const {
+  settings,
+  notificationPermission,
+  updateSettings,
+  requestNotificationPermission,
+} = usePriceAlerts();
+
+// Request browser notification permission
+const handleEnableNotifications = async () => {
+  const granted = await requestNotificationPermission();
+  if (granted) {
+    updateSettings({ browserNotifications: true });
+  }
+};
+
+// Toggle sound alerts
+const handleToggleSound = () => {
+  updateSettings({ soundEnabled: !settings.soundEnabled });
+};
+
+// Adjust volume
+const handleVolumeChange = (volume) => {
+  updateSettings({ soundVolume: volume });
+};
 ```
 
 ## Data Format
@@ -265,10 +311,10 @@ The components use EVETrade's space theme with these key colors:
 
 ## LocalStorage
 
-Alerts are persisted to localStorage under the key `evetrade_price_alerts`.
+Alerts and settings are persisted to localStorage:
 
+**Alerts Storage** (`evetrade_price_alerts`):
 ```javascript
-// Storage structure
 localStorage.setItem('evetrade_price_alerts', JSON.stringify([
   {
     id: '1701234567890',
@@ -284,14 +330,26 @@ localStorage.setItem('evetrade_price_alerts', JSON.stringify([
 ]));
 ```
 
+**Settings Storage** (`evetrade_alert_settings`):
+```javascript
+localStorage.setItem('evetrade_alert_settings', JSON.stringify({
+  browserNotifications: false,  // Enable/disable browser notifications
+  soundEnabled: true,           // Enable/disable sound alerts
+  soundVolume: 0.5,             // Volume level (0.0 to 1.0)
+}));
+```
+
 ## Best Practices
 
 1. **Check Alerts on Data Load**: Call `checkAlerts(trades)` whenever new trading data is loaded
-2. **Toast Duration**: Use 5-8 seconds for alert notifications
-3. **Alert Limits**: Consider limiting the number of active alerts (e.g., 20-50)
-4. **Performance**: `checkAlerts` is optimized but avoid calling it too frequently
-5. **User Feedback**: Always show confirmation for destructive actions (clear all, delete)
-6. **Mobile Support**: Panel is responsive and works on mobile devices
+2. **Request Permissions Early**: Request notification permissions during user onboarding or setup
+3. **Sound Settings**: Provide volume control for sound alerts to avoid annoying users
+4. **Toast Duration**: Use 5-8 seconds for alert notifications
+5. **Alert Limits**: Consider limiting the number of active alerts (e.g., 20-50)
+6. **Performance**: `checkAlerts` is optimized but avoid calling it too frequently
+7. **User Feedback**: Always show confirmation for destructive actions (clear all, delete)
+8. **Mobile Support**: Panel is responsive and works on mobile devices
+9. **Browser Support**: Check for `Notification` API availability before using browser notifications
 
 ## Advanced Features
 
@@ -380,16 +438,25 @@ const importAlerts = async (file) => {
 - `/src/components/common/Toast.jsx` - Toast system (enhanced)
 - `/src/components/common/PriceAlertPanel.example.jsx` - Usage examples
 
+## Recent Enhancements (Completed)
+
+- ✅ **Browser Notifications**: Desktop notifications with Notification API
+- ✅ **Sound Alerts**: Audio notifications with customizable volume
+- ✅ **Settings Panel**: Centralized notification preferences
+- ✅ **Quick Alerts**: Create alerts directly from trading table rows
+- ✅ **LocalStorage Persistence**: Settings persist across sessions
+
 ## Future Enhancements
 
 - Email/SMS notifications (requires backend)
 - Alert templates (save common alert patterns)
 - Alert groups/categories
 - Price history charts in alerts
-- Sound notifications
-- Browser notifications API
 - Bulk edit operations
 - Alert sharing/export
+- Custom sound files
+- Alert conditions: percentage change over time
+- Alert preview/test functionality
 
 ## License
 

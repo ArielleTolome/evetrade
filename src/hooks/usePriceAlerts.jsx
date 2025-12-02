@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 const STORAGE_KEY = 'evetrade_price_alerts';
+const SETTINGS_KEY = 'evetrade_alert_settings';
 
 /**
  * Price alerts hook
- * Manages price alerts with localStorage persistence
+ * Manages price alerts with localStorage persistence, browser notifications, and sound alerts
  */
 export function usePriceAlerts() {
   const [alerts, setAlerts] = useState(() => {
@@ -19,6 +20,38 @@ export function usePriceAlerts() {
 
   const [triggeredAlerts, setTriggeredAlerts] = useState([]);
 
+  const [settings, setSettings] = useState(() => {
+    try {
+      const stored = localStorage.getItem(SETTINGS_KEY);
+      return stored ? JSON.parse(stored) : {
+        browserNotifications: false,
+        soundEnabled: true,
+        soundVolume: 0.5,
+      };
+    } catch (e) {
+      return {
+        browserNotifications: false,
+        soundEnabled: true,
+        soundVolume: 0.5,
+      };
+    }
+  });
+
+  const [notificationPermission, setNotificationPermission] = useState(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  );
+
+  const audioRef = useRef(null);
+
+  // Initialize audio element
+  useEffect(() => {
+    // Create notification sound using Web Audio API
+    audioRef.current = new Audio();
+    // Using a data URL for a simple notification beep sound
+    audioRef.current.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOTqXh8LRlHQc5k9nyyncrBSl+zPLaizsKGGS57OihUhMNSpzf8r1nHwU=';
+    audioRef.current.volume = settings.soundVolume;
+  }, [settings.soundVolume]);
+
   // Persist to localStorage whenever alerts change
   useEffect(() => {
     try {
@@ -28,10 +61,91 @@ export function usePriceAlerts() {
     }
   }, [alerts]);
 
-  // Create new alert
+  // Persist settings to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn('Failed to save alert settings to localStorage:', e);
+    }
+  }, [settings]);
+
+  // Request notification permission
+  const requestNotificationPermission = useCallback(async () => {
+    if (typeof Notification === 'undefined') {
+      return false;
+    }
+
+    if (Notification.permission === 'granted') {
+      setNotificationPermission('granted');
+      return true;
+    }
+
+    if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      return permission === 'granted';
+    }
+
+    return false;
+  }, []);
+
+  // Update settings
+  const updateSettings = useCallback((newSettings) => {
+    setSettings(prev => ({ ...prev, ...newSettings }));
+  }, []);
+
+  // Show browser notification
+  const showNotification = useCallback((alert, currentValue) => {
+    if (!settings.browserNotifications || notificationPermission !== 'granted') {
+      return;
+    }
+
+    const title = `Price Alert: ${alert.itemName}`;
+    const body = `${getAlertTypeLabel(alert.type)} is ${alert.condition} ${formatThreshold(alert.threshold, alert.type)} (Current: ${formatThreshold(currentValue, alert.type)})`;
+
+    try {
+      const notification = new Notification(title, {
+        body,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: `alert-${alert.id}`,
+        requireInteraction: false,
+        silent: false,
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+
+      setTimeout(() => notification.close(), 10000);
+    } catch (e) {
+      console.warn('Failed to show notification:', e);
+    }
+  }, [settings.browserNotifications, notificationPermission]);
+
+  // Play notification sound
+  const playNotificationSound = useCallback(() => {
+    if (!settings.soundEnabled || !audioRef.current) {
+      return;
+    }
+
+    try {
+      audioRef.current.currentTime = 0;
+      audioRef.current.volume = settings.soundVolume;
+      audioRef.current.play().catch(e => {
+        console.warn('Failed to play notification sound:', e);
+      });
+    } catch (e) {
+      console.warn('Failed to play notification sound:', e);
+    }
+  }, [settings.soundEnabled, settings.soundVolume]);
+
+  // Create new alert (alias for backward compatibility)
   const createAlert = useCallback((alert) => {
     const newAlert = {
-      id: Date.now().toString(),
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       createdAt: new Date().toISOString(),
       triggered: false,
       oneTime: true, // Default to one-time alerts
@@ -40,6 +154,11 @@ export function usePriceAlerts() {
     setAlerts(prev => [...prev, newAlert]);
     return newAlert.id;
   }, []);
+
+  // Add alert (same as createAlert, exported for consistency)
+  const addAlert = useCallback((alert) => {
+    return createAlert(alert);
+  }, [createAlert]);
 
   // Remove alert
   const removeAlert = useCallback((alertId) => {
@@ -96,12 +215,17 @@ export function usePriceAlerts() {
       }
 
       if (isTriggered) {
-        triggered.push({
+        const triggeredAlert = {
           ...alert,
           currentValue,
           trade,
           triggeredAt: new Date().toISOString(),
-        });
+        };
+        triggered.push(triggeredAlert);
+
+        // Play sound and show notification
+        playNotificationSound();
+        showNotification(alert, currentValue);
 
         // Mark as triggered if one-time alert
         if (alert.oneTime) {
@@ -115,7 +239,7 @@ export function usePriceAlerts() {
     }
 
     return triggered;
-  }, [alerts, updateAlert]);
+  }, [alerts, updateAlert, playNotificationSound, showNotification]);
 
   // Clear all triggered alerts
   const clearTriggered = useCallback(() => {
@@ -150,19 +274,28 @@ export function usePriceAlerts() {
     alerts.filter(a => a.triggered).length
   , [alerts]);
 
+  // Get all alerts (alias for consistency)
+  const getAlerts = useCallback(() => alerts, [alerts]);
+
   return {
     alerts,
     triggeredAlerts,
     activeCount,
     triggeredCount,
+    settings,
+    notificationPermission,
     createAlert,
+    addAlert,
     removeAlert,
     updateAlert,
     resetAlert,
     checkAlerts,
+    getAlerts,
     clearTriggered,
     dismissTriggered,
     clearAllAlerts,
+    updateSettings,
+    requestNotificationPermission,
   };
 }
 
@@ -184,6 +317,33 @@ function getAlertValue(trade, type) {
     default:
       return 0;
   }
+}
+
+/**
+ * Helper to get alert type label
+ */
+function getAlertTypeLabel(type) {
+  const labels = {
+    buyPrice: 'Buy Price',
+    sellPrice: 'Sell Price',
+    margin: 'Margin',
+    volume: 'Volume',
+    profit: 'Net Profit',
+  };
+  return labels[type] || type;
+}
+
+/**
+ * Helper to format threshold value based on alert type
+ */
+function formatThreshold(value, type) {
+  if (type === 'margin') {
+    return `${value.toFixed(2)}%`;
+  }
+  if (type === 'volume') {
+    return value.toLocaleString();
+  }
+  return `${value.toLocaleString()} ISK`;
 }
 
 export default usePriceAlerts;

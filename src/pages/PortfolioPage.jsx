@@ -9,6 +9,7 @@ import { WalletJournal } from '../components/common/WalletJournal';
 import { OrderHistory } from '../components/common/OrderHistory';
 import { StandingsDisplay } from '../components/common/StandingsDisplay';
 import { ProfitLossCalculator } from '../components/common/ProfitLossCalculator';
+import { TradeHistoryPanel } from '../components/common/TradeHistoryPanel';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
@@ -309,10 +310,11 @@ export function PortfolioPage() {
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             {[
               { id: 'overview', label: 'Overview', icon: '📊' },
+              { id: 'trade-history', label: 'Trade History', icon: '📈' },
               { id: 'profit-loss', label: 'P&L Calculator', icon: '💹' },
               { id: 'transactions', label: 'Transactions', icon: '💰' },
               { id: 'journal', label: 'Journal', icon: '📒' },
-              { id: 'orders', label: 'Orders', icon: '📈' },
+              { id: 'orders', label: 'Orders', icon: '🛒' },
               { id: 'history', label: 'Order History', icon: '📜' },
               { id: 'assets', label: 'Assets', icon: '📦' },
               { id: 'standings', label: 'Standings', icon: '⭐' },
@@ -331,6 +333,11 @@ export function PortfolioPage() {
               </button>
             ))}
           </div>
+        )}
+
+        {/* Trade History Tab */}
+        {isAuthenticated && activeTab === 'trade-history' && (
+          <TradeHistoryPanel />
         )}
 
         {/* P&L Calculator Tab */}

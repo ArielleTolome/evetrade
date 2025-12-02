@@ -79,6 +79,7 @@ export function useWatchlist() {
         buy: item['Buy Price'] || item.buyPrice,
         sell: item['Sell Price'] || item.sellPrice,
       },
+      notes: '',
       alerts: [],
     };
 
@@ -105,6 +106,22 @@ export function useWatchlist() {
         [listId]: {
           ...prev[listId],
           items: prev[listId].items.filter(i => i.id !== itemId),
+        },
+      };
+    });
+  }, [activeList]);
+
+  // Update notes for a watchlist item
+  const updateItemNotes = useCallback((itemId, notes, listId = activeList) => {
+    setWatchlists(prev => {
+      if (!prev[listId]) return prev;
+      return {
+        ...prev,
+        [listId]: {
+          ...prev[listId],
+          items: prev[listId].items.map(item =>
+            item.id === itemId ? { ...item, notes } : item
+          ),
         },
       };
     });
@@ -195,6 +212,7 @@ export function useWatchlist() {
     renameWatchlist,
     addToWatchlist,
     removeFromWatchlist,
+    updateItemNotes,
     isWatched,
     getWatchlistForItem,
     watchedIds,
