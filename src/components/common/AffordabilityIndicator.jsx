@@ -315,4 +315,4 @@ export function AffordableRow({ cost, walletBalance, children, className = '' })
   );
 }
 
-export default AffordabilityIndicator;
+export default AffordabilityBadge;
