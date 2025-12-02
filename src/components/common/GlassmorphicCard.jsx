@@ -8,13 +8,14 @@ export function GlassmorphicCard({
   hover = false,
   glow = false,
   padding = 'p-4 sm:p-6',
+  style,
   onClick,
 }) {
   const baseClasses = `
     bg-space-dark/60 dark:bg-space-dark/60 bg-white/80
     backdrop-blur-xl
     border border-white/5 dark:border-white/5
-    rounded-xl
+    rounded-2xl
     shadow-lg shadow-black/20
     relative overflow-hidden
   `;
@@ -31,6 +32,7 @@ export function GlassmorphicCard({
     <div
       className={`${baseClasses} ${hoverClasses} ${glowClasses} ${padding} ${className}`}
       onClick={onClick}
+      style={style}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >

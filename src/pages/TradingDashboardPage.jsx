@@ -1,11 +1,18 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
-import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
-import { Button } from '../components/common/Button';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { useTradeHistory } from '../hooks/useTradeHistory';
-import { formatISK, formatPercent, formatRelativeTime } from '../utils/formatters';
+import { formatISK } from '../utils/formatters';
+
+// Sub-components
+import { OpportunitiesPanel } from '../components/trading/OpportunitiesPanel';
+import { ActiveAlertsPanel } from '../components/trading/ActiveAlertsPanel';
+import { WatchlistQuickView } from '../components/trading/WatchlistQuickView';
+import { MarketPulsePanel } from '../components/trading/MarketPulsePanel';
+import { QuickTradeCalculator } from '../components/trading/QuickTradeCalculator';
+import { SessionStatsPanel } from '../components/trading/SessionStatsPanel';
+import { DashboardHeader } from '../components/trading/DashboardHeader';
 
 /**
  * Trading Dashboard Page
@@ -88,33 +95,6 @@ export function TradingDashboardPage() {
     return mockHaulingRoutes.filter(route => route.profit >= minProfitValue);
   }, [mockHaulingRoutes, minProfit]);
 
-  // Calculate quick trade results
-  const calcResults = useMemo(() => {
-    const buy = parseFloat(quickCalc.buyPrice) || 0;
-    const sell = parseFloat(quickCalc.sellPrice) || 0;
-    const qty = parseFloat(quickCalc.quantity) || 1;
-    const broker = parseFloat(quickCalc.brokerFee) / 100 || 0;
-    const tax = parseFloat(quickCalc.salesTax) / 100 || 0;
-
-    const buyTotal = buy * qty;
-    const sellTotal = sell * qty;
-    const brokerFees = buyTotal * broker + sellTotal * broker;
-    const salesTaxes = sellTotal * tax;
-    const grossProfit = sellTotal - buyTotal;
-    const netProfit = grossProfit - brokerFees - salesTaxes;
-    const roi = buyTotal > 0 ? (netProfit / buyTotal) * 100 : 0;
-
-    return {
-      buyTotal,
-      sellTotal,
-      brokerFees,
-      salesTaxes,
-      grossProfit,
-      netProfit,
-      roi,
-    };
-  }, [quickCalc]);
-
   // Session calculations
   const sessionDuration = useMemo(() => {
     const now = Date.now();
@@ -155,16 +135,31 @@ Volume: ${trade.volume.toLocaleString()}`;
 
   // Copy calculator result
   const copyCalcResult = useCallback(() => {
+      // Re-calculate locally just for the copy string - ideally passed from child but this is cleaner than lifting state too much
+    const buy = parseFloat(quickCalc.buyPrice) || 0;
+    const sell = parseFloat(quickCalc.sellPrice) || 0;
+    const qty = parseFloat(quickCalc.quantity) || 1;
+    const broker = parseFloat(quickCalc.brokerFee) / 100 || 0;
+    const tax = parseFloat(quickCalc.salesTax) / 100 || 0;
+
+    const buyTotal = buy * qty;
+    const sellTotal = sell * qty;
+    const brokerFees = buyTotal * broker + sellTotal * broker;
+    const salesTaxes = sellTotal * tax;
+    const grossProfit = sellTotal - buyTotal;
+    const netProfit = grossProfit - brokerFees - salesTaxes;
+    const roi = buyTotal > 0 ? (netProfit / buyTotal) * 100 : 0;
+
     const text = `Item: ${quickCalc.itemName || 'N/A'}
 Quantity: ${quickCalc.quantity || 1}
-Buy Price: ${formatISK(calcResults.buyTotal)}
-Sell Price: ${formatISK(calcResults.sellTotal)}
-Gross Profit: ${formatISK(calcResults.grossProfit)}
-Fees & Taxes: ${formatISK(calcResults.brokerFees + calcResults.salesTaxes)}
-Net Profit: ${formatISK(calcResults.netProfit)}
-ROI: ${calcResults.roi.toFixed(2)}%`;
+Buy Price: ${formatISK(buyTotal)}
+Sell Price: ${formatISK(sellTotal)}
+Gross Profit: ${formatISK(grossProfit)}
+Fees & Taxes: ${formatISK(brokerFees + salesTaxes)}
+Net Profit: ${formatISK(netProfit)}
+ROI: ${roi.toFixed(2)}%`;
     copyToClipboard(text, 'Calculator Result');
-  }, [quickCalc, calcResults, copyToClipboard]);
+  }, [quickCalc, copyToClipboard]);
 
   // Reset session
   const resetSession = useCallback(() => {
@@ -187,533 +182,83 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
   }, []);
 
   return (
-    <PageLayout
-      title="Trading Dashboard"
-      subtitle="Your command center for EVE Online trading"
-    >
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Main Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <PageLayout>
+      <div className="max-w-7xl mx-auto px-4 py-8 relative">
+        {/* Background ambient glow */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-accent-cyan/5 rounded-full blur-[100px] pointer-events-none animate-pulse-slow"></div>
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-accent-purple/5 rounded-full blur-[100px] pointer-events-none animate-float"></div>
 
-          {/* Top Opportunities Panel */}
-          <GlassmorphicCard className="md:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-display text-accent-cyan">Top Opportunities</h2>
-              <div className="flex gap-3">
-                <input
-                  type="number"
-                  placeholder="Min Profit"
-                  value={minProfit}
-                  onChange={(e) => setMinProfit(e.target.value)}
-                  className="w-32 px-3 py-1 text-sm bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
-                />
-                <input
-                  type="number"
-                  placeholder="Max Investment"
-                  value={maxInvestment}
-                  onChange={(e) => setMaxInvestment(e.target.value)}
-                  className="w-36 px-3 py-1 text-sm bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
-                />
-              </div>
-            </div>
+        <DashboardHeader />
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Station Trading */}
-              <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-3">Station Trades (Margin Trading)</h3>
-                <div className="space-y-2">
-                  {filteredStationTrades.slice(0, 5).map((trade, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-space-black/30 border border-accent-cyan/10 rounded-lg hover:border-accent-cyan/30 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-text-primary">{trade.item}</div>
-                          <div className="text-xs text-text-secondary mt-1">
-                            Buy: {formatISK(trade.buyPrice)} | Sell: {formatISK(trade.sellPrice)}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-bold text-accent-gold">{formatISK(trade.profit)}</div>
-                          <div className="text-xs text-green-400">{trade.margin.toFixed(2)}% margin</div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <Button
-                          onClick={() => copyToClipboard(trade.item, trade.item)}
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                        >
-                          {copiedItem === trade.item ? 'Copied!' : 'Copy Name'}
-                        </Button>
-                        <Button
-                          onClick={() => copyTradeDetails(trade)}
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                        >
-                          Copy Details
-                        </Button>
-                        <Button
-                          onClick={() => addToWatchlist({
-                            'Item ID': trade.itemId,
-                            'Item': trade.item,
-                            'Buy Price': trade.buyPrice,
-                            'Sell Price': trade.sellPrice
-                          })}
-                          variant="secondary"
-                          size="sm"
-                          className="px-2 py-1 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 border-transparent"
-                          title="Add to watchlist"
-                        >
-                          Watch
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+        {/* Main Grid Layout - Masonry-like structure */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 relative z-10">
 
-              {/* Hauling Routes */}
-              <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-3">Hauling Routes (ISK/Jump)</h3>
-                <div className="space-y-2">
-                  {filteredHaulingRoutes.slice(0, 5).map((route, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-space-black/30 border border-accent-cyan/10 rounded-lg hover:border-accent-cyan/30 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-text-primary">{route.item}</div>
-                          <div className="text-xs text-text-secondary mt-1">
-                            {route.from} → {route.to} ({route.jumps} jumps)
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-bold text-accent-gold">{formatISK(route.iskPerJump)}/jump</div>
-                          <div className="text-xs text-green-400">{formatISK(route.profit)} total</div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <Button
-                          onClick={() => copyToClipboard(route.item, route.item)}
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                        >
-                          {copiedItem === route.item ? 'Copied!' : 'Copy Name'}
-                        </Button>
-                        <Button
-                          onClick={() => copyToClipboard(`${route.item}\n${route.from} → ${route.to}\n${route.jumps} jumps\n${formatISK(route.profit)} profit`, route.item + '_details')}
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                        >
-                          Copy Details
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </GlassmorphicCard>
+          {/* Left Column (Main Content) */}
+          <div className="md:col-span-8 space-y-6">
+            <OpportunitiesPanel
+              minProfit={minProfit}
+              setMinProfit={setMinProfit}
+              maxInvestment={maxInvestment}
+              setMaxInvestment={setMaxInvestment}
+              filteredStationTrades={filteredStationTrades}
+              filteredHaulingRoutes={filteredHaulingRoutes}
+              copyToClipboard={copyToClipboard}
+              copiedItem={copiedItem}
+              addToWatchlist={addToWatchlist}
+              copyTradeDetails={copyTradeDetails}
+              delay="100ms"
+            />
 
-          {/* Active Alerts Panel */}
-          <GlassmorphicCard>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-display text-accent-cyan">Active Alerts</h2>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-text-secondary">Sound</span>
-                <Button
-                  onClick={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
-                  variant="ghost"
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors p-0 border-none ${settings.soundEnabled ? 'bg-accent-cyan' : 'bg-gray-600'
-                    }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.soundEnabled ? 'translate-x-5' : 'translate-x-1'
-                      }`}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            {triggeredAlerts.length === 0 ? (
-              <div className="text-center py-8 text-text-secondary">
-                <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <p className="text-sm">No active alerts</p>
-                <p className="text-xs mt-1">Price alerts will appear here when triggered</p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {triggeredAlerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-yellow-400">{alert.itemName}</div>
-                        <div className="text-xs text-text-secondary mt-1">
-                          {alert.type} is {alert.condition} {alert.threshold}
-                        </div>
-                        <div className="text-xs text-text-secondary">
-                          Current: {alert.currentValue}
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => dismissTriggered(alert.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-text-secondary hover:text-red-400 p-1 h-auto min-h-0"
-                        title="Dismiss"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </Button>
-                    </div>
-                    <div className="text-xs text-text-secondary">
-                      Triggered: {formatRelativeTime(alert.triggeredAt)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </GlassmorphicCard>
-
-          {/* Watchlist Quick View */}
-          <GlassmorphicCard>
-            <h2 className="text-xl font-display text-accent-cyan mb-4">Watchlist Quick View</h2>
-
-            {currentList.items.length === 0 ? (
-              <div className="text-center py-8 text-text-secondary">
-                <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                <p className="text-sm">Watchlist is empty</p>
-                <p className="text-xs mt-1">Add items from opportunities above</p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-72 overflow-y-auto">
-                {currentList.items.map((item) => {
-                  const priceChange = item.currentPrice?.sell
-                    ? ((item.currentPrice.sell - item.initialPrice.sell) / item.initialPrice.sell) * 100
-                    : 0;
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="p-3 bg-space-black/30 border border-accent-cyan/10 rounded-lg"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-text-primary">{item.name}</div>
-                          <div className="text-xs text-text-secondary mt-1">
-                            Buy: {formatISK(item.currentPrice?.buy || item.initialPrice.buy)}
-                          </div>
-                          <div className="text-xs text-text-secondary">
-                            Sell: {formatISK(item.currentPrice?.sell || item.initialPrice.sell)}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className={`text-sm font-bold ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
-                          </div>
-                          {priceChange !== 0 && (
-                            <div className="text-xs text-text-secondary">
-                              {priceChange >= 0 ? '↑' : '↓'} from initial
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => copyToClipboard(item.name, item.name)}
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                        >
-                          {copiedItem === item.name ? 'Copied!' : 'Copy'}
-                        </Button>
-                        <Button
-                          onClick={() => removeFromWatchlist(item.id)}
-                          variant="secondary"
-                          size="sm"
-                          className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border-transparent"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </GlassmorphicCard>
-
-          {/* Market Pulse */}
-          <GlassmorphicCard>
-            <h2 className="text-xl font-display text-accent-cyan mb-4">Market Pulse</h2>
-
-            <div className="space-y-4">
-              {/* Overall Stats */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-space-black/30 rounded-lg">
-                  <div className="text-xs text-text-secondary">Total Volume</div>
-                  <div className="text-lg font-bold text-text-primary">{formatISK(marketPulse.totalVolume, false)}</div>
-                  <div className={`text-xs ${marketPulse.volumeChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {marketPulse.volumeChange >= 0 ? '↑' : '↓'} {Math.abs(marketPulse.volumeChange)}%
-                  </div>
-                </div>
-                <div className="p-3 bg-space-black/30 rounded-lg">
-                  <div className="text-xs text-text-secondary">Active Items</div>
-                  <div className="text-lg font-bold text-text-primary">{marketPulse.activeItems.toLocaleString()}</div>
-                  <div className="text-xs text-text-secondary">Being traded</div>
-                </div>
-              </div>
-
-              {/* Top Movers */}
-              <div>
-                <h3 className="text-xs font-medium text-text-secondary mb-2">Price Movers (24h)</h3>
-                <div className="space-y-1">
-                  {marketPulse.topMovers.map((mover, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-space-black/20 rounded">
-                      <span className="text-sm text-text-primary">{mover.item}</span>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold ${mover.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                          {mover.direction === 'up' ? '+' : ''}{mover.change.toFixed(1)}%
-                        </span>
-                        <span className={`text-xs ${mover.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                          {mover.direction === 'up' ? '↑' : '↓'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Most Active */}
-              <div>
-                <h3 className="text-xs font-medium text-text-secondary mb-2">Most Active</h3>
-                <div className="space-y-1">
-                  {marketPulse.mostActive.map((active, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-space-black/20 rounded">
-                      <span className="text-sm text-text-primary">{active.item}</span>
-                      <span className="text-sm text-accent-cyan">{active.volume.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </GlassmorphicCard>
-
-          {/* Quick Trade Calculator */}
-          <GlassmorphicCard>
-            <h2 className="text-xl font-display text-accent-cyan mb-4">Quick Trade Calculator</h2>
-
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Item Name"
-                value={quickCalc.itemName}
-                onChange={(e) => setQuickCalc({ ...quickCalc, itemName: e.target.value })}
-                className="w-full px-3 py-2 bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <ActiveAlertsPanel
+                triggeredAlerts={triggeredAlerts}
+                dismissTriggered={dismissTriggered}
+                settings={settings}
+                updateSettings={updateSettings}
+                delay="200ms"
               />
-
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="number"
-                  placeholder="Buy Price"
-                  value={quickCalc.buyPrice}
-                  onChange={(e) => setQuickCalc({ ...quickCalc, buyPrice: e.target.value })}
-                  className="px-3 py-2 bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
-                />
-                <input
-                  type="number"
-                  placeholder="Sell Price"
-                  value={quickCalc.sellPrice}
-                  onChange={(e) => setQuickCalc({ ...quickCalc, sellPrice: e.target.value })}
-                  className="px-3 py-2 bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
-                />
-              </div>
-
-              <input
-                type="number"
-                placeholder="Quantity"
-                value={quickCalc.quantity}
-                onChange={(e) => setQuickCalc({ ...quickCalc, quantity: e.target.value })}
-                className="w-full px-3 py-2 bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
+              <WatchlistQuickView
+                currentList={currentList}
+                removeFromWatchlist={removeFromWatchlist}
+                copyToClipboard={copyToClipboard}
+                copiedItem={copiedItem}
+                delay="300ms"
               />
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-text-secondary mb-1 block">Broker Fee %</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={quickCalc.brokerFee}
-                    onChange={(e) => setQuickCalc({ ...quickCalc, brokerFee: e.target.value })}
-                    className="w-full px-3 py-2 bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-text-secondary mb-1 block">Sales Tax %</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={quickCalc.salesTax}
-                    onChange={(e) => setQuickCalc({ ...quickCalc, salesTax: e.target.value })}
-                    className="w-full px-3 py-2 bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Results */}
-              <div className="border-t border-accent-cyan/20 pt-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-secondary">Gross Profit:</span>
-                  <span className={`font-bold ${calcResults.grossProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatISK(calcResults.grossProfit)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-secondary">Fees & Taxes:</span>
-                  <span className="text-text-primary">{formatISK(calcResults.brokerFees + calcResults.salesTaxes)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-secondary">Net Profit:</span>
-                  <span className={`font-bold text-lg ${calcResults.netProfit >= 0 ? 'text-accent-gold' : 'text-red-400'}`}>
-                    {formatISK(calcResults.netProfit)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-secondary">ROI:</span>
-                  <span className={`font-bold ${calcResults.roi >= 0 ? 'text-accent-cyan' : 'text-red-400'}`}>
-                    {calcResults.roi.toFixed(2)}%
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                onClick={copyCalcResult}
-                variant="secondary"
-                className="w-full py-2 bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 font-medium border-transparent"
-              >
-                {copiedItem === 'Calculator Result' ? 'Copied!' : 'Copy Result'}
-              </Button>
             </div>
-          </GlassmorphicCard>
+          </div>
 
-          {/* Session Stats */}
-          <GlassmorphicCard>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-display text-accent-cyan">Session Stats</h2>
-              <Button
-                onClick={resetSession}
-                variant="ghost"
-                size="sm"
-                className="text-xs text-text-secondary hover:text-red-400 p-1 h-auto min-h-0"
-                title="Reset session"
-              >
-                Reset
-              </Button>
-            </div>
+          {/* Right Column (Tools & Stats) */}
+          <div className="md:col-span-4 space-y-6">
+            <SessionStatsPanel
+              sessionStats={sessionStats}
+              sessionDuration={sessionDuration}
+              iskPerHour={iskPerHour}
+              resetSession={resetSession}
+              addSessionISK={addSessionISK}
+              stats={stats}
+              delay="400ms"
+            />
 
-            <div className="space-y-4">
-              {/* Main Stats Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 bg-space-black/30 rounded-lg">
-                  <div className="text-xs text-text-secondary mb-1">ISK Earned</div>
-                  <div className="text-xl font-bold text-accent-gold">{formatISK(sessionStats.iskEarned)}</div>
-                </div>
-                <div className="p-4 bg-space-black/30 rounded-lg">
-                  <div className="text-xs text-text-secondary mb-1">Trades</div>
-                  <div className="text-xl font-bold text-text-primary">{sessionStats.tradesCompleted}</div>
-                </div>
-                <div className="p-4 bg-space-black/30 rounded-lg">
-                  <div className="text-xs text-text-secondary mb-1">Time Trading</div>
-                  <div className="text-xl font-bold text-text-primary">
-                    {Math.floor(sessionDuration / 3600)}h {Math.floor((sessionDuration % 3600) / 60)}m
-                  </div>
-                </div>
-                <div className="p-4 bg-space-black/30 rounded-lg">
-                  <div className="text-xs text-text-secondary mb-1">ISK/Hour</div>
-                  <div className="text-xl font-bold text-accent-cyan">{formatISK(iskPerHour, false)}</div>
-                </div>
-              </div>
+            <MarketPulsePanel
+              marketPulse={marketPulse}
+              delay="500ms"
+            />
 
-              {/* Quick Add Buttons */}
-              <div>
-                <div className="text-xs text-text-secondary mb-2">Quick Add ISK:</div>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    onClick={() => addSessionISK(1000000)}
-                    variant="secondary"
-                    size="sm"
-                    className="py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 text-sm font-medium border-transparent"
-                  >
-                    +1M
-                  </Button>
-                  <Button
-                    onClick={() => addSessionISK(10000000)}
-                    variant="secondary"
-                    size="sm"
-                    className="py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 text-sm font-medium border-transparent"
-                  >
-                    +10M
-                  </Button>
-                  <Button
-                    onClick={() => addSessionISK(100000000)}
-                    variant="secondary"
-                    size="sm"
-                    className="py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 text-sm font-medium border-transparent"
-                  >
-                    +100M
-                  </Button>
-                </div>
-              </div>
-
-              {/* Historical Stats (if available) */}
-              {stats && (
-                <div className="border-t border-accent-cyan/20 pt-3">
-                  <div className="text-xs text-text-secondary mb-2">All-Time Stats:</div>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Total Profit:</span>
-                      <span className="text-text-primary font-bold">{formatISK(stats.totalProfit || 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Win Rate:</span>
-                      <span className="text-text-primary">{formatPercent(stats.winRate || 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Total Trades:</span>
-                      <span className="text-text-primary">{stats.completedTrades || 0}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </GlassmorphicCard>
+            <QuickTradeCalculator
+              quickCalc={quickCalc}
+              setQuickCalc={setQuickCalc}
+              copyCalcResult={copyCalcResult}
+              copiedItem={copiedItem}
+              delay="600ms"
+            />
+          </div>
         </div>
 
         {/* Help Text */}
-        <div className="mt-6 p-4 bg-accent-cyan/5 border border-accent-cyan/20 rounded-lg">
-          <h3 className="text-sm font-medium text-accent-cyan mb-2">Dashboard Quick Tips</h3>
-          <ul className="text-xs text-text-secondary space-y-1">
-            <li>• Use filters to find opportunities matching your ISK budget and profit goals</li>
-            <li>• Click "Watch" to add items to your watchlist for price tracking</li>
-            <li>• Active alerts will appear when your price conditions are met</li>
-            <li>• Use the Quick Calculator to evaluate trades before executing them</li>
-            <li>• Session stats track your performance in real-time - reset when starting a new session</li>
-          </ul>
+        <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '800ms' }}>
+          <p className="text-xs text-text-secondary opacity-50 hover:opacity-100 transition-opacity cursor-default">
+            Pro Tip: Customize your layout and alerts in Settings. Data updates every 5 minutes.
+          </p>
         </div>
       </div>
     </PageLayout>
