@@ -1,22 +1,30 @@
 {
   "name": "EVETrade - Market Trading Tool",
   "short_name": "EVETrade",
-  "description": "Discover profitable trades across New Eden. Market trading tools for EVE Online.",
+  "description": "Discover profitable trades across New Eden. Real-time market orders, profit tracking, and trading tools for EVE Online.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0a0a0f",
+  "background_color": "#050508",
   "theme_color": "#00d4ff",
   "orientation": "any",
   "icons": [
     {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
@@ -25,8 +33,31 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["games", "utilities"],
-  "screenshots": [],
+  "categories": ["games", "utilities", "finance"],
   "lang": "en",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Overview",
+      "short_name": "Overview",
+      "description": "View your trading dashboard",
+      "url": "/overview",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Market Orders",
+      "short_name": "Orders",
+      "description": "View your active market orders",
+      "url": "/market-orders",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Station Trading",
+      "short_name": "Trading",
+      "description": "Find profitable station trades",
+      "url": "/station-trading",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }

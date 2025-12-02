@@ -124,6 +124,47 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+.safe-area-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.5rem);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Prevent iOS bounce scroll */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Standalone PWA mode adjustments */
+@media (display-mode: standalone) {
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow text selection in inputs */
+  input, textarea {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+}
+
+/* Touch action for better scroll performance */
+.touch-pan-y {
+  touch-action: pan-y;
+}
+
+/* Hide scrollbar on mobile but allow scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Custom xs breakpoint utilities */
 @media (min-width: 480px) {
   .xs\:block { display: block; }
