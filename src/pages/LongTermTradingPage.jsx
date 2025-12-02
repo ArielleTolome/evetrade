@@ -18,29 +18,77 @@ function generatePredictions(invTypes, timeHorizon = 90) {
   if (!invTypes) return [];
 
   const predictions = [];
-  const typeIds = Object.keys(invTypes);
+
+  // invTypes is an array of objects: [{typeID, typeName, groupID, volume, ...}, ...]
+  // Convert to a more usable format if it's an array
+  let typesArray = Array.isArray(invTypes) ? invTypes : Object.values(invTypes);
+
+  console.log('generatePredictions: total items:', typesArray.length);
 
   // Sample popular trading items (focusing on commonly traded categories)
+  // These are actual EVE Online group IDs for tradeable items
   const tradingItemGroups = [
-    25, 26, 27, 28, 29, 30, 31, // Frigates
-    324, 358, 419, 420, // Cruisers
-    100, 101, 549, 639, // Drones
-    266, 275, 278, // Skillbooks
-    18, 423, 424, 427, // Materials
-    40, 41, 46, 53, 55, // Modules
+    25,   // Frigate
+    26,   // Cruiser
+    27,   // Battleship
+    28,   // Industrial
+    29,   // Capsule
+    30,   // Titan
+    31,   // Shuttle
+    324,  // Assault Frigate
+    358,  // Heavy Assault Cruiser
+    419,  // Combat Battlecruiser
+    420,  // Destroyer
+    100,  // Drone Bay
+    101,  // Electronic Warfare Drone
+    549,  // Mining Drone
+    639,  // Combat Drone
+    266,  // Security Tags
+    275,  // Hybrid Charges
+    278,  // Projectile Ammo
+    18,   // Minerals (like Plagioclase)
+    423,  // Ice Products
+    424,  // Misc Items
+    427,  // Moon Materials
+    40,   // Mining Laser
+    41,   // Standard Missiles
+    46,   // Hybrid Turrets
+    53,   // Energy Turrets
+    55,   // Projectile Turrets
+    // Add more tradeable groups
+    34,   // Ship Modules
+    87,   // Ships
+    65,   // Arkonor
+    60,   // Mining Barge
+    380,  // Transport Ships
+    463,  // Mining Frigate
+    1022, // Interdiction Nullifiers
+    1283, // Battlecruisers
   ];
 
-  // Get items from these groups
-  const selectedItems = typeIds
-    .filter(id => {
-      const item = invTypes[id];
-      return item && tradingItemGroups.includes(item.groupID) && item.published;
-    })
-    .slice(0, 150); // Limit to 150 items for performance
+  // Debug: log first few items to see structure
+  if (typesArray.length > 0) {
+    console.log('generatePredictions: sample item structure:', typesArray[0]);
+  }
 
-  selectedItems.forEach(typeId => {
-    const item = invTypes[typeId];
-    if (!item || !item.typeName) return;
+  // Filter to items with positive volume and in trading groups
+  const selectedItems = typesArray
+    .filter(item => {
+      if (!item) return false;
+      const groupId = item.groupID || item.groupId || item.group_id;
+      const hasVolume = item.volume !== null && item.volume > 0;
+      const hasName = item.typeName || item.name || item.type_name;
+      // For now, include items that have volume (tradeable items)
+      return hasVolume && hasName;
+    })
+    .slice(0, 200); // Limit to 200 items for performance
+
+  console.log('generatePredictions: selectedItems count:', selectedItems.length);
+
+  selectedItems.forEach(item => {
+    const itemName = item?.typeName || item?.name || item?.type_name;
+    if (!item || !itemName) return;
+    const typeId = item.typeID || item.typeId || item.type_id;
 
     // Generate base price (mock current market price)
     const basePrice = generateBasePrice(item);
@@ -65,12 +113,14 @@ function generatePredictions(invTypes, timeHorizon = 90) {
     // Confidence score (0-100)
     const confidence = calculateConfidence(volumeTrend, volatility, item);
 
+    const groupId = item.groupID || item.groupId || item.group_id;
+
     // Only include items with meaningful predictions
     if (Math.abs(roi) > 1 && confidence > 30) {
       predictions.push({
         itemId: typeId,
-        itemName: item.typeName,
-        groupID: item.groupID,
+        itemName: itemName,
+        groupID: groupId,
         currentPrice: basePrice,
         predictedPrice: predictedPrice,
         priceChange: predictedPrice - basePrice,
@@ -81,10 +131,12 @@ function generatePredictions(invTypes, timeHorizon = 90) {
         riskLevel: riskLevel,
         confidence: confidence,
         timeHorizon: timeHorizon,
-        category: getCategoryName(item.groupID),
+        category: getCategoryName(groupId),
       });
     }
   });
+
+  console.log('generatePredictions: final predictions count:', predictions.length);
 
   // Sort by ROI descending
   return predictions.sort((a, b) => b.roi - a.roi);
@@ -94,6 +146,8 @@ function generatePredictions(invTypes, timeHorizon = 90) {
  * Generate a realistic base price for an item
  */
 function generateBasePrice(item) {
+  const groupId = item.groupID || item.groupId || item.group_id;
+
   // Base price on item mass and group
   const basePrices = {
     // Ships - higher prices
@@ -109,7 +163,7 @@ function generateBasePrice(item) {
     40: 100000, 41: 150000, 46: 200000, 53: 250000, 55: 300000,
   };
 
-  const basePrice = basePrices[item.groupID] || 50000;
+  const basePrice = basePrices[groupId] || 50000;
 
   // Add some variation based on item properties
   const variation = (Math.random() - 0.5) * 0.4; // ±20% variation
@@ -153,12 +207,14 @@ function calculatePriceMomentum(item, volumeTrend) {
  * Calculate seasonality factor (-0.1 to 0.1)
  */
 function calculateSeasonality(item) {
+  const groupId = item.groupID || item.groupId || item.group_id;
+
   // Mock seasonality - some items are affected by EVE events
   const currentMonth = new Date().getMonth();
 
   // Combat-related items might spike in certain periods
   const combatGroups = [25, 26, 27, 28, 29, 30, 31, 100, 101, 40, 41, 46];
-  if (combatGroups.includes(item.groupID)) {
+  if (combatGroups.includes(groupId)) {
     // Simulate war season
     if (currentMonth >= 3 && currentMonth <= 5) {
       return 0.05 + Math.random() * 0.05;
@@ -173,6 +229,8 @@ function calculateSeasonality(item) {
  * Calculate volatility (0-1)
  */
 function calculateVolatility(item) {
+  const groupId = item.groupID || item.groupId || item.group_id;
+
   // Different item types have different volatility
   const volatilityByGroup = {
     // Ships - moderate volatility
@@ -188,7 +246,7 @@ function calculateVolatility(item) {
     40: 0.3, 41: 0.35, 46: 0.3, 53: 0.4, 55: 0.35,
   };
 
-  const baseVolatility = volatilityByGroup[item.groupID] || 0.3;
+  const baseVolatility = volatilityByGroup[groupId] || 0.3;
   const variation = -0.1 + Math.random() * 0.2;
 
   return Math.max(0.1, Math.min(0.9, baseVolatility + variation));
@@ -223,6 +281,8 @@ function assessRisk(volatility, volumeTrend, roi) {
  * Calculate confidence score (0-100)
  */
 function calculateConfidence(volumeTrend, volatility, item) {
+  const groupId = item.groupID || item.groupId || item.group_id;
+
   let confidence = 50; // Base confidence
 
   // Higher confidence for upward trends
@@ -236,7 +296,7 @@ function calculateConfidence(volumeTrend, volatility, item) {
   confidence -= volatility * 30;
 
   // Skillbooks are more predictable
-  if ([266, 275, 278].includes(item.groupID)) {
+  if ([266, 275, 278].includes(groupId)) {
     confidence += 15;
   }
 
@@ -271,16 +331,39 @@ export function LongTermTradingPage() {
 
   // Loading state for invTypes
   const [invTypesLoading, setInvTypesLoading] = useState(true);
+  const [invTypesError, setInvTypesError] = useState(null);
 
   // Load invTypes on mount (it's loaded on-demand)
   useEffect(() => {
-    setInvTypesLoading(true);
-    loadInvTypes()
-      .then(() => setInvTypesLoading(false))
-      .catch(() => setInvTypesLoading(false));
+    let isMounted = true;
+
+    const loadTypes = async () => {
+      try {
+        setInvTypesLoading(true);
+        setInvTypesError(null);
+        await loadInvTypes();
+        // Add a small delay to ensure state has propagated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        if (isMounted) {
+          setInvTypesLoading(false);
+        }
+      } catch (err) {
+        console.error('Failed to load invTypes:', err);
+        if (isMounted) {
+          setInvTypesError(err);
+          setInvTypesLoading(false);
+        }
+      }
+    };
+
+    loadTypes();
+
+    return () => {
+      isMounted = false;
+    };
   }, [loadInvTypes]);
 
-  // Combined loading state
+  // Combined loading state - keep loading until invTypes is actually available
   const isLoading = resourcesLoading || invTypesLoading || !invTypes;
 
   // Form state
@@ -296,8 +379,14 @@ export function LongTermTradingPage() {
 
   // Generate predictions
   const predictions = useMemo(() => {
-    if (!invTypes) return [];
-    return generatePredictions(invTypes, timeHorizon);
+    if (!invTypes) {
+      console.log('LongTermTradingPage: invTypes not available yet');
+      return [];
+    }
+    console.log('LongTermTradingPage: invTypes loaded, keys:', Object.keys(invTypes).length);
+    const preds = generatePredictions(invTypes, timeHorizon);
+    console.log('LongTermTradingPage: generated predictions:', preds.length);
+    return preds;
   }, [invTypes, timeHorizon]);
 
   // Apply filters
