@@ -2,6 +2,20 @@
 
 This document describes the reusable components in EVETrade Modern.
 
+## Component Directories
+
+| Directory | Purpose | Count |
+|-----------|---------|-------|
+| `components/analytics/` | Market analysis visualizations | 8 |
+| `components/common/` | Shared UI components | 165+ |
+| `components/dashboard/` | Dashboard widgets | 8 |
+| `components/forms/` | Form inputs & autocomplete | 7 |
+| `components/inventory/` | Inventory management | 8 |
+| `components/layout/` | Page layouts | 3 |
+| `components/routing/` | Route optimization | 7 |
+| `components/tables/` | Data tables | 2 |
+| `components/trading/` | Trading-specific components | 25+ |
+
 ## Common Components
 
 ### GlassmorphicCard
@@ -296,3 +310,248 @@ const columns = [
 - Pagination
 - Sorting
 - Responsive horizontal scroll
+
+## Analytics Components
+
+Located in `src/components/analytics/`:
+
+| Component | Purpose |
+|-----------|---------|
+| `MarketMomentum.jsx` | Market momentum indicator |
+| `PriceProjection.jsx` | Price trend projections |
+| `TrendAnalysis.jsx` | Trend detection and visualization |
+| `SeasonalTrends.jsx` | Seasonal pattern analysis |
+| `CompetitionTracker.jsx` | Competition level monitoring |
+| `MarketHealth.jsx` | Market health indicators |
+| `ProfitPerHourCalculator.jsx` | ISK/hour calculations |
+| `LongTermPredictions.jsx` | Long-term price predictions |
+
+## Dashboard Components
+
+Located in `src/components/dashboard/`:
+
+| Component | Purpose |
+|-----------|---------|
+| `DataCard.jsx` | Data display card with title and value |
+| `StatCard.jsx` | Statistic card with trend indicator |
+| `MiniChart.jsx` | Small inline charts |
+| `ActivityFeed.jsx` | Recent activity timeline |
+| `QuickActions.jsx` | Quick action buttons |
+| `ProgressRing.jsx` | Circular progress indicator |
+| `DashboardGrid.jsx` | Grid layout for dashboard |
+| `SummaryPanel.jsx` | Summary statistics panel |
+
+## Inventory Components
+
+Located in `src/components/inventory/`:
+
+| Component | Purpose |
+|-----------|---------|
+| `InventoryValuation.jsx` | Portfolio value calculation |
+| `DeadStockIdentifier.jsx` | Identify slow-moving inventory |
+| `RestockSuggestions.jsx` | Restock recommendations |
+| `StockAlertPanel.jsx` | Low stock alerts |
+| `AssetsInventory.jsx` | Asset display and management |
+| `InventoryValueTracker.jsx` | Track inventory value over time |
+| `StockLevelIndicator.jsx` | Visual stock level indicator |
+| `InventorySummary.jsx` | Inventory overview |
+
+## Routing Components
+
+Located in `src/components/routing/`:
+
+| Component | Purpose |
+|-----------|---------|
+| `RouteOptimizer.jsx` | Route optimization interface |
+| `CargoOptimizer.jsx` | Cargo capacity optimization |
+| `FuelCostCalculator.jsx` | Jump fuel cost calculation |
+| `MultiStopPlanner.jsx` | Multi-destination route planning |
+| `RouteRiskAssessment.jsx` | Route safety analysis |
+| `RouteMap.jsx` | Visual route display |
+| `JumpCalculator.jsx` | Jump distance calculator |
+
+## Trading Components
+
+Located in `src/components/trading/`:
+
+| Component | Purpose |
+|-----------|---------|
+| `BulkOrderCalculator.jsx` | Bulk order calculations |
+| `IndustryCalculator.jsx` | Manufacturing profit calculator |
+| `OrderBookDepth.jsx` | Order book visualization |
+| `RegionalArbitrage.jsx` | Cross-region price comparison |
+| `ContractFinder.jsx` | Contract search interface |
+| `ManipulationDetector.jsx` | Market manipulation detection |
+| `MarginErosionTracker.jsx` | Track margin changes over time |
+| `MarketSpreadAnalyzer.jsx` | Spread analysis |
+| `OptimalPricing.jsx` | Optimal price suggestions |
+| `TaxCalculator.jsx` | Trading tax calculations |
+| `ComprehensiveProfitCalculator.jsx` | Full profit breakdown |
+
+## Common Components (Extended)
+
+### UI Elements
+
+| Component | Purpose |
+|-----------|---------|
+| `Badge.jsx` | Status badges with colors |
+| `Button.jsx` | Styled buttons |
+| `Card.jsx` | Content card container |
+| `Modal.jsx` | Modal dialog |
+| `Drawer.jsx` | Side drawer panel |
+| `Dropdown.jsx` | Dropdown menu |
+| `Tooltip.jsx` | Hover tooltips |
+| `Toast.jsx` | Toast notifications |
+| `Skeleton.jsx` | Loading skeleton |
+| `Tabs.jsx` | Tab navigation |
+| `Accordion.jsx` | Collapsible sections |
+
+### Trading UI
+
+| Component | Purpose |
+|-----------|---------|
+| `TradeRiskScore.jsx` | Risk assessment badge |
+| `TradeNotes.jsx` | Trade annotation interface |
+| `TradeDecisionCard.jsx` | Quick trade decision UI |
+| `QuickDecisionCard.jsx` | Rapid decision interface |
+| `PriceAlertPanel.jsx` | Price alert configuration |
+| `WatchlistPanel.jsx` | Watchlist management |
+| `SmartFilters.jsx` | Advanced filtering |
+| `SmartAlerts.jsx` | Alert management |
+| `AdvancedSortPanel.jsx` | Multi-column sorting |
+
+### Data Display
+
+| Component | Purpose |
+|-----------|---------|
+| `PriceCharts.jsx` | Price history charts |
+| `Sparkline.jsx` | Inline trend lines |
+| `OrderBookPreview.jsx` | Order book summary |
+| `CompetitionAnalysis.jsx` | Competition breakdown |
+| `MarketHealthDashboard.jsx` | Market health overview |
+| `ProfitPerHour.jsx` | ISK/hour display |
+| `ProfitTracker.jsx` | Profit tracking over time |
+| `VolumeTrend.jsx` | Volume trend indicator |
+
+### Copy & Export
+
+| Component | Purpose |
+|-----------|---------|
+| `BulkCopyPanel.jsx` | Bulk data copy |
+| `OneClickCopy.jsx` | Single-click copy button |
+| `TradeClipboard.jsx` | Trade data clipboard |
+| `MultibuyExport.jsx` | Multibuy format export |
+| `ExportButtons.jsx` | Data export options |
+
+### Alerts & Notifications
+
+| Component | Purpose |
+|-----------|---------|
+| `ToastProvider.jsx` | Toast notification context |
+| `PriceAlert.jsx` | Price alert display |
+| `StockAlert.jsx` | Stock level alert |
+| `NotificationBadge.jsx` | Notification count badge |
+| `AlertBanner.jsx` | Full-width alert banner |
+
+## Component Patterns
+
+### Using Common Components
+
+```jsx
+import { Badge, Button, Card, Modal } from '../components/common';
+
+function MyComponent() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Card>
+      <Badge variant="success">Active</Badge>
+      <Button onClick={() => setIsOpen(true)}>
+        Open Modal
+      </Button>
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        Modal content
+      </Modal>
+    </Card>
+  );
+}
+```
+
+### Using Form Components
+
+```jsx
+import { FormInput, FormSelect, StationAutocomplete } from '../components/forms';
+
+function TradingForm() {
+  const [form, setForm] = useState({
+    station: '',
+    minProfit: 1000000,
+    tax: 0.08,
+  });
+
+  return (
+    <form>
+      <StationAutocomplete
+        label="Station"
+        value={form.station}
+        onChange={(v) => setForm({ ...form, station: v })}
+        required
+      />
+      <FormInput
+        label="Min Profit"
+        type="number"
+        value={form.minProfit}
+        onChange={(v) => setForm({ ...form, minProfit: v })}
+        suffix="ISK"
+      />
+      <FormSelect
+        label="Tax Rate"
+        value={form.tax}
+        onChange={(v) => setForm({ ...form, tax: parseFloat(v) })}
+        options={TAX_OPTIONS}
+      />
+    </form>
+  );
+}
+```
+
+### Using Trading Components
+
+```jsx
+import { TradeRiskScore } from '../components/common/TradeRiskScore';
+import { OrderBookDepth } from '../components/trading/OrderBookDepth';
+
+function TradeDetails({ trade }) {
+  return (
+    <div>
+      <TradeRiskScore
+        volume={trade.volume}
+        spread={trade.spread}
+        competition={trade.competition}
+      />
+      <OrderBookDepth
+        itemId={trade.itemId}
+        regionId={trade.regionId}
+      />
+    </div>
+  );
+}
+```
+
+## Styling Guidelines
+
+All components use Tailwind CSS with the project's space theme:
+
+```jsx
+// Card with glassmorphism
+<div className="bg-space-dark/50 backdrop-blur-sm border border-white/10 rounded-lg p-6">
+
+// Primary action button
+<button className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-space-black font-semibold rounded-lg">
+
+// Secondary button
+<button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/20">
+
+// Input field
+<input className="w-full px-4 py-2 bg-space-dark/50 border border-white/20 rounded-lg text-white placeholder:text-gray-500 focus:border-accent-cyan focus:outline-none" />
+```
