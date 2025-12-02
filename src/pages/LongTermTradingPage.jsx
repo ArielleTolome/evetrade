@@ -314,6 +314,11 @@ function calculateConfidence(volumeTrend, volatility, item) {
  * Get category name from group ID
  */
 function getCategoryName(groupID) {
+  // Validate groupID is a valid number
+  if (groupID === null || groupID === undefined || isNaN(groupID)) {
+    return 'Other';
+  }
+
   const categories = {
     25: 'Frigate', 26: 'Frigate', 27: 'Frigate', 28: 'Frigate', 29: 'Frigate', 30: 'Frigate', 31: 'Frigate',
     324: 'Cruiser', 358: 'Cruiser', 419: 'Cruiser', 420: 'Cruiser',

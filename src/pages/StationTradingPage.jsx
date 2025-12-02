@@ -252,9 +252,15 @@ export function StationTradingPage() {
   const customValidation = useCallback((formData) => {
     const errors = {};
 
-    if (!formData.station) {
+    // Explicitly check if station is empty or not provided
+    if (!formData.station || formData.station.trim() === '') {
       errors.station = 'Please select a station';
-    } else if (!getStationData(formData.station, universeList)) {
+      return errors;
+    }
+
+    // Check if station data is valid
+    const stationData = getStationData(formData.station, universeList);
+    if (!stationData) {
       errors.station = 'Invalid station selected';
     }
 

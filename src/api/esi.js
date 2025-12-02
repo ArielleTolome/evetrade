@@ -226,7 +226,7 @@ export async function getTypeNames(typeIds) {
     chunks.push(typeIds.slice(i, i + 1000));
   }
 
-  const results = await Promise.all(
+  const results = await Promise.allSettled(
     chunks.map((chunk) =>
       fetch(`${ESI_BASE_URL}/universe/names/`, {
         method: 'POST',
@@ -236,7 +236,11 @@ export async function getTypeNames(typeIds) {
     )
   );
 
-  return results.flat();
+  // Filter out rejected promises and only return fulfilled results
+  return results
+    .filter((result) => result.status === 'fulfilled')
+    .map((result) => result.value)
+    .flat();
 }
 
 /**
@@ -417,13 +421,16 @@ function getCompetitionLevel(buyers, sellers) {
  * Calculate trading taxes based on skills and standings
  */
 export function calculateTradingTaxes(skills, standings) {
+  // Safely access skills array with proper null coalescing
+  const skillsArray = skills?.skills ?? [];
+
   // Find Accounting skill (reduces sales tax)
-  const accountingSkill = skills?.skills?.find((s) => s.skill_id === 16622);
-  const accountingLevel = accountingSkill?.active_skill_level || 0;
+  const accountingSkill = skillsArray.find((s) => s.skill_id === 16622);
+  const accountingLevel = accountingSkill?.active_skill_level ?? 0;
 
   // Find Broker Relations skill (reduces broker fee)
-  const brokerRelationsSkill = skills?.skills?.find((s) => s.skill_id === 3446);
-  const brokerRelationsLevel = brokerRelationsSkill?.active_skill_level || 0;
+  const brokerRelationsSkill = skillsArray.find((s) => s.skill_id === 3446);
+  const brokerRelationsLevel = brokerRelationsSkill?.active_skill_level ?? 0;
 
   // Base rates
   const baseSalesTax = 0.08; // 8%
@@ -437,8 +444,8 @@ export function calculateTradingTaxes(skills, standings) {
 
   // Apply standings bonus if available
   if (standings) {
-    const corpStanding = Math.max(0, standings.corpStanding || 0);
-    const factionStanding = Math.max(0, standings.factionStanding || 0);
+    const corpStanding = Math.max(0, standings.corpStanding ?? 0);
+    const factionStanding = Math.max(0, standings.factionStanding ?? 0);
     const standingBonus = 0.0003 * corpStanding + 0.0002 * factionStanding;
     brokerFee = Math.max(0.01, brokerFee - standingBonus);
   }

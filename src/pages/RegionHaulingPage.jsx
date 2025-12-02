@@ -20,9 +20,6 @@ import { formatISK, formatNumber, formatPercent, formatCompact } from '../utils/
 import { useToast } from '../components/common/ToastProvider';
 import {
   TAX_OPTIONS,
-  ROUTE_SAFETY_OPTIONS,
-  SYSTEM_SECURITY_OPTIONS,
-  STRUCTURE_TYPE_OPTIONS,
   TRADE_PREFERENCE_OPTIONS,
 } from '../utils/constants';
 import { getRegionData } from '../utils/stations';
@@ -51,9 +48,6 @@ export function RegionHaulingPage() {
     minROI: 5,
     maxBudget: 1000000000,
     tax: 0.0375,
-    systemSecurity: 'all',
-    structureType: 'both',
-    routeSafety: 'shortest',
   });
 
   // EVE auth state
@@ -61,9 +55,12 @@ export function RegionHaulingPage() {
   const [walletBalance, setWalletBalance] = useState(null);
   const [assets, setAssets] = useState([]);
   const [assetsLoading, setAssetsLoading] = useState(false);
-  const [typeNames, setTypeNames] = useState({});
-  const [locationNames, setLocationNames] = useState({});
-  const [regionNames, setRegionNames] = useState({});
+  // Combine related state objects to prevent race conditions
+  const [assetMetadata, setAssetMetadata] = useState({
+    typeNames: {},
+    locationNames: {},
+    regionNames: {},
+  });
 
   // Toast state for copy feedback
   const [toastMessage, setToastMessage] = useState(null);
@@ -173,13 +170,12 @@ Jumps: ${jumps}`;
 
       // Get type names
       const typeIds = [...new Set(hangarAssets.map((a) => a.type_id))];
+      const nameMap = {};
       if (typeIds.length > 0) {
         const names = await getTypeNames(typeIds);
-        const nameMap = {};
         names.forEach((n) => {
           nameMap[n.id] = n.name;
         });
-        setTypeNames(nameMap);
       }
 
       // Get location names and map to regions
@@ -222,8 +218,12 @@ Jumps: ${jumps}`;
         }
       }
 
-      setLocationNames(locationMap);
-      setRegionNames(regionMap);
+      // Update all metadata in a single state update to prevent race conditions
+      setAssetMetadata({
+        typeNames: nameMap,
+        locationNames: locationMap,
+        regionNames: regionMap,
+      });
     } catch (err) {
       console.error('Failed to load assets:', err);
     } finally {
@@ -280,9 +280,6 @@ Jumps: ${jumps}`;
           minROI: form.minROI,
           maxBudget: form.maxBudget,
           tax: form.tax,
-          systemSecurity: form.systemSecurity,
-          structureType: form.structureType,
-          routeSafety: form.routeSafety,
         });
       } catch (err) {
         console.error('Hauling request failed:', err);
@@ -293,9 +290,6 @@ Jumps: ${jumps}`;
 
   // Option arrays for dropdowns
   const taxOptions = useMemo(() => TAX_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const routeOptions = useMemo(() => ROUTE_SAFETY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const securityOptions = useMemo(() => SYSTEM_SECURITY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const structureOptions = useMemo(() => STRUCTURE_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
   const prefOptions = useMemo(() => TRADE_PREFERENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
 
   // Helper to check if user has item at origin location/region
@@ -304,7 +298,7 @@ Jumps: ${jumps}`;
       if (!assets.length || !itemName || !locationName) return false;
 
       // Find matching location by name
-      const matchingLocation = Object.entries(locationNames).find(
+      const matchingLocation = Object.entries(assetMetadata.locationNames).find(
         ([_, name]) => name === locationName
       );
       if (!matchingLocation) return false;
@@ -312,7 +306,7 @@ Jumps: ${jumps}`;
       const locationId = parseInt(matchingLocation[0]);
 
       // Find matching type by name
-      const matchingType = Object.entries(typeNames).find(
+      const matchingType = Object.entries(assetMetadata.typeNames).find(
         ([_, name]) => name === itemName
       );
       if (!matchingType) return false;
@@ -324,7 +318,7 @@ Jumps: ${jumps}`;
         (asset) => asset.location_id === locationId && asset.type_id === typeId
       );
     },
-    [assets, locationNames, typeNames]
+    [assets, assetMetadata.locationNames, assetMetadata.typeNames]
   );
 
   // Helper to check if user has item in region
@@ -333,7 +327,7 @@ Jumps: ${jumps}`;
       if (!assets.length || !itemName || !regionName) return false;
 
       // Find matching type by name
-      const matchingType = Object.entries(typeNames).find(
+      const matchingType = Object.entries(assetMetadata.typeNames).find(
         ([_, name]) => name === itemName
       );
       if (!matchingType) return false;
@@ -343,11 +337,11 @@ Jumps: ${jumps}`;
       // Check if we have this item in any location in this region
       return assets.some((asset) => {
         if (asset.type_id !== typeId) return false;
-        const assetRegion = regionNames[asset.location_id];
+        const assetRegion = assetMetadata.regionNames[asset.location_id];
         return assetRegion === regionName;
       });
     },
-    [assets, typeNames, regionNames]
+    [assets, assetMetadata.typeNames, assetMetadata.regionNames]
   );
 
   // Count assets at origin region
@@ -356,10 +350,10 @@ Jumps: ${jumps}`;
 
     // Count items in origin region
     return assets.filter((asset) => {
-      const assetRegion = regionNames[asset.location_id];
+      const assetRegion = assetMetadata.regionNames[asset.location_id];
       return assetRegion === form.fromRegion;
     }).length;
-  }, [isAuthenticated, assets, form.fromRegion, regionNames]);
+  }, [isAuthenticated, assets, form.fromRegion, assetMetadata.regionNames]);
 
   // Filter data based on asset ownership
   const filteredData = useMemo(() => {
@@ -719,30 +713,12 @@ Jumps: ${jumps}`;
               />
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid sm:grid-cols-1 gap-4 md:gap-6">
               <FormSelect
                 label="Sales Tax Level"
                 value={form.tax}
                 onChange={(v) => updateForm('tax', parseFloat(v))}
                 options={taxOptions}
-              />
-              <FormSelect
-                label="System Security"
-                value={form.systemSecurity}
-                onChange={(v) => updateForm('systemSecurity', v)}
-                options={securityOptions}
-              />
-              <FormSelect
-                label="Structure Type"
-                value={form.structureType}
-                onChange={(v) => updateForm('structureType', v)}
-                options={structureOptions}
-              />
-              <FormSelect
-                label="Route Safety"
-                value={form.routeSafety}
-                onChange={(v) => updateForm('routeSafety', v)}
-                options={routeOptions}
               />
             </div>
 

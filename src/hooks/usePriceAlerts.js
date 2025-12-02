@@ -261,9 +261,22 @@ export function usePriceAlerts() {
       return false;
     }
 
+    // Validate required properties
+    if (!alert.typeId || typeof alert.typeId !== 'number') {
+      console.warn(`Alert ${alert.id} missing valid typeId`);
+      return false;
+    }
+
     try {
       // Get market orders for this item (using The Forge region ID: 10000002)
       const regionId = alert.regionId || 10000002;
+
+      // Validate regionId before making API call
+      if (!regionId || typeof regionId !== 'number') {
+        console.warn(`Alert ${alert.id} has invalid regionId`);
+        return false;
+      }
+
       const orders = await getMarketOrders(regionId, alert.typeId);
 
       if (!orders || orders.length === 0) {
@@ -277,8 +290,10 @@ export function usePriceAlerts() {
       const bestSellPrice = sellOrders[0]?.price || 0;
       const bestBuyPrice = buyOrders[0]?.price || 0;
 
+      // Initialize currentPrice with a default value to prevent undefined comparisons
+      let currentPrice = 0;
+
       // Determine which price to check based on alert type
-      let currentPrice;
       if (alert.alertType === 'price_below' || alert.alertType === 'price_above') {
         // Use sell price for general price alerts
         currentPrice = bestSellPrice;
@@ -364,8 +379,10 @@ export function usePriceAlerts() {
 
   // Start automatic checking
   const startAutoCheck = useCallback(() => {
+    // Clear any existing interval to prevent memory leaks
     if (checkIntervalRef.current) {
       clearInterval(checkIntervalRef.current);
+      checkIntervalRef.current = null;
     }
 
     // Check immediately
@@ -473,9 +490,21 @@ export function usePriceAlerts() {
     return () => {
       if (checkIntervalRef.current) {
         clearInterval(checkIntervalRef.current);
+        checkIntervalRef.current = null;
       }
     };
   }, []);
+
+  // Clean up and restart interval when checkInterval setting changes
+  useEffect(() => {
+    // If an interval is currently running, restart it with the new interval
+    if (checkIntervalRef.current) {
+      clearInterval(checkIntervalRef.current);
+      checkIntervalRef.current = setInterval(() => {
+        checkAllAlerts();
+      }, settings.checkInterval);
+    }
+  }, [settings.checkInterval, checkAllAlerts]);
 
   // Stats
   const stats = useMemo(() => ({

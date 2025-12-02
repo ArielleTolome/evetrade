@@ -64,7 +64,7 @@ export function useRouteOptimizer() {
     await setCached(cacheKey, data);
 
     return data;
-  }, []);
+  }, [getCached, setCached]);
 
   const { data, loading, error, execute, reset } = useApiCall(fetchRoute);
 

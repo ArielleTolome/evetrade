@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { fetchWithRetry } from '../api/client';
 
 /**
@@ -19,6 +19,19 @@ export function useArbitrageScanner() {
     maxInvestment: null,
   });
   const abortControllerRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  // Track mounted state
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Abort any pending requests on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   /**
    * Scan for arbitrage opportunities
@@ -41,8 +54,10 @@ export function useArbitrageScanner() {
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    setLoading(true);
-    setError(null);
+    if (isMountedRef.current) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const {
@@ -72,8 +87,8 @@ export function useArbitrageScanner() {
         { signal: abortController.signal }
       );
 
-      // Only update state if request wasn't aborted
-      if (!abortController.signal.aborted) {
+      // Only update state if request wasn't aborted and component is still mounted
+      if (!abortController.signal.aborted && isMountedRef.current) {
         setData(result);
         setLastUpdated(new Date());
         return result;
@@ -86,13 +101,13 @@ export function useArbitrageScanner() {
       }
 
       const errorMessage = err.message || 'Failed to scan for arbitrage opportunities';
-      if (!abortController.signal.aborted) {
+      if (!abortController.signal.aborted && isMountedRef.current) {
         setError({ message: errorMessage, original: err });
       }
       throw err;
     } finally {
-      // Only update loading state if request wasn't aborted
-      if (!abortController.signal.aborted) {
+      // Only update loading state if request wasn't aborted and component is still mounted
+      if (!abortController.signal.aborted && isMountedRef.current) {
         setLoading(false);
       }
     }
@@ -168,7 +183,9 @@ export function useArbitrageScanner() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -177,10 +194,12 @@ export function useArbitrageScanner() {
    */
   const reset = useCallback(() => {
     cancel();
-    setData(null);
-    setError(null);
-    setLastUpdated(null);
-    resetFilters();
+    if (isMountedRef.current) {
+      setData(null);
+      setError(null);
+      setLastUpdated(null);
+      resetFilters();
+    }
   }, [cancel, resetFilters]);
 
   /**

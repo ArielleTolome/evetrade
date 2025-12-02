@@ -18,6 +18,81 @@ const DEFAULT_PORTFOLIO = {
 };
 
 /**
+ * Check if localStorage is available and working
+ * @returns {boolean}
+ */
+function isLocalStorageAvailable() {
+  try {
+    const testKey = '__storage_test__';
+    localStorage.setItem(testKey, 'test');
+    localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Safely get item from localStorage
+ * @param {string} key - Storage key
+ * @returns {string|null} Stored value or null
+ */
+function safeGetItem(key) {
+  try {
+    if (!isLocalStorageAvailable()) {
+      console.warn('localStorage is not available');
+      return null;
+    }
+    return localStorage.getItem(key);
+  } catch (error) {
+    console.error('Error reading from localStorage:', error);
+    return null;
+  }
+}
+
+/**
+ * Safely set item in localStorage
+ * @param {string} key - Storage key
+ * @param {string} value - Value to store
+ * @returns {boolean} True if successful
+ */
+function safeSetItem(key, value) {
+  try {
+    if (!isLocalStorageAvailable()) {
+      console.warn('localStorage is not available');
+      return false;
+    }
+    localStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    if (error.name === 'QuotaExceededError') {
+      console.error('localStorage quota exceeded. Attempting to clear old data...');
+      try {
+        // Try to clear some space by removing old trade history
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const data = JSON.parse(stored);
+          // Keep only last 100 trades instead of 1000
+          if (data.tradeHistory && data.tradeHistory.length > 100) {
+            data.tradeHistory = data.tradeHistory.slice(0, 100);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            console.log('Cleared old trade history to free up space');
+          }
+        }
+        // Try again after cleanup
+        localStorage.setItem(key, value);
+        return true;
+      } catch (retryError) {
+        console.error('Failed to save even after cleanup:', retryError);
+        return false;
+      }
+    }
+    console.error('Error writing to localStorage:', error);
+    return false;
+  }
+}
+
+/**
  * Generate a unique ID
  */
 function generateId() {
@@ -35,13 +110,21 @@ export function usePortfolio() {
   // Load portfolio from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeGetItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        setPortfolio({ ...DEFAULT_PORTFOLIO, ...parsed });
+        try {
+          const parsed = JSON.parse(stored);
+          setPortfolio({ ...DEFAULT_PORTFOLIO, ...parsed });
+        } catch (parseError) {
+          console.error('Failed to parse portfolio data:', parseError);
+          // If data is corrupted, start with default
+          setPortfolio(DEFAULT_PORTFOLIO);
+        }
       }
     } catch (err) {
       console.error('Failed to load portfolio:', err);
+      // Use default portfolio as fallback
+      setPortfolio(DEFAULT_PORTFOLIO);
     }
     setIsLoaded(true);
   }, []);
@@ -50,9 +133,14 @@ export function usePortfolio() {
   useEffect(() => {
     if (isLoaded) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolio));
+        const serialized = JSON.stringify(portfolio);
+        const success = safeSetItem(STORAGE_KEY, serialized);
+        if (!success) {
+          console.warn('Portfolio data could not be saved to localStorage');
+          // Optionally notify user that data isn't being saved
+        }
       } catch (err) {
-        console.error('Failed to save portfolio:', err);
+        console.error('Failed to serialize portfolio:', err);
       }
     }
   }, [portfolio, isLoaded]);
@@ -221,6 +309,13 @@ export function usePortfolio() {
    */
   const clearAllData = useCallback(() => {
     setPortfolio(DEFAULT_PORTFOLIO);
+    try {
+      if (isLocalStorageAvailable()) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (err) {
+      console.error('Failed to clear portfolio from localStorage:', err);
+    }
   }, []);
 
   /**

@@ -7,10 +7,10 @@ import { useEffect, useState, useRef } from 'react';
 export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, action }) {
   const [progress, setProgress] = useState(100);
   const [isExiting, setIsExiting] = useState(false);
-  const startTimeRef = useRef(Date.now());
   const remainingTimeRef = useRef(duration);
   const pausedRef = useRef(false);
   const animationFrameRef = useRef(null);
+  const dismissTimeoutRef = useRef(null);
 
   // Toast type configurations with cyberpunk/space theme
   const config = {
@@ -116,13 +116,21 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (dismissTimeoutRef.current) {
+        clearTimeout(dismissTimeoutRef.current);
+      }
     };
   }, [duration]);
 
   const handleDismiss = () => {
     setIsExiting(true);
-    setTimeout(() => {
+    // Clear any existing timeout before creating a new one
+    if (dismissTimeoutRef.current) {
+      clearTimeout(dismissTimeoutRef.current);
+    }
+    dismissTimeoutRef.current = setTimeout(() => {
       onDismiss(id);
+      dismissTimeoutRef.current = null;
     }, 300); // Match animation duration
   };
 

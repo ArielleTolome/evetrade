@@ -45,7 +45,7 @@ export function useMarketTrends(typeId, regionId) {
         if (isMounted) {
           // Sort by date (oldest first) and ensure we have valid data
           const validHistory = (history || [])
-            .filter(day => day.average && day.date)
+            .filter(day => day.average != null && day.date != null)
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
           setMarketHistory(validHistory);

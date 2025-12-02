@@ -113,10 +113,14 @@ function DropdownMenu({ category, isOpen, onClose }) {
           onClose();
           break;
         case 'Enter':
-          if (focusedIndex >= 0) {
-            const link = dropdownRef.current?.querySelectorAll('a')[focusedIndex];
-            link?.click();
-          }
+          e.preventDefault();
+          setFocusedIndex(currentIndex => {
+            if (currentIndex >= 0) {
+              const link = dropdownRef.current?.querySelectorAll('a')[currentIndex];
+              link?.click();
+            }
+            return currentIndex;
+          });
           break;
         default:
           break;
@@ -125,7 +129,7 @@ function DropdownMenu({ category, isOpen, onClose }) {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, focusedIndex, category.items, onClose]);
+  }, [isOpen, category.items, onClose]);
 
   if (!isOpen || !category.items) return null;
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 
 /**
  * EVE Online SSO Configuration
@@ -31,7 +31,14 @@ const NEW_AUTH_STORAGE_KEY = 'eve_auth_multi';
  */
 function parseJwt(token) {
   try {
-    const base64Url = token.split('.')[1];
+    // Validate token format (JWT should have 3 parts: header.payload.signature)
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.error('Invalid JWT token format: expected 3 parts, got', parts.length);
+      return null;
+    }
+
+    const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
@@ -40,7 +47,8 @@ function parseJwt(token) {
         .join('')
     );
     return JSON.parse(jsonPayload);
-  } catch {
+  } catch (error) {
+    console.error('Failed to parse JWT token:', error);
     return null;
   }
 }
@@ -124,6 +132,9 @@ export function EveAuthProvider({ children }) {
   const [error, setError] = useState(null);
   const [multiCharAuth, setMultiCharAuth] = useState(null);
 
+  // Ref to track in-flight refresh requests and prevent race conditions
+  const refreshPromiseRef = useRef(null);
+
   // Load auth from storage on mount - check for migration first
   useEffect(() => {
     // Try to migrate old auth first
@@ -163,8 +174,17 @@ export function EveAuthProvider({ children }) {
             name: activeChar.name,
           });
         } else if (activeChar?.refreshToken) {
-          // Token expired, try to refresh
-          refreshAccessToken(activeChar.refreshToken);
+          // Token expired, mark for refresh but don't call it here
+          // The getAccessToken function will handle the refresh on first use
+          setAuth({
+            accessToken: '',
+            refreshToken: activeChar.refreshToken,
+            expiresAt: 0, // Force refresh on next getAccessToken call
+          });
+          setCharacter({
+            id: activeChar.id,
+            name: activeChar.name,
+          });
         }
       } catch {
         localStorage.removeItem(NEW_AUTH_STORAGE_KEY);
@@ -199,6 +219,7 @@ export function EveAuthProvider({ children }) {
     };
 
     handleCallback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Exchange authorization code for tokens
@@ -283,8 +304,22 @@ export function EveAuthProvider({ children }) {
     }));
   };
 
+  // Logout (removes all characters)
+  const logout = useCallback(() => {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem(NEW_AUTH_STORAGE_KEY);
+    setAuth(null);
+    setCharacter(null);
+    setMultiCharAuth(null);
+    setError(null);
+    // Clear any in-flight refresh promise
+    refreshPromiseRef.current = null;
+    // Notify MultiCharacterProvider
+    window.dispatchEvent(new CustomEvent('eveauth:logout'));
+  }, []);
+
   // Refresh access token
-  const refreshAccessToken = async (refreshToken) => {
+  const refreshAccessToken = useCallback(async (refreshToken) => {
     try {
       const response = await fetch(EVE_SSO_CONFIG.tokenUrl, {
         method: 'POST',
@@ -305,31 +340,57 @@ export function EveAuthProvider({ children }) {
       const data = await response.json();
       const expiresAt = Date.now() + data.expires_in * 1000;
 
+      // Extract character info
+      const tokenData = parseJwt(data.access_token);
+      if (!tokenData) {
+        throw new Error('Invalid token received during refresh');
+      }
+
+      const characterId = tokenData.sub?.split(':')[2];
+      if (!characterId) {
+        throw new Error('Could not extract character ID from refreshed token');
+      }
+
       const authData = {
         accessToken: data.access_token,
         refreshToken: data.refresh_token || refreshToken,
         expiresAt,
       };
 
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
-      setAuth(authData);
-
-      // Extract character info
-      const tokenData = parseJwt(data.access_token);
-      if (tokenData) {
-        const characterId = tokenData.sub?.split(':')[2];
-        setCharacter({
-          id: characterId,
-          name: tokenData.name,
-        });
+      // Update both old and new storage formats if multi-char auth exists
+      if (multiCharAuth) {
+        const updatedMultiAuth = { ...multiCharAuth };
+        const charIndex = updatedMultiAuth.characters.findIndex(c => c.id === characterId);
+        if (charIndex >= 0) {
+          updatedMultiAuth.characters[charIndex] = {
+            ...updatedMultiAuth.characters[charIndex],
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token || refreshToken,
+            expiresAt,
+            lastUpdated: Date.now(),
+          };
+          localStorage.setItem(NEW_AUTH_STORAGE_KEY, JSON.stringify(updatedMultiAuth));
+          setMultiCharAuth(updatedMultiAuth);
+        }
       }
 
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+      setAuth(authData);
+      setCharacter({
+        id: characterId,
+        name: tokenData.name,
+      });
+
       return authData.accessToken;
-    } catch {
+    } catch (error) {
+      console.error('Token refresh failed:', error);
       logout();
       return null;
+    } finally {
+      // Clear the refresh promise ref
+      refreshPromiseRef.current = null;
     }
-  };
+  }, [multiCharAuth, logout]);
 
   // Start OAuth login flow
   const login = useCallback(async () => {
@@ -358,29 +419,25 @@ export function EveAuthProvider({ children }) {
     window.location.href = `${EVE_SSO_CONFIG.authUrl}?${params}`;
   }, []);
 
-  // Logout (removes all characters)
-  const logout = useCallback(() => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem(NEW_AUTH_STORAGE_KEY);
-    setAuth(null);
-    setCharacter(null);
-    setMultiCharAuth(null);
-    setError(null);
-    // Notify MultiCharacterProvider
-    window.dispatchEvent(new CustomEvent('eveauth:logout'));
-  }, []);
-
   // Get valid access token (refresh if needed)
   const getAccessToken = useCallback(async () => {
     if (!auth) return null;
 
     // Check if token is about to expire (within 5 minutes)
     if (auth.expiresAt - Date.now() < 5 * 60 * 1000) {
-      return await refreshAccessToken(auth.refreshToken);
+      // Check if there's already a refresh in progress
+      if (refreshPromiseRef.current) {
+        // Reuse the existing promise to avoid duplicate refresh requests
+        return await refreshPromiseRef.current;
+      }
+
+      // Start a new refresh and store the promise
+      refreshPromiseRef.current = refreshAccessToken(auth.refreshToken);
+      return await refreshPromiseRef.current;
     }
 
     return auth.accessToken;
-  }, [auth]);
+  }, [auth, refreshAccessToken]);
 
   const value = {
     isAuthenticated: !!auth,

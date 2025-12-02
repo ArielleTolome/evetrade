@@ -23,8 +23,6 @@ import { useToast } from '../components/common/ToastProvider';
 import { isCitadel } from '../utils/security';
 import {
   TAX_OPTIONS,
-  ROUTE_SAFETY_OPTIONS,
-  SYSTEM_SECURITY_OPTIONS,
   TRADE_PREFERENCE_OPTIONS,
 } from '../utils/constants';
 import { getStationData } from '../utils/stations';
@@ -52,8 +50,6 @@ export function StationHaulingPage() {
     minROI: 5,
     maxBudget: 1000000000,
     tax: 0.0375,
-    systemSecurity: 'all',
-    routeSafety: 'shortest',
   });
 
   // Temporary input values
@@ -257,8 +253,6 @@ ROI: ${formatPercent(roi / 100, 1)}`;
           minROI: form.minROI,
           maxBudget: form.maxBudget,
           tax: form.tax,
-          systemSecurity: form.systemSecurity,
-          routeSafety: form.routeSafety,
         });
       } catch (err) {
         console.error('Hauling request failed:', err);
@@ -269,8 +263,6 @@ ROI: ${formatPercent(roi / 100, 1)}`;
 
   // Option arrays for dropdowns
   const taxOptions = useMemo(() => TAX_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const routeOptions = useMemo(() => ROUTE_SAFETY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
-  const securityOptions = useMemo(() => SYSTEM_SECURITY_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
   const prefOptions = useMemo(() => TRADE_PREFERENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label })), []);
 
   // Helper to check if user has item at origin
@@ -721,24 +713,12 @@ ROI: ${formatPercent(roi / 100, 1)}`;
               />
             </div>
 
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid sm:grid-cols-1 gap-4 md:gap-6">
               <FormSelect
                 label="Sales Tax Level"
                 value={form.tax}
                 onChange={(v) => updateForm('tax', parseFloat(v))}
                 options={taxOptions}
-              />
-              <FormSelect
-                label="System Security"
-                value={form.systemSecurity}
-                onChange={(v) => updateForm('systemSecurity', v)}
-                options={securityOptions}
-              />
-              <FormSelect
-                label="Route Safety"
-                value={form.routeSafety}
-                onChange={(v) => updateForm('routeSafety', v)}
-                options={routeOptions}
               />
             </div>
 

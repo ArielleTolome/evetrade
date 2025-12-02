@@ -40,8 +40,6 @@ export async function fetchStationHauling({
   minROI,
   maxBudget,
   tax,
-  systemSecurity,
-  routeSafety,
 }) {
   const queryParams = new URLSearchParams({
     from: from,
@@ -51,8 +49,6 @@ export async function fetchStationHauling({
     minROI: minROI,
     maxBudget: maxBudget,
     tax: tax,
-    systemSecurity: systemSecurity,
-    routeSafety: routeSafety,
   });
 
   const data = await fetchWithRetry(`/hauling?${queryParams.toString()}`);
@@ -72,9 +68,6 @@ export async function fetchRegionHauling({
   minROI,
   maxBudget,
   tax,
-  systemSecurity,
-  structureType,
-  routeSafety,
 }) {
   const queryParams = new URLSearchParams({
     from: from,
@@ -84,9 +77,6 @@ export async function fetchRegionHauling({
     minROI: minROI,
     maxBudget: maxBudget,
     tax: tax,
-    systemSecurity: systemSecurity,
-    structureType: structureType,
-    routeSafety: routeSafety,
   });
 
   const data = await fetchWithRetry(`/hauling?${queryParams.toString()}`);
@@ -200,8 +190,12 @@ export async function fetchPIOpportunities({
     queryParams.append('minVolume', minVolume.toString());
   }
 
+  // Validate characterId is a valid positive integer before sending
   if (characterId) {
-    queryParams.append('characterId', characterId.toString());
+    const charIdNum = parseInt(characterId, 10);
+    if (!isNaN(charIdNum) && charIdNum > 0 && Number.isFinite(charIdNum)) {
+      queryParams.append('characterId', charIdNum.toString());
+    }
   }
 
   const options = {};

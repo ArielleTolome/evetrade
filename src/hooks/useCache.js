@@ -3,6 +3,12 @@ import { CACHE_CONFIG } from '../utils/constants';
 const { dbName, storeName, duration } = CACHE_CONFIG;
 
 /**
+ * Queue to prevent concurrent writes to the same key
+ * Maps key -> Promise
+ */
+const writeQueue = new Map();
+
+/**
  * Check if IndexedDB is available and working
  * @returns {boolean}
  */
@@ -233,49 +239,74 @@ export async function getCached(key) {
 
 /**
  * Set cached data in localStorage or IndexedDB
+ * Prevents concurrent writes to the same key using a queue
  * @param {string} key - Cache key
  * @param {any} data - Data to cache
  */
 export async function setCached(key, data) {
-  const timestamp = Date.now();
+  // If there's already a write in progress for this key, wait for it
+  if (writeQueue.has(key)) {
+    try {
+      await writeQueue.get(key);
+    } catch (error) {
+      // Ignore errors from previous write, continue with this one
+      console.warn('Previous write failed for key:', key, error);
+    }
+  }
+
+  // Create a promise for this write operation
+  const writePromise = (async () => {
+    const timestamp = Date.now();
+
+    try {
+      // Try localStorage first (for items < 2MB)
+      const serialized = JSON.stringify(data);
+
+      if (serialized.length < 2 * 1024 * 1024 && isLocalStorageAvailable()) {
+        try {
+          localStorage.setItem(key, serialized);
+          localStorage.setItem(`${key}_timestamp`, timestamp.toString());
+          return;
+        } catch (e) {
+          // localStorage full or quota exceeded, fall through to IndexedDB
+          console.warn('localStorage full, using IndexedDB:', e);
+        }
+      }
+
+      // Use IndexedDB for larger items or if localStorage failed
+      if (!isIndexedDBAvailable()) {
+        console.warn('IndexedDB not available, cache not saved for key:', key);
+        return;
+      }
+
+      await executeTransaction('readwrite', (store) => {
+        return new Promise((resolve, reject) => {
+          const request = store.put({ key, data, timestamp });
+
+          request.onerror = () => {
+            console.warn('IndexedDB write error for key:', key, request.error);
+            reject(request.error);
+          };
+
+          request.onsuccess = () => {
+            resolve();
+          };
+        });
+      });
+    } catch (error) {
+      console.warn('Cache write error for key:', key, error);
+      throw error;
+    }
+  })();
+
+  // Add to queue
+  writeQueue.set(key, writePromise);
 
   try {
-    // Try localStorage first (for items < 2MB)
-    const serialized = JSON.stringify(data);
-
-    if (serialized.length < 2 * 1024 * 1024 && isLocalStorageAvailable()) {
-      try {
-        localStorage.setItem(key, serialized);
-        localStorage.setItem(`${key}_timestamp`, timestamp.toString());
-        return;
-      } catch (e) {
-        // localStorage full or quota exceeded, fall through to IndexedDB
-        console.warn('localStorage full, using IndexedDB:', e);
-      }
-    }
-
-    // Use IndexedDB for larger items or if localStorage failed
-    if (!isIndexedDBAvailable()) {
-      console.warn('IndexedDB not available, cache not saved for key:', key);
-      return;
-    }
-
-    await executeTransaction('readwrite', (store) => {
-      return new Promise((resolve, reject) => {
-        const request = store.put({ key, data, timestamp });
-
-        request.onerror = () => {
-          console.warn('IndexedDB write error for key:', key, request.error);
-          reject(request.error);
-        };
-
-        request.onsuccess = () => {
-          resolve();
-        };
-      });
-    });
-  } catch (error) {
-    console.warn('Cache write error for key:', key, error);
+    await writePromise;
+  } finally {
+    // Remove from queue when done
+    writeQueue.delete(key);
   }
 }
 
