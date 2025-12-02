@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 import { useResources } from '../hooks/useResources';
 
 const tradingModes = [
@@ -60,12 +61,12 @@ export function HomePage() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/station-trading" className="btn-primary text-lg px-8 py-4 shadow-lg shadow-accent-cyan/20">
+            <Button to="/station-trading" variant="primary" size="lg" className="shadow-lg shadow-accent-cyan/20">
               Start Trading
-            </Link>
-            <Link to="/help" className="btn-secondary text-lg px-8 py-4">
+            </Button>
+            <Button to="/help" variant="secondary" size="lg">
               Learn More
-            </Link>
+            </Button>
           </div>
 
           {/* Loading indicator */}

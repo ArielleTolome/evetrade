@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { Button } from '../common/Button';
 
 /**
  * Get quality tier based on row data stats
@@ -341,20 +342,22 @@ export function TradingTable({
       {/* Top Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4 bg-space-mid/40 border-b border-white/5">
         <div className="flex gap-2 w-full sm:w-auto">
-          <button
-            type="button"
+          <Button
             onClick={copyToClipboard}
-            className="flex-1 sm:flex-none px-3 md:px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50 focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 min-h-[44px]"
+            variant="secondary"
+            size="sm"
+            className="flex-1 sm:flex-none min-h-[44px]"
           >
             Copy
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
             onClick={exportCSV}
-            className="flex-1 sm:flex-none px-3 md:px-4 py-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-sm font-medium transition-all hover:bg-accent-cyan/20 hover:border-accent-cyan/50 focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 min-h-[44px]"
+            variant="secondary"
+            size="sm"
+            className="flex-1 sm:flex-none min-h-[44px]"
           >
             CSV
-          </button>
+          </Button>
         </div>
         <div className="w-full sm:w-auto">
           <input
@@ -475,8 +478,8 @@ export function TradingTable({
                           }}
                           disabled={isItemWatched && isItemWatched(row['Item ID'] || row.itemId)}
                           className={`p-2 rounded-lg transition-all ${isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
-                              ? 'bg-accent-purple/20 text-accent-purple/50 cursor-not-allowed'
-                              : 'bg-accent-purple/10 border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/20 hover:border-accent-purple/50'
+                            ? 'bg-accent-purple/20 text-accent-purple/50 cursor-not-allowed'
+                            : 'bg-accent-purple/10 border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/20 hover:border-accent-purple/50'
                             }`}
                           title={
                             isItemWatched && isItemWatched(row['Item ID'] || row.itemId)

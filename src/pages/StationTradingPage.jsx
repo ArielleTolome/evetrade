@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 import { QuickTradeCalculator } from '../components/common/QuickTradeCalculator';
 import { TopRecommendations } from '../components/common/TopRecommendations';
 import { TradingStats } from '../components/common/TradingStats';
@@ -1101,20 +1102,16 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={loading || resourcesLoading}
-              className="btn-primary w-full py-3 md:py-4 text-base md:text-lg min-h-[44px]"
+              variant="primary"
+              size="lg"
+              className="w-full text-base md:text-lg min-h-[44px]"
+              loading={loading}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-space-black/30 border-t-space-black rounded-full animate-spin" />
-                  Searching...
-                </span>
-              ) : (
-                'Find Trades'
-              )}
-            </button>
+              {loading ? 'Searching...' : 'Find Trades'}
+            </Button>
           </form>
         </GlassmorphicCard>
 
@@ -1261,11 +1258,10 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                                 {typeNames[order.type_id] || `Type ${order.type_id}`}
                               </td>
                               <td className="py-2 px-3">
-                                <span className={`px-2 py-0.5 rounded text-xs ${
-                                  order.is_buy_order
-                                    ? 'bg-red-500/20 text-red-400'
-                                    : 'bg-green-500/20 text-green-400'
-                                }`}>
+                                <span className={`px-2 py-0.5 rounded text-xs ${order.is_buy_order
+                                  ? 'bg-red-500/20 text-red-400'
+                                  : 'bg-green-500/20 text-green-400'
+                                  }`}>
                                   {order.is_buy_order ? 'BUY' : 'SELL'}
                                 </span>
                               </td>
@@ -1286,9 +1282,8 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                                   <span className="text-xs text-text-secondary">{formatPercent(fillPercent / 100, 0)}</span>
                                 </div>
                               </td>
-                              <td className={`py-2 px-3 text-right text-sm ${
-                                daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'
-                              }`}>
+                              <td className={`py-2 px-3 text-right text-sm ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'
+                                }`}>
                                 {daysLeft}d
                               </td>
                             </tr>
@@ -1314,7 +1309,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         {error && (
           <ActionableError
             error={error}
-            onRetry={() => handleSubmit({ preventDefault: () => {} })}
+            onRetry={() => handleSubmit({ preventDefault: () => { } })}
             className="mb-8"
           />
         )}
@@ -1362,20 +1357,17 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
             <>
               {/* Dashboard Toggle and At-A-Glance View */}
               <div className="mb-6 flex items-center justify-between">
-                <button
+                <Button
                   onClick={() => setShowDashboard(!showDashboard)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                    showDashboard
-                      ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan'
-                      : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
-                  }`}
+                  variant={showDashboard ? 'secondary' : 'ghost'}
+                  className={`border ${showDashboard ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan' : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'}`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                   </svg>
                   <span className="font-medium">Dashboard</span>
-                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">d</kbd>
-                </button>
+                  <kbd className="hidden sm:inline-block ml-2 px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">d</kbd>
+                </Button>
               </div>
 
               {/* At-A-Glance Trading Dashboard */}
@@ -1423,18 +1415,17 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   </div>
                   <DataFreshnessIndicator
                     lastUpdated={lastUpdated}
-                    onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+                    onRefresh={() => handleSubmit({ preventDefault: () => { } })}
                     isLoading={loading}
                     compact
                   />
                   {favorites.length > 0 && (
                     <button
                       onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
-                        showFavoritesOnly
-                          ? 'bg-accent-gold/20 border-accent-gold/50 text-accent-gold'
-                          : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
-                      }`}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${showFavoritesOnly
+                        ? 'bg-accent-gold/20 border-accent-gold/50 text-accent-gold'
+                        : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
+                        }`}
                       title="Toggle favorites filter (f)"
                     >
                       <svg
@@ -1457,11 +1448,10 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   )}
                   <button
                     onClick={() => setHighQualityOnly(!highQualityOnly)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
-                      highQualityOnly
-                        ? 'bg-green-500/20 border-green-500/50 text-green-400'
-                        : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
-                    }`}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${highQualityOnly
+                      ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                      : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
+                      }`}
                     title="Toggle high quality filter (h)"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1616,18 +1606,20 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
               autoFocus
             />
             <div className="flex gap-3">
-              <button
+              <Button
                 onClick={() => setShowSaveModal(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors min-h-[44px]"
+                variant="ghost"
+                className="flex-1 border border-accent-cyan/20 text-text-secondary hover:bg-white/5 min-h-[44px]"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSaveRoute}
-                className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors min-h-[44px]"
+                variant="primary"
+                className="flex-1 min-h-[44px]"
               >
                 Save
-              </button>
+              </Button>
             </div>
           </div>
         </div>
