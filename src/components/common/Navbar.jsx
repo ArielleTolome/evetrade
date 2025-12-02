@@ -8,6 +8,7 @@ const navItems = [
   { path: '/station-trading', label: 'Station Trading', icon: '📊' },
   { path: '/station-hauling', label: 'Station Hauling', icon: '🚀' },
   { path: '/region-hauling', label: 'Region Hauling', icon: '🌌' },
+  { path: '/route-optimization', label: 'Route Opt', icon: '🛣️' },
   { path: '/predictions', label: 'Predictions', icon: '📈' },
   { path: '/tools', label: 'Tools', icon: '🛠️' },
   { path: '/price-compare', label: 'Price Compare', icon: '💹' },
@@ -157,7 +158,7 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {navItems.slice(0, 6).map(({ path, label }) => (
+            {navItems.slice(0, 7).map(({ path, label }) => (
               <Link
                 key={path}
                 to={path}
