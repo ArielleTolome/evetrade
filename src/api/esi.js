@@ -217,6 +217,17 @@ export async function getTypeNames(typeIds) {
 }
 
 /**
+ * Major trade hub regions in EVE Online
+ */
+export const TRADE_HUB_REGIONS = {
+  'The Forge': 10000002,      // Jita
+  'Domain': 10000043,         // Amarr
+  'Heimatar': 10000030,       // Rens
+  'Sinq Laison': 10000032,    // Dodixie
+  'Metropolis': 10000042,     // Hek
+};
+
+/**
  * Get market history for a type in a region
  */
 export async function getMarketHistory(regionId, typeId) {
@@ -236,6 +247,51 @@ export async function getMarketOrders(regionId, typeId, orderType = 'all') {
     `/markets/${regionId}/orders/?type_id=${typeId}&order_type=${orderType}`
   );
   return orders;
+}
+
+/**
+ * Get market history for a type across multiple regions in parallel
+ * @param {number} typeId - Type ID of the item
+ * @param {Array<number>} regionIds - Array of region IDs
+ * @returns {Promise<Object>} Object with regionId as keys and history data as values
+ */
+export async function getMarketHistoryMultiRegion(typeId, regionIds) {
+  const historyPromises = regionIds.map(regionId =>
+    getMarketHistory(regionId, typeId)
+      .then(data => ({ regionId, data }))
+      .catch(error => ({ regionId, error: error.message }))
+  );
+
+  const results = await Promise.all(historyPromises);
+
+  // Convert array to object with regionId as keys
+  return results.reduce((acc, result) => {
+    acc[result.regionId] = result.error ? { error: result.error } : result.data;
+    return acc;
+  }, {});
+}
+
+/**
+ * Get market orders for a type across multiple regions in parallel
+ * @param {number} typeId - Type ID of the item
+ * @param {Array<number>} regionIds - Array of region IDs
+ * @param {string} orderType - 'all', 'buy', or 'sell' (default: 'all')
+ * @returns {Promise<Object>} Object with regionId as keys and orders data as values
+ */
+export async function getMarketOrdersMultiRegion(typeId, regionIds, orderType = 'all') {
+  const ordersPromises = regionIds.map(regionId =>
+    getMarketOrders(regionId, typeId, orderType)
+      .then(data => ({ regionId, data }))
+      .catch(error => ({ regionId, error: error.message }))
+  );
+
+  const results = await Promise.all(ordersPromises);
+
+  // Convert array to object with regionId as keys
+  return results.reduce((acc, result) => {
+    acc[result.regionId] = result.error ? { error: result.error } : result.data;
+    return acc;
+  }, {});
 }
 
 /**
@@ -397,6 +453,8 @@ export default {
   getTypeNames,
   getMarketHistory,
   getMarketOrders,
+  getMarketHistoryMultiRegion,
+  getMarketOrdersMultiRegion,
   analyzeMarketOrders,
   calculateTradingTaxes,
 };

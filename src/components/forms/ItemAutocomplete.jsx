@@ -224,6 +224,7 @@ export function ItemAutocomplete({
           placeholder={getPlaceholder()}
           disabled={disabled || isLoading || itemsList.length === 0}
           required={required}
+          title={inputValue}
           className={`
             w-full px-4 py-3 rounded-lg
             bg-space-dark/50 dark:bg-space-dark/50 bg-white
@@ -283,7 +284,7 @@ export function ItemAutocomplete({
                 }
               `}
             >
-              <span className="truncate text-text-primary">
+              <span className="truncate text-text-primary" title={item.name}>
                 {item.name}
               </span>
               <span className="text-xs text-text-secondary ml-2">

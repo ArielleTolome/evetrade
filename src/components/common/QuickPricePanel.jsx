@@ -219,14 +219,14 @@ function PriceButton({ label, sublabel, price, onClick, isCopied, variant = 'neu
  * Compact inline version for table rows
  */
 export function QuickCopyButtons({ buyPrice, sellPrice, onCopy }) {
-  const [copiedField, setCopiedField] = useState(null);
+  const [copiedButton, setCopiedButton] = useState(null);
 
   const copyPrice = useCallback(async (value, field) => {
     try {
       await navigator.clipboard.writeText(value.toFixed(2));
-      setCopiedField(field);
+      setCopiedButton(field);
       onCopy?.(`Copied ${formatISK(value, false)}`);
-      setTimeout(() => setCopiedField(null), 1500);
+      setTimeout(() => setCopiedButton(null), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -240,10 +240,16 @@ export function QuickCopyButtons({ buyPrice, sellPrice, onCopy }) {
           e.stopPropagation();
           copyPrice(buyPrice, 'buy');
         }}
-        className={`p-1.5 rounded text-xs transition-all ${copiedField === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'}`}
+        className={`p-1.5 rounded text-xs transition-all ${copiedButton === 'buy' ? 'bg-green-500/30 text-green-400 ring-2 ring-green-400/50' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'}`}
         title={`Copy buy price: ${formatISK(buyPrice, false)}`}
       >
-        {copiedField === 'buy' ? '✓' : 'B'}
+        {copiedButton === 'buy' ? (
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          'B'
+        )}
       </button>
 
       {/* Copy undercut buy price */}
@@ -252,10 +258,16 @@ export function QuickCopyButtons({ buyPrice, sellPrice, onCopy }) {
           e.stopPropagation();
           copyPrice(buyPrice - 0.01, 'buy-under');
         }}
-        className={`p-1.5 rounded text-xs transition-all ${copiedField === 'buy-under' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/10 text-orange-400 hover:bg-orange-500/20'}`}
+        className={`p-1.5 rounded text-xs transition-all ${copiedButton === 'buy-under' ? 'bg-green-500/30 text-green-400 ring-2 ring-green-400/50' : 'bg-orange-500/10 text-orange-400 hover:bg-orange-500/20'}`}
         title={`Copy undercut buy: ${formatISK(buyPrice - 0.01, false)}`}
       >
-        B-
+        {copiedButton === 'buy-under' ? (
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          'B-'
+        )}
       </button>
 
       {/* Copy sell price (to place sell order) */}
@@ -264,10 +276,16 @@ export function QuickCopyButtons({ buyPrice, sellPrice, onCopy }) {
           e.stopPropagation();
           copyPrice(sellPrice, 'sell');
         }}
-        className={`p-1.5 rounded text-xs transition-all ${copiedField === 'sell' ? 'bg-green-500/20 text-green-400' : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'}`}
+        className={`p-1.5 rounded text-xs transition-all ${copiedButton === 'sell' ? 'bg-green-500/30 text-green-400 ring-2 ring-green-400/50' : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'}`}
         title={`Copy sell price: ${formatISK(sellPrice, false)}`}
       >
-        S
+        {copiedButton === 'sell' ? (
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          'S'
+        )}
       </button>
 
       {/* Copy overbid sell price */}
@@ -276,10 +294,16 @@ export function QuickCopyButtons({ buyPrice, sellPrice, onCopy }) {
           e.stopPropagation();
           copyPrice(sellPrice + 0.01, 'sell-over');
         }}
-        className={`p-1.5 rounded text-xs transition-all ${copiedField === 'sell-over' ? 'bg-green-500/20 text-green-400' : 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20'}`}
+        className={`p-1.5 rounded text-xs transition-all ${copiedButton === 'sell-over' ? 'bg-green-500/30 text-green-400 ring-2 ring-green-400/50' : 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20'}`}
         title={`Copy overbid sell: ${formatISK(sellPrice + 0.01, false)}`}
       >
-        S+
+        {copiedButton === 'sell-over' ? (
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          'S+'
+        )}
       </button>
     </div>
   );

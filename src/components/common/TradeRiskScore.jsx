@@ -8,11 +8,11 @@ const RISK_LEVELS = {
   low: {
     label: 'Low Risk',
     shortLabel: 'Low',
-    color: 'text-green-400',
-    bg: 'bg-green-400',
-    borderColor: 'border-green-400',
-    shadowColor: 'shadow-green-400/30',
-    glowColor: 'shadow-green-400/50',
+    color: 'text-accent-green',
+    bg: 'bg-accent-green',
+    borderColor: 'border-accent-green',
+    shadowColor: 'shadow-accent-green/30',
+    glowColor: 'shadow-accent-green/50',
     range: [0, 25],
     icon: '✓',
     description: 'Safe trade with minimal risk factors',
@@ -20,11 +20,11 @@ const RISK_LEVELS = {
   medium: {
     label: 'Medium Risk',
     shortLabel: 'Medium',
-    color: 'text-yellow-400',
-    bg: 'bg-yellow-400',
-    borderColor: 'border-yellow-400',
-    shadowColor: 'shadow-yellow-400/30',
-    glowColor: 'shadow-yellow-400/50',
+    color: 'text-accent-gold',
+    bg: 'bg-accent-gold',
+    borderColor: 'border-accent-gold',
+    shadowColor: 'shadow-accent-gold/30',
+    glowColor: 'shadow-accent-gold/50',
     range: [26, 50],
     icon: '⚠',
     description: 'Moderate risk, proceed with caution',
@@ -32,11 +32,11 @@ const RISK_LEVELS = {
   high: {
     label: 'High Risk',
     shortLabel: 'High',
-    color: 'text-orange-400',
-    bg: 'bg-orange-400',
-    borderColor: 'border-orange-400',
-    shadowColor: 'shadow-orange-400/30',
-    glowColor: 'shadow-orange-400/50',
+    color: 'text-accent-gold',
+    bg: 'bg-accent-gold',
+    borderColor: 'border-accent-gold',
+    shadowColor: 'shadow-accent-gold/50',
+    glowColor: 'shadow-accent-gold/70',
     range: [51, 75],
     icon: '⚠',
     description: 'Significant risk, careful consideration needed',
@@ -44,11 +44,11 @@ const RISK_LEVELS = {
   extreme: {
     label: 'Extreme Risk',
     shortLabel: 'Extreme',
-    color: 'text-red-500',
-    bg: 'bg-red-500',
-    borderColor: 'border-red-500',
-    shadowColor: 'shadow-red-500/30',
-    glowColor: 'shadow-red-500/50',
+    color: 'text-accent-pink',
+    bg: 'bg-accent-pink',
+    borderColor: 'border-accent-pink',
+    shadowColor: 'shadow-accent-pink/30',
+    glowColor: 'shadow-accent-pink/50',
     range: [76, 100],
     icon: '⛔',
     description: 'Very high risk, likely a scam or unrealistic',
@@ -283,10 +283,10 @@ function RiskGauge({ score, level, size = 120 }) {
  */
 function RiskFactorBar({ factor, showDetails }) {
   const barWidth = `${factor.score}%`;
-  let barColor = 'bg-green-400';
-  if (factor.score >= 76) barColor = 'bg-red-500';
-  else if (factor.score >= 51) barColor = 'bg-orange-400';
-  else if (factor.score >= 26) barColor = 'bg-yellow-400';
+  let barColor = 'bg-accent-green';
+  if (factor.score >= 76) barColor = 'bg-accent-pink';
+  else if (factor.score >= 51) barColor = 'bg-accent-gold';
+  else if (factor.score >= 26) barColor = 'bg-accent-gold';
 
   return (
     <div className="space-y-1">

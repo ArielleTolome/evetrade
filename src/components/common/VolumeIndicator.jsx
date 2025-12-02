@@ -5,10 +5,10 @@ import { getCached, setCached } from '../../hooks/useCache';
 
 const VOLUME_TIERS = [
   { max: 5, label: 'Dead', color: 'text-red-500', bg: 'bg-red-500', bgLight: 'bg-red-500/20' },
-  { max: 20, label: 'Slow', color: 'text-orange-400', bg: 'bg-orange-400', bgLight: 'bg-orange-400/20' },
-  { max: 100, label: 'Active', color: 'text-yellow-400', bg: 'bg-yellow-400', bgLight: 'bg-yellow-400/20' },
-  { max: 500, label: 'Busy', color: 'text-green-400', bg: 'bg-green-400', bgLight: 'bg-green-400/20' },
-  { max: Infinity, label: 'Hot', color: 'text-cyan-400', bg: 'bg-cyan-400', bgLight: 'bg-cyan-400/20' },
+  { max: 20, label: 'Slow', color: 'text-accent-gold', bg: 'bg-accent-gold', bgLight: 'bg-accent-gold/20' },
+  { max: 100, label: 'Active', color: 'text-accent-gold', bg: 'bg-accent-gold', bgLight: 'bg-accent-gold/20' },
+  { max: 500, label: 'Busy', color: 'text-accent-green', bg: 'bg-accent-green', bgLight: 'bg-accent-green/20' },
+  { max: Infinity, label: 'Hot', color: 'text-accent-cyan', bg: 'bg-accent-cyan', bgLight: 'bg-accent-cyan/20' },
 ];
 
 /**
@@ -111,15 +111,15 @@ export function VolumeStats({ data = [], volumeKey = 'volume' }) {
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <div className="text-xs text-gray-400 mb-1">Total Volume</div>
-          <div className="text-lg font-mono text-cyan-400">{formatNumber(stats.total, 0)}</div>
+          <div className="text-lg font-mono text-accent-cyan">{formatNumber(stats.total, 0)}</div>
         </div>
         <div>
           <div className="text-xs text-gray-400 mb-1">Avg Volume</div>
-          <div className="text-lg font-mono text-cyan-400">{formatNumber(stats.average, 0)}</div>
+          <div className="text-lg font-mono text-accent-cyan">{formatNumber(stats.average, 0)}</div>
         </div>
         <div>
           <div className="text-xs text-gray-400 mb-1">Max Volume</div>
-          <div className="text-lg font-mono text-cyan-400">{formatNumber(stats.max, 0)}</div>
+          <div className="text-lg font-mono text-accent-cyan">{formatNumber(stats.max, 0)}</div>
         </div>
       </div>
 
@@ -151,7 +151,7 @@ export function VolumeStats({ data = [], volumeKey = 'volume' }) {
       {/* Items Count */}
       <div className="mt-3 pt-3 border-t border-gray-700">
         <div className="text-xs text-gray-400">
-          Analyzing <span className="font-mono text-cyan-400">{data.length}</span> items
+          Analyzing <span className="font-mono text-accent-cyan">{data.length}</span> items
         </div>
       </div>
     </div>
@@ -326,9 +326,9 @@ export function VolumeTrendIndicator({
 
   // Determine trend colors and icons
   const trendColor = useMemo(() => {
-    if (trendData.trend === 'up') return 'text-green-400';
-    if (trendData.trend === 'down') return 'text-red-400';
-    return 'text-yellow-400';
+    if (trendData.trend === 'up') return 'text-accent-green';
+    if (trendData.trend === 'down') return 'text-red-500';
+    return 'text-accent-gold';
   }, [trendData.trend]);
 
   const trendArrow = useMemo(() => {

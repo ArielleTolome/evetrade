@@ -11,9 +11,9 @@ export function GlassmorphicCard({
   onClick,
 }) {
   const baseClasses = `
-    bg-space-dark/60 dark:bg-space-dark/60 bg-white/80
+    bg-white/80 dark:bg-space-dark/60
     backdrop-blur-xl
-    border border-white/5 dark:border-white/5
+    border border-gray-200/50 dark:border-white/5
     rounded-xl
     shadow-lg shadow-black/20
     relative overflow-hidden

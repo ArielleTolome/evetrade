@@ -139,6 +139,7 @@ export function SmartTradingPage() {
   const [showCalculator, setShowCalculator] = useState(false);
   const [undercutOrders, setUndercutOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated && character?.id) {
@@ -205,8 +206,9 @@ export function SmartTradingPage() {
   const handleReprice = async (orderId, newPrice) => {
     // Copy to clipboard
     await navigator.clipboard.writeText(newPrice.toFixed(2));
-    // Show notification (in production, use a toast library)
-    alert(`Price ${formatISK(newPrice, false)} copied to clipboard!`);
+    // Show notification
+    setNotificationMessage(`Price ${formatISK(newPrice, false)} copied to clipboard!`);
+    setTimeout(() => setNotificationMessage(null), 3000);
   };
 
   const handleBatchReprice = async (orderIds) => {
@@ -217,7 +219,8 @@ export function SmartTradingPage() {
       .join('\n');
 
     await navigator.clipboard.writeText(prices);
-    alert('All prices copied to clipboard!');
+    setNotificationMessage('All prices copied to clipboard!');
+    setTimeout(() => setNotificationMessage(null), 3000);
   };
 
   if (!isAuthenticated) {
@@ -292,6 +295,28 @@ export function SmartTradingPage() {
       subtitle="Intelligent trading assistance powered by real-time market data"
     >
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+        {/* Notification Message */}
+        {notificationMessage && (
+          <div className="fixed top-4 right-4 z-50 animate-fade-in">
+            <GlassmorphicCard className="border-l-4 border-green-500 bg-green-500/10">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-text-primary">{notificationMessage}</p>
+                <button
+                  onClick={() => setNotificationMessage(null)}
+                  className="ml-auto text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </GlassmorphicCard>
+          </div>
+        )}
+
         {/* Quick Actions */}
         <QuickActionsCard onAction={handleQuickAction} />
 

@@ -583,7 +583,7 @@ export function OverviewPage() {
                 <tr className="border-b border-accent-cyan/10">
                   <td className="py-2 text-text-primary">{character?.name || 'Character'}</td>
                   <td className="py-2 text-right font-mono text-text-primary">
-                    {formatNumber(walletBalance, 2)}
+                    {formatISK(walletBalance, false)}
                   </td>
                 </tr>
               </tbody>

@@ -5,6 +5,7 @@ import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
+import { useToast, ToastContainer } from '../components/common/Toast';
 
 /**
  * Route Card Component
@@ -194,6 +195,7 @@ function EmptyState() {
 export function SavedRoutesPage() {
   const navigate = useNavigate();
   const { savedRoutes, deleteRoute, isLoaded, exportData, importData } = usePortfolio();
+  const { toasts, addToast, removeToast } = useToast();
   const [filter, setFilter] = useState('all');
   const [showImport, setShowImport] = useState(false);
   const [importValue, setImportValue] = useState('');
@@ -242,10 +244,11 @@ export function SavedRoutesPage() {
     if (importData(importValue)) {
       setShowImport(false);
       setImportValue('');
+      addToast('Portfolio data imported successfully!', 'success', 3000);
     } else {
-      alert('Invalid data format. Please paste valid JSON.');
+      addToast('Invalid data format. Please paste valid JSON.', 'error', 5000);
     }
-  }, [importData, importValue]);
+  }, [importData, importValue, addToast]);
 
   if (!isLoaded) {
     return (
@@ -258,11 +261,13 @@ export function SavedRoutesPage() {
   }
 
   return (
-    <PageLayout
-      title="Saved Routes"
-      subtitle="Your favorite trade routes for quick access"
-    >
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <PageLayout
+        title="Saved Routes"
+        subtitle="Your favorite trade routes for quick access"
+      >
+        <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header Actions */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           {/* Filters */}
@@ -386,6 +391,7 @@ export function SavedRoutesPage() {
         )}
       </div>
     </PageLayout>
+    </>
   );
 }
 

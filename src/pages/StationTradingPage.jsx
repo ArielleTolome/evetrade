@@ -34,6 +34,18 @@ import { AffordabilityBadge, AffordabilityCard } from '../components/common/Affo
 import { QuickPricePanel, QuickCopyButtons } from '../components/common/QuickPricePanel';
 import { PriceStatusBadge, PriceDifference, RecommendedPrice, OrdersSummaryStats } from '../components/common/OrderPriceStatus';
 import { ProfitSummaryCard, TradeActivityFeed } from '../components/common/ProfitTracker';
+// New Station Trading Features
+import { MobileQuickActions } from '../components/common/MobileQuickActions';
+import { OrderUpdateReminder } from '../components/common/OrderUpdateReminder';
+import { PriceUndercutAlert } from '../components/common/PriceUndercutAlert';
+import { OrderExpiryTracker } from '../components/common/OrderExpiryTracker';
+import { VolumeVelocityAnalysis } from '../components/common/VolumeVelocityAnalysis';
+import { CompetitionCounter } from '../components/common/CompetitionCounter';
+import { MarketManipulationAlert } from '../components/common/MarketManipulationAlert';
+import { InventoryValueTracker } from '../components/common/InventoryValueTracker';
+import { ISKPerHourEstimator } from '../components/common/ISKPerHourEstimator';
+import { SmartMultibuyBudget } from '../components/common/SmartMultibuyBudget';
+import { OrderUpdatePriorityQueue } from '../components/common/OrderUpdatePriorityQueue';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { useTradeForm } from '../hooks/useTradeForm';
@@ -45,7 +57,7 @@ import { useScamDetection } from '../hooks/useScamDetection';
 import { useTradeSession } from '../hooks/useTradeSession';
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { fetchStationTrading } from '../api/trading';
-import { getCharacterOrders, getCharacterSkills, calculateTradingTaxes, getTypeNames, getWalletBalance } from '../api/esi';
+import { getCharacterOrders, getCharacterSkills, calculateTradingTaxes, getTypeNames, getWalletBalance, getWalletTransactions } from '../api/esi';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 import { TAX_OPTIONS } from '../utils/constants';
 import { getStationData } from '../utils/stations';
@@ -176,6 +188,11 @@ export function StationTradingPage() {
   // Dashboard view state
   const [showDashboard, setShowDashboard] = useState(true);
 
+  // New features state
+  const [showTradingTools, setShowTradingTools] = useState(false);
+  const [walletTransactions, setWalletTransactions] = useState([]);
+  const [activeToolTab, setActiveToolTab] = useState('overview'); // overview, orders, analysis, tools
+
   // Refs for keyboard shortcuts
   const searchInputRef = useRef(null);
   const tableRef = useRef(null);
@@ -203,7 +220,7 @@ export function StationTradingPage() {
     }
   }, [data, checkAlerts]);
 
-  // Load character data (skills, wallet)
+  // Load character data (skills, wallet, transactions)
   const loadCharacterData = async () => {
     try {
       const accessToken = await getAccessToken();
@@ -217,6 +234,15 @@ export function StationTradingPage() {
       // Load wallet balance
       const balance = await getWalletBalance(character.id, accessToken);
       setWalletBalance(balance);
+
+      // Load wallet transactions for ISK/hour calculation
+      try {
+        const transactions = await getWalletTransactions(character.id, accessToken);
+        setWalletTransactions(transactions || []);
+      } catch (txErr) {
+        console.error('Failed to load wallet transactions:', txErr);
+        setWalletTransactions([]);
+      }
     } catch (err) {
       console.error('Failed to load character data:', err);
     }
@@ -1035,7 +1061,8 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       title="Station Trading"
       subtitle="Find profitable buy/sell margins within a single station"
     >
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Add padding-bottom for mobile quick actions bar */}
+      <div className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8">
         {/* Toast Notification */}
         {toastMessage && (
           <Toast
@@ -1431,6 +1458,209 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
           </GlassmorphicCard>
         )}
 
+        {/* Trading Tools Panel - New Features */}
+        {isAuthenticated && orders?.length > 0 && (
+          <GlassmorphicCard className="mb-8">
+            <button
+              onClick={() => setShowTradingTools(!showTradingTools)}
+              className="w-full flex items-center justify-between p-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-accent-purple/20 rounded-lg">
+                  <svg className="w-5 h-5 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h3 className="text-text-primary font-medium">Trading Tools & Analysis</h3>
+                  <p className="text-xs text-text-secondary">
+                    Advanced order management and market analysis
+                  </p>
+                </div>
+              </div>
+              <svg
+                className={`w-5 h-5 text-text-secondary transition-transform ${showTradingTools ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showTradingTools && (
+              <div className="px-4 pb-4 space-y-4">
+                {/* Tab Navigation */}
+                <div className="flex flex-wrap gap-2 p-1 bg-space-dark/50 rounded-lg">
+                  {[
+                    { id: 'overview', label: 'Overview', icon: '📊' },
+                    { id: 'orders', label: 'Order Management', icon: '📋' },
+                    { id: 'analysis', label: 'Market Analysis', icon: '🔍' },
+                    { id: 'tools', label: 'Smart Tools', icon: '🛠️' },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveToolTab(tab.id)}
+                      className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        activeToolTab === tab.id
+                          ? 'bg-accent-cyan/20 text-accent-cyan'
+                          : 'text-text-secondary hover:bg-white/5'
+                      }`}
+                    >
+                      <span>{tab.icon}</span>
+                      <span className="hidden sm:inline">{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tab Content */}
+                <div className="space-y-4">
+                  {/* Overview Tab */}
+                  {activeToolTab === 'overview' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Price Undercut Alerts */}
+                      <PriceUndercutAlert
+                        orders={orders}
+                        marketData={data || []}
+                        typeNames={typeNames}
+                        onCopyPrice={(price, itemName) => {
+                          copyToClipboard(String(price), `Price for ${itemName} copied!`);
+                        }}
+                      />
+
+                      {/* ISK/Hour Estimator */}
+                      <ISKPerHourEstimator
+                        transactions={walletTransactions}
+                        activeSession={{
+                          startTime: session.startTime || Date.now(),
+                        }}
+                      />
+
+                      {/* Inventory Value Tracker */}
+                      <InventoryValueTracker
+                        orders={orders}
+                        typeNames={typeNames}
+                        invTypes={invTypes}
+                        walletBalance={walletBalance}
+                      />
+                    </div>
+                  )}
+
+                  {/* Order Management Tab */}
+                  {activeToolTab === 'orders' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Order Update Priority Queue */}
+                      <OrderUpdatePriorityQueue
+                        orders={orders}
+                        marketData={data || []}
+                        typeNames={typeNames}
+                        onCopyPrice={(price, itemName) => {
+                          copyToClipboard(String(price), `Price for ${itemName} copied!`);
+                        }}
+                      />
+
+                      {/* Order Update Reminder */}
+                      <OrderUpdateReminder
+                        orders={orders}
+                        typeNames={typeNames}
+                        marketData={data || []}
+                        staleThresholdHours={4}
+                        onCopyPrice={(price, itemName) => {
+                          copyToClipboard(String(price), `Recommended price for ${itemName} copied!`);
+                        }}
+                      />
+
+                      {/* Order Expiry Tracker */}
+                      <OrderExpiryTracker
+                        orders={orders}
+                        typeNames={typeNames}
+                        warningDays={3}
+                        criticalDays={1}
+                      />
+                    </div>
+                  )}
+
+                  {/* Market Analysis Tab */}
+                  {activeToolTab === 'analysis' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Volume Velocity Analysis */}
+                      <VolumeVelocityAnalysis
+                        orders={orders}
+                        marketData={data || []}
+                        typeNames={typeNames}
+                      />
+
+                      {/* Market Manipulation Alert */}
+                      <MarketManipulationAlert
+                        marketData={data || []}
+                      />
+
+                      {/* Competition Counter - placeholder, needs market orders data */}
+                      <div className="p-4 bg-white/5 rounded-xl border border-accent-cyan/10">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-xl">👥</span>
+                          <div>
+                            <h4 className="text-text-primary font-medium">Competition Analysis</h4>
+                            <p className="text-xs text-text-secondary">Coming soon - requires market orders API</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-text-secondary">
+                          This feature will analyze how many competitors are trading the same items
+                          and help you identify less crowded markets.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Smart Tools Tab */}
+                  {activeToolTab === 'tools' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Smart Multibuy Budget */}
+                      <SmartMultibuyBudget
+                        trades={data || []}
+                        walletBalance={walletBalance || 0}
+                        onCopyMultibuy={(text) => {
+                          copyToClipboard(text, 'Smart multibuy list copied!');
+                        }}
+                      />
+
+                      {/* Quick Tips */}
+                      <div className="p-4 bg-accent-cyan/10 border border-accent-cyan/20 rounded-xl">
+                        <h4 className="text-accent-cyan font-medium mb-3 flex items-center gap-2">
+                          <span>💡</span> Station Trading Tips
+                        </h4>
+                        <ul className="space-y-2 text-sm text-text-secondary">
+                          <li className="flex items-start gap-2">
+                            <span className="text-accent-cyan">•</span>
+                            Update orders every 4-6 hours for best results
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-accent-cyan">•</span>
+                            Focus on items with &gt;10% margin and &gt;100 daily volume
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-accent-cyan">•</span>
+                            Diversify across 10-20 items to reduce risk
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-accent-cyan">•</span>
+                            Train Accounting and Broker Relations to reduce fees
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-accent-cyan">•</span>
+                            Avoid items with extremely high margins (&gt;50%) - often traps
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </GlassmorphicCard>
+        )}
+
         {/* Error Display */}
         {error && (
           <ActionableError
@@ -1788,6 +2018,28 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         onExportShoppingList={exportShoppingList}
         onRemoveFromShoppingList={removeFromShoppingList}
       />
+
+      {/* Mobile Quick Actions Bar */}
+      {data !== null && !loading && (
+        <MobileQuickActions
+          onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+          onCopyAll={() => {
+            const trades = Array.isArray(sortedData) ? sortedData : [];
+            if (trades.length > 0) copyAllResults(trades);
+          }}
+          onMultibuy={() => {
+            const trades = Array.isArray(sortedData) ? sortedData : [];
+            if (trades.length > 0) copyMultibuyFormat(trades);
+          }}
+          onSaveRoute={() => setShowSaveModal(true)}
+          onToggleFavorites={() => setShowFavoritesOnly(prev => !prev)}
+          onToggleHighQuality={() => setHighQualityOnly(prev => !prev)}
+          showFavoritesOnly={showFavoritesOnly}
+          highQualityOnly={highQualityOnly}
+          isLoading={loading}
+          tradesCount={Array.isArray(sortedData) ? sortedData.length : 0}
+        />
+      )}
 
       {/* Save Route Modal */}
       {showSaveModal && (

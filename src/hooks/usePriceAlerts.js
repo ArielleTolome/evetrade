@@ -395,6 +395,79 @@ export function usePriceAlerts() {
     setAlertHistory([]);
   }, []);
 
+  // Check alerts against provided trading data (e.g., from station trading results)
+  const checkAlerts = useCallback((tradingData) => {
+    if (!tradingData || !Array.isArray(tradingData) || tradingData.length === 0) {
+      return;
+    }
+    if (!alerts || alerts.length === 0) {
+      return;
+    }
+
+    const enabledAlerts = alerts.filter(a => a.enabled);
+    if (enabledAlerts.length === 0) {
+      return;
+    }
+
+    // Check each alert against the trading data
+    for (const alert of enabledAlerts) {
+      // Find matching item in trading data
+      const matchingItem = tradingData.find(item => {
+        const itemId = item['Item ID'] || item.itemId || item.type_id;
+        return itemId && String(itemId) === String(alert.typeId);
+      });
+
+      if (!matchingItem) continue;
+
+      // Get current price from trading data
+      const sellPrice = matchingItem['Sell Price'] || matchingItem.sellPrice || matchingItem.price || 0;
+      const buyPrice = matchingItem['Buy Price'] || matchingItem.buyPrice || 0;
+      const currentPrice = sellPrice || buyPrice;
+
+      if (currentPrice <= 0) continue;
+
+      let isTriggered = false;
+      let message = '';
+
+      switch (alert.alertType) {
+        case 'price_above':
+          if (currentPrice > alert.threshold) {
+            isTriggered = true;
+            message = `Price is now ${currentPrice.toLocaleString()} ISK (above ${alert.threshold.toLocaleString()} ISK)`;
+          }
+          break;
+        case 'price_below':
+          if (currentPrice < alert.threshold && currentPrice > 0) {
+            isTriggered = true;
+            message = `Price is now ${currentPrice.toLocaleString()} ISK (below ${alert.threshold.toLocaleString()} ISK)`;
+          }
+          break;
+        default:
+          break;
+      }
+
+      if (isTriggered) {
+        // Check if we've triggered this alert recently (within 5 minutes) to avoid spam
+        if (alert.lastTriggered) {
+          const lastTriggerTime = new Date(alert.lastTriggered).getTime();
+          const now = Date.now();
+          if (now - lastTriggerTime < 300000) { // 5 minutes
+            continue;
+          }
+        }
+
+        // Trigger the alert
+        playNotificationSound();
+        showNotification(alert, currentPrice);
+        addToHistory(alert, currentPrice, message);
+        updateAlert(alert.id, {
+          lastTriggered: new Date().toISOString(),
+          lastTriggerPrice: currentPrice,
+        });
+      }
+    }
+  }, [alerts, playNotificationSound, showNotification, addToHistory, updateAlert]);
+
   // Clean up interval on unmount
   useEffect(() => {
     return () => {
@@ -431,6 +504,7 @@ export function usePriceAlerts() {
     toggleAlert,
     checkSingleAlert,
     checkAllAlerts,
+    checkAlerts,
     startAutoCheck,
     stopAutoCheck,
     clearAllAlerts,

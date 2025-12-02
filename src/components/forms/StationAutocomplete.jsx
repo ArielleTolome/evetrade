@@ -266,6 +266,7 @@ export function StationAutocomplete({
           placeholder={resourcesLoading ? 'Loading stations...' : placeholder}
           disabled={disabled || resourcesLoading}
           required={required}
+          title={inputValue || undefined}
           className={`
             w-full px-4 py-3 rounded-lg
             bg-space-dark/50 dark:bg-space-dark/50 bg-white
@@ -327,7 +328,10 @@ export function StationAutocomplete({
                     `}
                   >
                     <div className="flex flex-col overflow-hidden mr-2">
-                       <span className={`truncate font-medium ${citadel ? 'text-accent-gold' : 'text-text-primary'}`}>
+                       <span
+                        className={`truncate font-medium ${citadel ? 'text-accent-gold' : 'text-text-primary'}`}
+                        title={station}
+                      >
                         {station}
                       </span>
                       {citadel && (

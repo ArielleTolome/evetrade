@@ -3,7 +3,7 @@
  * Placeholder loading animation for content
  */
 export function Skeleton({ className = '', variant = 'text' }) {
-  const baseClasses = 'animate-pulse bg-space-mid/50 dark:bg-space-mid/50 bg-gray-200 rounded';
+  const baseClasses = 'animate-pulse bg-gray-200 dark:bg-space-mid/50 rounded';
 
   const variantClasses = {
     text: 'h-4 w-full',
