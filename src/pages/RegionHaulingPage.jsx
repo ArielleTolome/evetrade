@@ -547,18 +547,12 @@ Jumps: ${jumps}`;
     [isAuthenticated, hasAssetInRegion, hasAssetAtLocation, form.fromRegion, copyItemName, copyTradeDetails]
   );
 
-  // Handle row click
+  // Handle row click - copy trade details when clicking a row
   const handleRowClick = useCallback(
     (item) => {
-      const itemId = item['Item ID'] || item.itemId;
-      const fromLocation = item.fromLocation || '';
-      const toLocation = item.toLocation || '';
-
-      if (itemId && fromLocation && toLocation) {
-        navigate(`/orders?itemId=${itemId}&from=${fromLocation}&to=${toLocation}`);
-      }
+      copyTradeDetails(item);
     },
-    [navigate]
+    [copyTradeDetails]
   );
 
   // Handle save route
