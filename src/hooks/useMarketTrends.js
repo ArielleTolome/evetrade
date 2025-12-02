@@ -90,7 +90,7 @@ export function useMarketTrends(typeId, regionId) {
 
     const result = [];
     for (let i = period - 1; i < data.length; i++) {
-      const sum = data.slice(i - period + 1, i + 1).reduce((acc, val) => acc + val, 0);
+      const sum = data.slice(i - period + 1, i + 1).reduce((acc, val) => acc + (Number(val) || 0), 0);
       result.push(sum / period);
     }
 

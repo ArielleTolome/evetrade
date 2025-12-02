@@ -224,7 +224,7 @@ function NavItem({ category }) {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, setIsOpen]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

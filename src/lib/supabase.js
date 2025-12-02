@@ -55,7 +55,11 @@ export async function fetchFromSupabase(filename) {
   }
 
   const text = await data.text();
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch (parseError) {
+    throw new Error(`Failed to parse JSON for ${filename}: ${parseError.message}`);
+  }
 }
 
 /**

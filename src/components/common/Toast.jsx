@@ -123,6 +123,7 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
   }, [duration]);
 
   const handleDismiss = () => {
+    if (isExiting) return; // Already dismissing
     setIsExiting(true);
     // Clear any existing timeout before creating a new one
     if (dismissTimeoutRef.current) {

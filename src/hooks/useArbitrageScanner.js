@@ -191,14 +191,21 @@ export function useArbitrageScanner() {
 
   /**
    * Reset scanner state
+   * @returns {boolean} True if reset was successful
    */
   const reset = useCallback(() => {
-    cancel();
-    if (isMountedRef.current) {
-      setData(null);
-      setError(null);
-      setLastUpdated(null);
-      resetFilters();
+    try {
+      cancel();
+      if (isMountedRef.current) {
+        setData(null);
+        setError(null);
+        setLastUpdated(null);
+        resetFilters();
+      }
+      return true;
+    } catch (error) {
+      console.warn('Error during scanner reset:', error);
+      return false;
     }
   }, [cancel, resetFilters]);
 

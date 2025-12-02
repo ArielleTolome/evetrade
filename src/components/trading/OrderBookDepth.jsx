@@ -184,7 +184,7 @@ export function OrderBookDepth({
 
         {/* Compact Order Bars */}
         <div className="p-2 space-y-1">
-          {displaySells.reverse().map((order, idx) => {
+          {[...displaySells].reverse().map((order, idx) => {
             const volume = order.volume || order.volume_remain || 0;
             const cumVolume = sellDepth.find(d => d.price === order.price)?.cumulativeVolume || 0;
             const widthPercent = (cumVolume / maxVolume) * 100;
@@ -314,7 +314,7 @@ export function OrderBookDepth({
               </span>
             </div>
 
-            {displaySells.reverse().map((order, idx) => {
+            {[...displaySells].reverse().map((order, idx) => {
               const volume = order.volume || order.volume_remain || 0;
               const cumVolume = sellDepth.find(d => d.price === order.price)?.cumulativeVolume || 0;
               const widthPercent = (cumVolume / maxVolume) * 100;

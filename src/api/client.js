@@ -51,6 +51,9 @@ apiClient.interceptors.response.use(
     }
 
     const config = error.config;
+    if (!config) {
+      return Promise.reject(error);
+    }
 
     // Initialize retry count
     if (!config._retryCount) {

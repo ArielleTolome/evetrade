@@ -18,8 +18,11 @@ export function LoadingSpinner({ size = 'md', className = '' }) {
         ${className}
       `}
       role="status"
+      aria-busy="true"
       aria-label="Loading"
-    />
+    >
+      <span className="sr-only">Loading...</span>
+    </div>
   );
 }
 

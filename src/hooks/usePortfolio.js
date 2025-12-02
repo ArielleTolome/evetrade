@@ -74,7 +74,7 @@ function safeSetItem(key, value) {
           const data = JSON.parse(stored);
           // Keep only last 100 trades instead of 1000
           if (data.tradeHistory && data.tradeHistory.length > 100) {
-            data.tradeHistory = data.tradeHistory.slice(0, 100);
+            data.tradeHistory = data.tradeHistory.slice(-100);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             console.log('Cleared old trade history to free up space');
           }
@@ -223,6 +223,7 @@ export function usePortfolio() {
       ...item,
     };
 
+    let added = false;
     setPortfolio((prev) => {
       // Check if item already exists
       const exists = prev.watchlist.some(
@@ -230,13 +231,14 @@ export function usePortfolio() {
       );
       if (exists) return prev;
 
+      added = true;
       return {
         ...prev,
         watchlist: [newItem, ...prev.watchlist],
       };
     });
 
-    return newItem;
+    return added ? newItem : null;
   }, []);
 
   /**

@@ -17,7 +17,6 @@ import { useEveAuth } from '../hooks/useEveAuth';
 import { fetchRegionHauling } from '../api/trading';
 import { getCharacterAssets, getWalletBalance, getTypeNames, getStationInfo, getStructureInfo, getRegionFromSystem } from '../api/esi';
 import { formatISK, formatNumber, formatPercent, formatCompact } from '../utils/formatters';
-import { useToast } from '../components/common/ToastProvider';
 import {
   TAX_OPTIONS,
   TRADE_PREFERENCE_OPTIONS,

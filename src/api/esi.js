@@ -22,8 +22,13 @@ async function esiRequest(endpoint, accessToken, options = {}) {
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`ESI Error: ${response.status} - ${error}`);
+    let errorText = '';
+    try {
+      errorText = await response.text();
+    } catch {
+      errorText = 'Unable to read error response';
+    }
+    throw new Error(`ESI Error: ${response.status} - ${errorText}`);
   }
 
   return response.json();
@@ -381,6 +386,10 @@ export function analyzeMarketOrders(orders, stationId = null) {
  * Find price walls in order book
  */
 function findPriceWalls(orders, totalVolume) {
+  if (totalVolume <= 0) {
+    return [];
+  }
+
   const priceGroups = {};
   orders.forEach(order => {
     const price = order.price;

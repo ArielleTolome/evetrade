@@ -358,8 +358,11 @@ export function EveAuthProvider({ children }) {
       };
 
       // Update both old and new storage formats if multi-char auth exists
-      if (multiCharAuth) {
-        const updatedMultiAuth = { ...multiCharAuth };
+      // Use functional update to avoid stale closure issues
+      setMultiCharAuth(currentMultiCharAuth => {
+        if (!currentMultiCharAuth) return currentMultiCharAuth;
+
+        const updatedMultiAuth = { ...currentMultiCharAuth };
         const charIndex = updatedMultiAuth.characters.findIndex(c => c.id === characterId);
         if (charIndex >= 0) {
           updatedMultiAuth.characters[charIndex] = {
@@ -370,9 +373,10 @@ export function EveAuthProvider({ children }) {
             lastUpdated: Date.now(),
           };
           localStorage.setItem(NEW_AUTH_STORAGE_KEY, JSON.stringify(updatedMultiAuth));
-          setMultiCharAuth(updatedMultiAuth);
+          return updatedMultiAuth;
         }
-      }
+        return currentMultiCharAuth;
+      });
 
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
       setAuth(authData);
@@ -390,7 +394,7 @@ export function EveAuthProvider({ children }) {
       // Clear the refresh promise ref
       refreshPromiseRef.current = null;
     }
-  }, [multiCharAuth, logout]);
+  }, [logout]);
 
   // Start OAuth login flow
   const login = useCallback(async () => {

@@ -549,11 +549,12 @@ export function usePriceAlerts() {
  * Get alert message based on type and current price
  */
 function getAlertMessage(alert, currentPrice) {
+  const priceStr = currentPrice != null ? currentPrice.toLocaleString() : 'unknown';
   switch (alert.alertType) {
     case 'price_above':
-      return `${alert.itemName} is now ${currentPrice?.toLocaleString()} ISK (above ${alert.threshold.toLocaleString()} ISK)`;
+      return `${alert.itemName} is now ${priceStr} ISK (above ${alert.threshold.toLocaleString()} ISK)`;
     case 'price_below':
-      return `${alert.itemName} is now ${currentPrice?.toLocaleString()} ISK (below ${alert.threshold.toLocaleString()} ISK)`;
+      return `${alert.itemName} is now ${priceStr} ISK (below ${alert.threshold.toLocaleString()} ISK)`;
     case 'undercut':
       return `Your ${alert.itemName} order has been undercut`;
     case 'order_expiry':

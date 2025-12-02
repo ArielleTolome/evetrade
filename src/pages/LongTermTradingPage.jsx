@@ -4,7 +4,6 @@ import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { TradingTable } from '../components/tables/TradingTable';
-import { useToast } from '../components/common/ToastProvider';
 import { QuickCopyButton } from '../components/common/QuickCopyButtons';
 import { FormSelect, ItemAutocomplete } from '../components/forms';
 import { PriceHistoryChart } from '../components/common/PriceHistoryChart';
@@ -13,6 +12,7 @@ import { useResources } from '../hooks/useResources';
 import { getMarketHistory } from '../api/esi';
 import { formatISK, formatPercent, formatNumber, formatCompact } from '../utils/formatters';
 import { TRADE_HUBS } from '../utils/constants';
+import { Toast } from '../components/common/Toast';
 
 /**
  * Generate realistic long-term predictions based on market data
@@ -26,8 +26,6 @@ function generatePredictions(invTypes, timeHorizon = 90) {
   // invTypes is an array of objects: [{typeID, typeName, groupID, volume, ...}, ...]
   // Convert to a more usable format if it's an array
   let typesArray = Array.isArray(invTypes) ? invTypes : Object.values(invTypes);
-
-  console.log('generatePredictions: total items:', typesArray.length);
 
   // Sample popular trading items (focusing on commonly traded categories)
   // These are actual EVE Online group IDs for tradeable items
@@ -70,11 +68,6 @@ function generatePredictions(invTypes, timeHorizon = 90) {
     1283, // Battlecruisers
   ];
 
-  // Debug: log first few items to see structure
-  if (typesArray.length > 0) {
-    console.log('generatePredictions: sample item structure:', typesArray[0]);
-  }
-
   // Filter to items with positive volume and in trading groups
   const selectedItems = typesArray
     .filter(item => {
@@ -86,8 +79,6 @@ function generatePredictions(invTypes, timeHorizon = 90) {
       return hasVolume && hasName;
     })
     .slice(0, 200); // Limit to 200 items for performance
-
-  console.log('generatePredictions: selectedItems count:', selectedItems.length);
 
   selectedItems.forEach(item => {
     const itemName = item?.typeName || item?.name || item?.type_name;
@@ -139,8 +130,6 @@ function generatePredictions(invTypes, timeHorizon = 90) {
       });
     }
   });
-
-  console.log('generatePredictions: final predictions count:', predictions.length);
 
   // Sort by ROI descending
   return predictions.sort((a, b) => b.roi - a.roi);
@@ -425,12 +414,9 @@ export function LongTermTradingPage() {
   // Generate predictions
   const predictions = useMemo(() => {
     if (!invTypes) {
-      console.log('LongTermTradingPage: invTypes not available yet');
       return [];
     }
-    console.log('LongTermTradingPage: invTypes loaded, keys:', Object.keys(invTypes).length);
     const preds = generatePredictions(invTypes, timeHorizon);
-    console.log('LongTermTradingPage: generated predictions:', preds.length);
     return preds;
   }, [invTypes, timeHorizon]);
 

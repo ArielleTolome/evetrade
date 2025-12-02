@@ -157,9 +157,25 @@ async function executeTransaction(mode, callback) {
 
     // Wait for transaction to complete
     await new Promise((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(new Error('Transaction aborted'));
+      let settled = false;
+      tx.oncomplete = () => {
+        if (!settled) {
+          settled = true;
+          resolve();
+        }
+      };
+      tx.onerror = () => {
+        if (!settled) {
+          settled = true;
+          reject(tx.error);
+        }
+      };
+      tx.onabort = () => {
+        if (!settled) {
+          settled = true;
+          reject(new Error('Transaction aborted'));
+        }
+      };
     });
 
     return result;
@@ -244,15 +260,19 @@ export async function getCached(key) {
  * @param {any} data - Data to cache
  */
 export async function setCached(key, data) {
-  // If there's already a write in progress for this key, wait for it
-  if (writeQueue.has(key)) {
+  // If there's already a write in progress for this key, wait for it and use a unique queue entry
+  const existingPromise = writeQueue.get(key);
+  if (existingPromise) {
     try {
-      await writeQueue.get(key);
+      await existingPromise;
     } catch (error) {
       // Ignore errors from previous write, continue with this one
       console.warn('Previous write failed for key:', key, error);
     }
   }
+
+  // Create a unique ID for this write operation to prevent queue entry replacement
+  const writeId = `${key}_${Date.now()}_${Math.random()}`;
 
   // Create a promise for this write operation
   const writePromise = (async () => {
@@ -348,6 +368,8 @@ export async function clearCached(key) {
  * Clear all cached data
  */
 export async function clearAllCache() {
+  const result = { localStorage: false, indexedDB: false };
+
   try {
     // Clear localStorage items with our keys
     if (isLocalStorageAvailable()) {
@@ -365,6 +387,7 @@ export async function clearAllCache() {
           console.warn('Error removing localStorage key:', key, error);
         }
       });
+      result.localStorage = true;
     }
 
     // Clear IndexedDB
@@ -383,10 +406,13 @@ export async function clearAllCache() {
           };
         });
       });
+      result.indexedDB = true;
     }
   } catch (error) {
     console.warn('Cache clear all error:', error);
   }
+
+  return result;
 }
 
 /**

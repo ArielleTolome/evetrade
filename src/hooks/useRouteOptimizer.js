@@ -93,7 +93,7 @@ export function useRouteOptimizer() {
    * Compare multiple route preferences
    */
   const compareRoutes = useCallback(
-    async (origin, destination, cargoValue = null, avoidSystems = []) => {
+    async (origin, destination, cargoValue = null, avoidSystems = [], signal = null) => {
       const preferences = ['shortest', 'secure', 'insecure'];
 
       // Fetch all three route types in parallel
@@ -105,7 +105,7 @@ export function useRouteOptimizer() {
             preference,
             cargoValue,
             avoidSystems,
-          })
+          }, signal)
         )
       );
 
