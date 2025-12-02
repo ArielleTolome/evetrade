@@ -296,7 +296,7 @@ export function AlertNotificationCenter({
               className="px-3 py-2 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-purple"
             >
               <option value="all">All Priorities</option>
-              {PRIORITY_LEVELS && Object.entries(PRIORITY_LEVELS).map(([key, value]) => {
+              {PRIORITY_LEVELS && Object.entries(PRIORITY_LEVELS).map(([_key, value]) => {
                 const badge = getPriorityBadge(value);
                 return (
                   <option key={value} value={value}>{badge.label}</option>
@@ -310,7 +310,7 @@ export function AlertNotificationCenter({
               className="px-3 py-2 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-purple"
             >
               <option value="all">All Types</option>
-              {ALERT_TYPES && Object.entries(ALERT_TYPES).map(([key, value]) => (
+              {ALERT_TYPES && Object.entries(ALERT_TYPES).map(([_key, value]) => (
                 <option key={value} value={value}>{getAlertTypeLabel(value)}</option>
               ))}
             </select>

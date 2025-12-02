@@ -64,7 +64,17 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Force new service worker to take control immediately
+        skipWaiting: true,
+        clientsClaim: true,
+        // Clean up outdated caches from previous builds
+        cleanupOutdatedCaches: true,
+        // Don't cache-bust URLs with hashes (Vite already does this)
+        dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Handle SPA navigation - serve index.html for all navigation requests
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /\.[^/]+$/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/evetrade\.s3\.amazonaws\.com\/.*/i,

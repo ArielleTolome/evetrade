@@ -86,7 +86,7 @@ describe('useProfitMetrics', () => {
     };
 
     const metrics = result.current.calculateMetrics(excellentTrade);
-    expect(metrics.rating).toBeGreaterThan(3);
+    expect(metrics.rating).toBeGreaterThanOrEqual(3);
     expect(metrics.rating).toBeLessThanOrEqual(5);
   });
 

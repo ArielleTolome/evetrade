@@ -75,7 +75,7 @@ const tableColumns = useMemo(
 );
 
 // Example 2: Add to the Item column for inline display
-const tableColumns = useMemo(
+const tableColumnsExample2 = useMemo(
   () => [
     {
       key: 'Item',
@@ -99,7 +99,7 @@ const tableColumns = useMemo(
 );
 
 // Example 3: Add to the Actions column
-const tableColumns = useMemo(
+const tableColumnsExample3 = useMemo(
   () => [
     // ... existing columns ...
     {

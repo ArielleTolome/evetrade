@@ -12,6 +12,51 @@
  */
 
 const ESI_BASE = 'https://esi.evetech.net/latest';
+const ESI_TIMEOUT_MS = 15000; // 15 second timeout for ESI requests
+
+/**
+ * Validate and parse an integer parameter
+ */
+function validateInt(value, paramName, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  if (value === undefined || value === null || value === '') return null;
+  const num = parseInt(value, 10);
+  if (isNaN(num) || num < min || num > max) {
+    return null;
+  }
+  return num;
+}
+
+/**
+ * Validate and parse a float parameter
+ */
+function validateFloat(value, paramName, min = 0, max = Infinity, defaultValue = null) {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  const num = parseFloat(value);
+  if (isNaN(num) || !isFinite(num) || num < min || num > max) {
+    return defaultValue;
+  }
+  return num;
+}
+
+/**
+ * Fetch with timeout using AbortController
+ */
+async function fetchWithTimeout(url, options = {}, timeoutMs = ESI_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('ESI request timeout');
+    }
+    throw error;
+  }
+}
 
 // Station ID to Region ID mapping (common stations)
 const STATION_REGIONS = {
@@ -29,10 +74,12 @@ const STATION_REGIONS = {
 
 /**
  * Fetch pages in parallel with a limit
+ * @returns {{ orders: Array, errors: Array }} Results and any errors encountered
  */
 async function fetchPagesInParallel(baseUrl, maxPages) {
-  const batchSize = 20;
+  const batchSize = 10; // Reduced from 20 to avoid rate limiting
   const allOrders = [];
+  const errors = [];
 
   for (let batchStart = 1; batchStart <= maxPages; batchStart += batchSize) {
     const batchEnd = Math.min(batchStart + batchSize - 1, maxPages);
@@ -41,31 +88,33 @@ async function fetchPagesInParallel(baseUrl, maxPages) {
       pageNumbers.push(p);
     }
 
-    const batchResults = await Promise.all(
+    const batchResults = await Promise.allSettled(
       pageNumbers.map(async (page) => {
-        try {
-          const response = await fetch(`${baseUrl}&page=${page}`);
-          if (response.ok) {
-            return await response.json();
-          }
-          return [];
-        } catch {
-          return [];
+        const response = await fetchWithTimeout(`${baseUrl}&page=${page}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
         }
+        return await response.json();
       })
     );
 
-    for (const orders of batchResults) {
-      allOrders.push(...orders);
+    for (let i = 0; i < batchResults.length; i++) {
+      const result = batchResults[i];
+      if (result.status === 'fulfilled') {
+        allOrders.push(...(result.value || []));
+      } else {
+        errors.push({ page: pageNumbers[i], error: result.reason?.message || 'Unknown error' });
+      }
     }
   }
 
-  return allOrders;
+  return { orders: allOrders, errors };
 }
 
 /**
  * Fetch market orders from ESI for a region (parallel fetching)
  * Fetches buy and sell orders separately to avoid pagination issues
+ * @returns {{ orders: Array, errors: Array }} Orders and any errors encountered
  */
 async function fetchRegionOrders(regionId, typeId = null) {
   let buyUrl = `${ESI_BASE}/markets/${regionId}/orders/?datasource=tranquility&order_type=buy`;
@@ -78,28 +127,36 @@ async function fetchRegionOrders(regionId, typeId = null) {
 
   // Get total pages for each order type
   const [buyFirstResponse, sellFirstResponse] = await Promise.all([
-    fetch(`${buyUrl}&page=1`),
-    fetch(`${sellUrl}&page=1`)
+    fetchWithTimeout(`${buyUrl}&page=1`),
+    fetchWithTimeout(`${sellUrl}&page=1`)
   ]);
 
   if (!buyFirstResponse.ok || !sellFirstResponse.ok) {
-    throw new Error(`ESI API error`);
+    throw new Error(`ESI API error: buy=${buyFirstResponse.status}, sell=${sellFirstResponse.status}`);
   }
 
-  const buyTotalPages = parseInt(buyFirstResponse.headers.get('x-pages') || '1');
-  const sellTotalPages = parseInt(sellFirstResponse.headers.get('x-pages') || '1');
+  const buyTotalPages = parseInt(buyFirstResponse.headers.get('x-pages') || '1', 10);
+  const sellTotalPages = parseInt(sellFirstResponse.headers.get('x-pages') || '1', 10);
 
-  // Limit pages (60 each = 120 total requests max)
-  const maxBuyPages = Math.min(buyTotalPages, 60);
-  const maxSellPages = Math.min(sellTotalPages, 60);
+  // Limit pages (40 each = 80 total requests max)
+  const maxBuyPages = Math.min(buyTotalPages, 40);
+  const maxSellPages = Math.min(sellTotalPages, 40);
 
   // Fetch both buy and sell orders in parallel
-  const [buyOrders, sellOrders] = await Promise.all([
+  const [buyResult, sellResult] = await Promise.all([
     fetchPagesInParallel(buyUrl, maxBuyPages),
     fetchPagesInParallel(sellUrl, maxSellPages)
   ]);
 
-  return [...buyOrders, ...sellOrders];
+  const allErrors = [...buyResult.errors, ...sellResult.errors];
+  if (allErrors.length > 0) {
+    console.warn(`Region ${regionId} fetch errors:`, allErrors.slice(0, 5));
+  }
+
+  return {
+    orders: [...buyResult.orders, ...sellResult.orders],
+    errors: allErrors
+  };
 }
 
 /**
@@ -112,7 +169,7 @@ async function getStationRegion(stationId) {
   }
 
   // Fetch from ESI
-  const response = await fetch(`${ESI_BASE}/universe/stations/${stationId}/?datasource=tranquility`);
+  const response = await fetchWithTimeout(`${ESI_BASE}/universe/stations/${stationId}/?datasource=tranquility`);
   if (!response.ok) {
     throw new Error(`Could not find station ${stationId}`);
   }
@@ -121,7 +178,7 @@ async function getStationRegion(stationId) {
   const systemId = data.system_id;
 
   // Get system info to find region
-  const systemResponse = await fetch(`${ESI_BASE}/universe/systems/${systemId}/?datasource=tranquility`);
+  const systemResponse = await fetchWithTimeout(`${ESI_BASE}/universe/systems/${systemId}/?datasource=tranquility`);
   if (!systemResponse.ok) {
     throw new Error(`Could not find system for station ${stationId}`);
   }
@@ -130,7 +187,7 @@ async function getStationRegion(stationId) {
   const constellationId = systemData.constellation_id;
 
   // Get constellation to find region
-  const constResponse = await fetch(`${ESI_BASE}/universe/constellations/${constellationId}/?datasource=tranquility`);
+  const constResponse = await fetchWithTimeout(`${ESI_BASE}/universe/constellations/${constellationId}/?datasource=tranquility`);
   if (!constResponse.ok) {
     throw new Error(`Could not find constellation ${constellationId}`);
   }
@@ -154,17 +211,21 @@ async function getItemNames(typeIds) {
   const names = {};
 
   for (const chunk of chunks) {
-    const response = await fetch(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(chunk),
-    });
+    try {
+      const response = await fetchWithTimeout(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(chunk),
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      for (const item of data) {
-        names[item.id] = item.name;
+      if (response.ok) {
+        const data = await response.json();
+        for (const item of data) {
+          names[item.id] = item.name;
+        }
       }
+    } catch (error) {
+      console.warn('Failed to fetch item names:', error.message);
     }
   }
 
@@ -261,10 +322,14 @@ function calculateTrades(orders, stationId, params) {
 }
 
 export default async function handler(req, res) {
+  // Generate request ID for debugging
+  const requestId = req.headers['x-vercel-id'] || crypto.randomUUID?.() || Date.now().toString(36);
+
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('X-Request-ID', requestId);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -281,17 +346,25 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Station ID is required' });
     }
 
-    const stationId = parseInt(station);
-    const minProfit = parseFloat(profit) || 1000000;
-    const salesTax = parseFloat(tax) || 0.08;
-    const minVolume = parseInt(min_volume) || 1;
-    const brokerFee = parseFloat(fee) || 0.03;
+    // Validate station ID
+    const stationId = validateInt(station, 'station', 1);
+    if (stationId === null) {
+      return res.status(400).json({ error: 'Invalid Station ID: must be a positive integer' });
+    }
+
+    // Validate and parse numeric parameters with sensible bounds
+    const minProfit = validateFloat(profit, 'profit', 0, 1e15, 1000000);
+    const salesTax = validateFloat(tax, 'tax', 0, 1, 0.08);
+    const minVolume = validateInt(min_volume, 'min_volume', 1, 1e9) || 1;
+    const brokerFee = validateFloat(fee, 'fee', 0, 1, 0.03);
 
     // Parse margins (format: "above,below")
-    let marginAbove = 0.05;
-    let marginBelow = 0.50;
+    let marginAbove = 5; // 5%
+    let marginBelow = 50; // 50%
     if (margins) {
-      const [above, below] = margins.split(',').map(parseFloat);
+      const parts = margins.split(',');
+      const above = validateFloat(parts[0], 'marginAbove', 0, 100, 0.05);
+      const below = validateFloat(parts[1], 'marginBelow', 0, 100, 0.50);
       marginAbove = (above || 0.05) * 100; // Convert to percentage
       marginBelow = (below || 0.50) * 100;
     }
@@ -300,7 +373,11 @@ export default async function handler(req, res) {
     const regionId = await getStationRegion(stationId);
 
     // Fetch all market orders for the region
-    const orders = await fetchRegionOrders(regionId);
+    const { orders, errors: fetchErrors } = await fetchRegionOrders(regionId);
+
+    if (fetchErrors.length > 0) {
+      console.warn(`[${requestId}] Fetch errors:`, fetchErrors.slice(0, 5));
+    }
 
     // Calculate trading opportunities
     const trades = calculateTrades(orders, stationId, {
@@ -321,12 +398,19 @@ export default async function handler(req, res) {
       trade['Item'] = names[trade['Item ID']] || `Unknown Item #${trade['Item ID']}`;
     }
 
+    // Set cache headers (market data updates every 5 minutes in EVE)
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
+
     return res.status(200).json(trades);
   } catch (error) {
-    console.error('Station trading error:', error);
+    console.error(`[${requestId}] Station trading error:`, error);
+
+    // Don't expose internal error details in production
+    const isProduction = process.env.NODE_ENV === 'production';
     return res.status(500).json({
       error: 'Failed to fetch trading data',
-      message: error.message
+      ...(isProduction ? {} : { message: error.message }),
+      requestId,
     });
   }
 }

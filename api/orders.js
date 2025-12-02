@@ -9,13 +9,48 @@
  */
 
 const ESI_BASE = 'https://esi.evetech.net/latest';
+const ESI_TIMEOUT_MS = 15000; // 15 second timeout for ESI requests
+
+/**
+ * Validate and parse an integer parameter
+ * @returns {number|null} Parsed integer or null if invalid
+ */
+function validateInt(value, paramName, min = 1, max = Number.MAX_SAFE_INTEGER) {
+  if (value === undefined || value === null || value === '') return null;
+  const num = parseInt(value, 10);
+  if (isNaN(num) || num < min || num > max) {
+    throw new Error(`Invalid ${paramName}: must be an integer between ${min} and ${max}`);
+  }
+  return num;
+}
+
+/**
+ * Fetch with timeout using AbortController
+ */
+async function fetchWithTimeout(url, timeoutMs = ESI_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('ESI request timeout');
+    }
+    throw error;
+  }
+}
 
 /**
  * Parse location string into components
  * Format: "regionId:stationId" (may have preference prefix like "buy-" or "sell-")
+ * @returns {object|null} Parsed location or null if invalid
  */
 function parseLocation(locationStr) {
-  if (!locationStr) return null;
+  if (!locationStr || typeof locationStr !== 'string') return null;
 
   let rest = locationStr;
 
@@ -27,8 +62,17 @@ function parseLocation(locationStr) {
   }
 
   const parts = rest.split(':');
-  const regionId = parseInt(parts[0]);
-  const stationId = parts[1] ? parseInt(parts[1]) : null;
+  const regionId = parseInt(parts[0], 10);
+
+  // Validate regionId
+  if (isNaN(regionId) || regionId <= 0) return null;
+
+  // Validate stationId if provided
+  let stationId = null;
+  if (parts[1]) {
+    stationId = parseInt(parts[1], 10);
+    if (isNaN(stationId) || stationId <= 0) return null;
+  }
 
   return { regionId, stationId };
 }
@@ -42,24 +86,35 @@ async function fetchItemOrders(regionId, typeId) {
   const allOrders = [];
   let page = 1;
   let hasMore = true;
+  let errors = [];
 
   while (hasMore) {
-    const response = await fetch(`${url}&page=${page}`);
+    try {
+      const response = await fetchWithTimeout(`${url}&page=${page}`);
 
-    if (!response.ok) {
-      if (response.status === 404) break;
-      throw new Error(`ESI API error: ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 404) break;
+        errors.push(`Page ${page}: HTTP ${response.status}`);
+        break;
+      }
+
+      const orders = await response.json();
+      allOrders.push(...orders);
+
+      const totalPages = parseInt(response.headers.get('x-pages') || '1', 10);
+      hasMore = page < totalPages;
+      page++;
+
+      // Safety limit
+      if (page > 10) break;
+    } catch (error) {
+      errors.push(`Page ${page}: ${error.message}`);
+      break;
     }
+  }
 
-    const orders = await response.json();
-    allOrders.push(...orders);
-
-    const totalPages = parseInt(response.headers.get('x-pages') || '1');
-    hasMore = page < totalPages;
-    page++;
-
-    // Safety limit
-    if (page > 10) break;
+  if (errors.length > 0 && allOrders.length === 0) {
+    throw new Error(`Failed to fetch orders: ${errors.join(', ')}`);
   }
 
   return allOrders;
@@ -86,10 +141,14 @@ function filterOrders(orders, stationId, isBuyOrder) {
 }
 
 export default async function handler(req, res) {
+  // Generate request ID for debugging
+  const requestId = req.headers['x-vercel-id'] || crypto.randomUUID?.() || Date.now().toString(36);
+
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('X-Request-ID', requestId);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -106,12 +165,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Item ID is required' });
     }
 
-    const typeId = parseInt(itemId);
+    // Validate itemId is a positive integer
+    const typeId = validateInt(itemId, 'itemId', 1);
+    if (typeId === null) {
+      return res.status(400).json({ error: 'Invalid Item ID: must be a positive integer' });
+    }
+
     const fromLocation = parseLocation(from);
     const toLocation = parseLocation(to);
 
     if (!fromLocation) {
-      return res.status(400).json({ error: 'From location is required' });
+      return res.status(400).json({ error: 'From location is required and must be valid (format: regionId:stationId)' });
     }
 
     // Fetch orders from both regions (may be the same region)
@@ -121,11 +185,23 @@ export default async function handler(req, res) {
     }
 
     const ordersByRegion = {};
+    const fetchErrors = [];
+
     await Promise.all(
       Array.from(regionsToFetch).map(async (regionId) => {
-        ordersByRegion[regionId] = await fetchItemOrders(regionId, typeId);
+        try {
+          ordersByRegion[regionId] = await fetchItemOrders(regionId, typeId);
+        } catch (error) {
+          fetchErrors.push({ regionId, error: error.message });
+          ordersByRegion[regionId] = [];
+        }
       })
     );
+
+    // Log errors if any occurred but we still have some data
+    if (fetchErrors.length > 0) {
+      console.warn(`[${requestId}] Partial fetch errors:`, fetchErrors);
+    }
 
     // Get orders for "from" location (buy orders - what you can sell to)
     const fromOrders = ordersByRegion[fromLocation.regionId] || [];
@@ -143,15 +219,22 @@ export default async function handler(req, res) {
 
     const toSellOrders = filterOrders(toOrders, toStationId, false);
 
+    // Set cache headers (market data updates every 5 minutes in EVE)
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
+
     return res.status(200).json({
       from: fromBuyOrders,
       to: toSellOrders,
     });
   } catch (error) {
-    console.error('Orders error:', error);
+    console.error(`[${requestId}] Orders error:`, error);
+
+    // Don't expose internal error details in production
+    const isProduction = process.env.NODE_ENV === 'production';
     return res.status(500).json({
       error: 'Failed to fetch order data',
-      message: error.message
+      ...(isProduction ? {} : { message: error.message }),
+      requestId,
     });
   }
 }

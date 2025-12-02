@@ -15,16 +15,97 @@
  */
 
 const ESI_BASE = 'https://esi.evetech.net/latest';
+const ESI_TIMEOUT_MS = 15000; // 15 second timeout for ESI requests
+const TYPE_CACHE_MAX_SIZE = 2000; // Maximum entries in type info cache
 
-// Cache for type info (volume, etc.)
-const typeInfoCache = new Map();
+/**
+ * Simple LRU Cache implementation
+ */
+class LRUCache {
+  constructor(maxSize) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) return undefined;
+    // Move to end (most recently used)
+    const value = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+
+  set(key, value) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      // Remove oldest (first) entry
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+
+  has(key) {
+    return this.cache.has(key);
+  }
+}
+
+// Cache for type info (volume, etc.) with LRU eviction
+const typeInfoCache = new LRUCache(TYPE_CACHE_MAX_SIZE);
+
+/**
+ * Validate and parse an integer parameter
+ */
+function validateInt(value, paramName, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  if (value === undefined || value === null || value === '') return null;
+  const num = parseInt(value, 10);
+  if (isNaN(num) || num < min || num > max) {
+    return null;
+  }
+  return num;
+}
+
+/**
+ * Validate and parse a float parameter
+ */
+function validateFloat(value, paramName, min = 0, max = Infinity, defaultValue = null) {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  const num = parseFloat(value);
+  if (isNaN(num) || !isFinite(num) || num < min || num > max) {
+    return defaultValue;
+  }
+  return num;
+}
+
+/**
+ * Fetch with timeout using AbortController
+ */
+async function fetchWithTimeout(url, options = {}, timeoutMs = ESI_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('ESI request timeout');
+    }
+    throw error;
+  }
+}
 
 /**
  * Parse location string into components
  * Format: "preference-regionId:stationId" or "preference-regionId"
+ * @returns {object|null} Parsed location or null if invalid
  */
 function parseLocation(locationStr) {
-  if (!locationStr) return null;
+  if (!locationStr || typeof locationStr !== 'string') return null;
 
   let preference = 'sell';
   let rest = locationStr;
@@ -38,18 +119,29 @@ function parseLocation(locationStr) {
   }
 
   const parts = rest.split(':');
-  const regionId = parseInt(parts[0]);
-  const stationId = parts[1] ? parseInt(parts[1]) : null;
+  const regionId = parseInt(parts[0], 10);
+
+  // Validate regionId
+  if (isNaN(regionId) || regionId <= 0) return null;
+
+  // Validate stationId if provided
+  let stationId = null;
+  if (parts[1]) {
+    stationId = parseInt(parts[1], 10);
+    if (isNaN(stationId) || stationId <= 0) return null;
+  }
 
   return { preference, regionId, stationId };
 }
 
 /**
  * Fetch pages in parallel with a limit
+ * @returns {{ orders: Array, errors: Array }} Results and any errors encountered
  */
 async function fetchPagesInParallel(baseUrl, maxPages) {
-  const batchSize = 15;
+  const batchSize = 10; // Reduced from 15 to avoid rate limiting
   const allOrders = [];
+  const errors = [];
 
   for (let batchStart = 1; batchStart <= maxPages; batchStart += batchSize) {
     const batchEnd = Math.min(batchStart + batchSize - 1, maxPages);
@@ -58,31 +150,33 @@ async function fetchPagesInParallel(baseUrl, maxPages) {
       pageNumbers.push(p);
     }
 
-    const batchResults = await Promise.all(
+    const batchResults = await Promise.allSettled(
       pageNumbers.map(async (page) => {
-        try {
-          const response = await fetch(`${baseUrl}&page=${page}`);
-          if (response.ok) {
-            return await response.json();
-          }
-          return [];
-        } catch {
-          return [];
+        const response = await fetchWithTimeout(`${baseUrl}&page=${page}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
         }
+        return await response.json();
       })
     );
 
-    for (const orders of batchResults) {
-      allOrders.push(...orders);
+    for (let i = 0; i < batchResults.length; i++) {
+      const result = batchResults[i];
+      if (result.status === 'fulfilled') {
+        allOrders.push(...(result.value || []));
+      } else {
+        errors.push({ page: pageNumbers[i], error: result.reason?.message || 'Unknown error' });
+      }
     }
   }
 
-  return allOrders;
+  return { orders: allOrders, errors };
 }
 
 /**
  * Fetch market orders from ESI for a region (parallel fetching)
  * Fetches buy and sell orders separately
+ * @returns {{ orders: Array, errors: Array }} Orders and any errors encountered
  */
 async function fetchRegionOrders(regionId) {
   const buyUrl = `${ESI_BASE}/markets/${regionId}/orders/?datasource=tranquility&order_type=buy`;
@@ -90,40 +184,49 @@ async function fetchRegionOrders(regionId) {
 
   // Get total pages for each order type
   const [buyFirstResponse, sellFirstResponse] = await Promise.all([
-    fetch(`${buyUrl}&page=1`),
-    fetch(`${sellUrl}&page=1`)
+    fetchWithTimeout(`${buyUrl}&page=1`),
+    fetchWithTimeout(`${sellUrl}&page=1`)
   ]);
 
   if (!buyFirstResponse.ok || !sellFirstResponse.ok) {
-    throw new Error(`ESI API error`);
+    throw new Error(`ESI API error: buy=${buyFirstResponse.status}, sell=${sellFirstResponse.status}`);
   }
 
-  const buyTotalPages = parseInt(buyFirstResponse.headers.get('x-pages') || '1');
-  const sellTotalPages = parseInt(sellFirstResponse.headers.get('x-pages') || '1');
+  const buyTotalPages = parseInt(buyFirstResponse.headers.get('x-pages') || '1', 10);
+  const sellTotalPages = parseInt(sellFirstResponse.headers.get('x-pages') || '1', 10);
 
   // Limit pages (30 each = 60 total requests)
   const maxBuyPages = Math.min(buyTotalPages, 30);
   const maxSellPages = Math.min(sellTotalPages, 30);
 
   // Fetch both buy and sell orders in parallel
-  const [buyOrders, sellOrders] = await Promise.all([
+  const [buyResult, sellResult] = await Promise.all([
     fetchPagesInParallel(buyUrl, maxBuyPages),
     fetchPagesInParallel(sellUrl, maxSellPages)
   ]);
 
-  return [...buyOrders, ...sellOrders];
+  const allErrors = [...buyResult.errors, ...sellResult.errors];
+  if (allErrors.length > 0) {
+    console.warn(`Region ${regionId} fetch errors:`, allErrors.slice(0, 5));
+  }
+
+  return {
+    orders: [...buyResult.orders, ...sellResult.orders],
+    errors: allErrors
+  };
 }
 
 /**
  * Fetch type information (volume, name) from ESI
  */
 async function getTypeInfo(typeId) {
-  if (typeInfoCache.has(typeId)) {
-    return typeInfoCache.get(typeId);
+  const cached = typeInfoCache.get(typeId);
+  if (cached) {
+    return cached;
   }
 
   try {
-    const response = await fetch(`${ESI_BASE}/universe/types/${typeId}/?datasource=tranquility`);
+    const response = await fetchWithTimeout(`${ESI_BASE}/universe/types/${typeId}/?datasource=tranquility`);
     if (!response.ok) {
       return { volume: 0.01, name: `Item #${typeId}` };
     }
@@ -151,7 +254,7 @@ async function batchGetTypeInfo(typeIds) {
   // Fetch names in batch
   if (uncached.length > 0) {
     try {
-      const response = await fetch(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
+      const response = await fetchWithTimeout(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(uncached.slice(0, 1000)),
@@ -166,7 +269,7 @@ async function batchGetTypeInfo(typeIds) {
         }
       }
     } catch (e) {
-      console.error('Failed to batch fetch names:', e);
+      console.warn('Failed to batch fetch names:', e.message);
     }
   }
 
@@ -185,7 +288,7 @@ async function getStationName(stationId) {
   try {
     // Check if it's an NPC station (ID < 100000000) or structure
     if (stationId < 100000000) {
-      const response = await fetch(`${ESI_BASE}/universe/stations/${stationId}/?datasource=tranquility`);
+      const response = await fetchWithTimeout(`${ESI_BASE}/universe/stations/${stationId}/?datasource=tranquility`);
       if (response.ok) {
         const data = await response.json();
         return data.name;
@@ -318,10 +421,14 @@ async function calculateHaulingTrades(fromOrders, toOrders, fromLocation, toLoca
 }
 
 export default async function handler(req, res) {
+  // Generate request ID for debugging
+  const requestId = req.headers['x-vercel-id'] || crypto.randomUUID?.() || Date.now().toString(36);
+
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('X-Request-ID', requestId);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -350,27 +457,33 @@ export default async function handler(req, res) {
     const toLocation = parseLocation(to);
 
     if (!fromLocation || !toLocation) {
-      return res.status(400).json({ error: 'Invalid location format' });
+      return res.status(400).json({ error: 'Invalid location format (expected: preference-regionId:stationId)' });
     }
 
+    // Validate and parse numeric parameters with sensible bounds
     const params = {
-      minProfit: parseFloat(minProfit),
-      maxWeight: parseFloat(maxWeight),
-      minROI: parseFloat(minROI),
-      maxBudget: parseFloat(maxBudget),
-      tax: parseFloat(tax),
+      minProfit: validateFloat(minProfit, 'minProfit', 0, 1e15, 1000000),
+      maxWeight: validateFloat(maxWeight, 'maxWeight', 0, 1e9, 30000),
+      minROI: validateFloat(minROI, 'minROI', 0, 10000, 5),
+      maxBudget: validateFloat(maxBudget, 'maxBudget', 0, 1e15, 1000000000),
+      tax: validateFloat(tax, 'tax', 0, 1, 0.08),
     };
 
     // Fetch orders from both regions
-    const [fromOrders, toOrders] = await Promise.all([
+    const [fromResult, toResult] = await Promise.all([
       fetchRegionOrders(fromLocation.regionId),
       fetchRegionOrders(toLocation.regionId),
     ]);
 
+    const fetchErrors = [...fromResult.errors, ...toResult.errors];
+    if (fetchErrors.length > 0) {
+      console.warn(`[${requestId}] Fetch errors:`, fetchErrors.slice(0, 5));
+    }
+
     // Calculate trading opportunities
     const trades = await calculateHaulingTrades(
-      fromOrders,
-      toOrders,
+      fromResult.orders,
+      toResult.orders,
       fromLocation,
       toLocation,
       params
@@ -396,12 +509,19 @@ export default async function handler(req, res) {
       }
     }
 
+    // Set cache headers (market data updates every 5 minutes in EVE)
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
+
     return res.status(200).json(trades);
   } catch (error) {
-    console.error('Hauling error:', error);
+    console.error(`[${requestId}] Hauling error:`, error);
+
+    // Don't expose internal error details in production
+    const isProduction = process.env.NODE_ENV === 'production';
     return res.status(500).json({
       error: 'Failed to fetch hauling data',
-      message: error.message
+      ...(isProduction ? {} : { message: error.message }),
+      requestId,
     });
   }
 }

@@ -36,6 +36,16 @@ export function usePriceAlerts() {
     }
   });
 
+  // Track triggered alerts that haven't been dismissed yet
+  const [triggeredAlerts, setTriggeredAlerts] = useState(() => {
+    try {
+      const stored = localStorage.getItem('evetrade_triggered_alerts');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [settings, setSettings] = useState(() => {
     try {
       const stored = localStorage.getItem(SETTINGS_KEY);
@@ -99,6 +109,15 @@ export function usePriceAlerts() {
       console.warn('Failed to save alert settings to localStorage:', e);
     }
   }, [settings]);
+
+  // Persist triggered alerts to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('evetrade_triggered_alerts', JSON.stringify(triggeredAlerts));
+    } catch (e) {
+      console.warn('Failed to save triggered alerts to localStorage:', e);
+    }
+  }, [triggeredAlerts]);
 
   // Request notification permission
   const requestNotificationPermission = useCallback(async () => {
@@ -172,7 +191,7 @@ export function usePriceAlerts() {
     }
   }, [settings.soundEnabled, settings.soundVolume]);
 
-  // Add alert to history
+  // Add alert to history and triggered alerts
   const addToHistory = useCallback((alert, currentPrice, message) => {
     const historyItem = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -180,12 +199,27 @@ export function usePriceAlerts() {
       itemName: alert.itemName,
       typeId: alert.typeId,
       alertType: alert.alertType,
+      type: alert.alertType,
       threshold: alert.threshold,
       currentPrice,
+      currentValue: currentPrice?.toLocaleString() + ' ISK',
+      condition: alert.alertType === 'price_above' ? 'above' : 'below',
       message,
       triggeredAt: new Date().toISOString(),
     };
     setAlertHistory(prev => [...prev, historyItem]);
+    // Also add to triggered alerts (active notifications)
+    setTriggeredAlerts(prev => [...prev, historyItem]);
+  }, []);
+
+  // Dismiss a triggered alert
+  const dismissTriggered = useCallback((alertId) => {
+    setTriggeredAlerts(prev => prev.filter(a => a.id !== alertId));
+  }, []);
+
+  // Dismiss all triggered alerts
+  const dismissAllTriggered = useCallback(() => {
+    setTriggeredAlerts([]);
   }, []);
 
   // Create new alert
@@ -386,6 +420,7 @@ export function usePriceAlerts() {
   return {
     alerts,
     alertHistory,
+    triggeredAlerts,
     stats,
     settings,
     notificationPermission,
@@ -400,6 +435,8 @@ export function usePriceAlerts() {
     stopAutoCheck,
     clearAllAlerts,
     clearHistory,
+    dismissTriggered,
+    dismissAllTriggered,
     updateSettings,
     requestNotificationPermission,
   };

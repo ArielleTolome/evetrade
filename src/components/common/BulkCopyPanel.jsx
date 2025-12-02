@@ -80,7 +80,7 @@ export function BulkCopyPanel({
         // Fallback to JSON
         return JSON.stringify(items, null, 2);
 
-      case 'csv':
+      case 'csv': {
         // CSV format with headers
         if (items.length === 0) return '';
 
@@ -104,6 +104,7 @@ export function BulkCopyPanel({
           }).join(','))
         ];
         return csvRows.join('\n');
+      }
 
       case 'ingame':
         // EVE Online in-game format (item names separated by newlines)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useEveAuth } from '../../hooks/useEveAuth';
 import { getCharacterAssets, getTypeNames, getStationInfo, getStructureInfo } from '../../api/esi';
 import { formatISK, formatNumber } from '../../utils/formatters';
@@ -17,14 +17,32 @@ export function AssetsInventory() {
   const [error, setError] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState('all');
 
-  // Load assets when authenticated
-  useEffect(() => {
-    if (isAuthenticated && character?.id) {
-      loadAssets();
-    }
-  }, [isAuthenticated, character?.id]);
+  // Fetch location names for stations and structures
+  const fetchLocationNames = useCallback(async (locationIds, accessToken) => {
+    const locationMap = {};
 
-  const loadAssets = async () => {
+    for (const locationId of locationIds) {
+      try {
+        // Station IDs are typically < 70000000, structure IDs are much larger
+        if (locationId >= 1000000000000) {
+          // Player structure
+          const structure = await getStructureInfo(locationId, accessToken);
+          locationMap[locationId] = structure.name || `Structure ${locationId}`;
+        } else {
+          // NPC station
+          const station = await getStationInfo(locationId);
+          locationMap[locationId] = station.name || `Station ${locationId}`;
+        }
+      } catch {
+        // If we can't fetch the name, use a fallback
+        locationMap[locationId] = `Location ${locationId}`;
+      }
+    }
+
+    setLocationNames(locationMap);
+  }, []);
+
+  const loadAssets = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -72,32 +90,14 @@ export function AssetsInventory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [character?.id, getAccessToken, fetchLocationNames]);
 
-  // Fetch location names for stations and structures
-  const fetchLocationNames = async (locationIds, accessToken) => {
-    const locationMap = {};
-
-    for (const locationId of locationIds) {
-      try {
-        // Station IDs are typically < 70000000, structure IDs are much larger
-        if (locationId >= 1000000000000) {
-          // Player structure
-          const structure = await getStructureInfo(locationId, accessToken);
-          locationMap[locationId] = structure.name || `Structure ${locationId}`;
-        } else {
-          // NPC station
-          const station = await getStationInfo(locationId);
-          locationMap[locationId] = station.name || `Station ${locationId}`;
-        }
-      } catch (err) {
-        // If we can't fetch the name, use a fallback
-        locationMap[locationId] = `Location ${locationId}`;
-      }
+  // Load assets when authenticated
+  useEffect(() => {
+    if (isAuthenticated && character?.id) {
+      loadAssets();
     }
-
-    setLocationNames(locationMap);
-  };
+  }, [isAuthenticated, character?.id, loadAssets]);
 
   // Group assets by location
   const assetsByLocation = useMemo(() => {

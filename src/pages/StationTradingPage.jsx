@@ -310,7 +310,9 @@ export function StationTradingPage() {
       const allOrders = await getCharacterOrders(character.id, accessToken);
 
       // Filter to only show orders at the selected station
-      const stationOrders = allOrders.filter((o) => o.location_id === stationData.station);
+      const stationOrders = Array.isArray(allOrders)
+        ? allOrders.filter((o) => o.location_id === stationData.station)
+        : [];
       setOrders(stationOrders);
 
       // Get unique type IDs and fetch names
@@ -435,10 +437,13 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
   // Calculate summary stats for orders
   const ordersStats = useMemo(() => {
+    if (!orders || !Array.isArray(orders)) {
+      return { totalOrders: 0, buyOrders: 0, sellOrders: 0, buyEscrow: 0, sellValue: 0, totalValue: 0 };
+    }
     const buyOrders = orders.filter((o) => o.is_buy_order);
     const sellOrders = orders.filter((o) => !o.is_buy_order);
 
-    const buyEscrow = buyOrders.reduce((sum, o) => sum + o.escrow, 0);
+    const buyEscrow = buyOrders.reduce((sum, o) => sum + (o.escrow || 0), 0);
     const sellValue = sellOrders.reduce((sum, o) => sum + o.price * o.volume_remain, 0);
 
     return {
@@ -1264,7 +1269,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
                 Your Orders at This Station
-                {orders.length > 0 && (
+                {orders?.length > 0 && (
                   <span className="ml-2 px-2 py-0.5 text-xs bg-accent-cyan/20 text-accent-cyan rounded-full">
                     {orders.length}
                   </span>
@@ -1287,7 +1292,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
             {showOrders && (
               <>
                 {/* Enhanced Summary Stats - EVE Tycoon Style */}
-                {orders.length > 0 && (
+                {orders?.length > 0 && (
                   <OrdersSummaryStats orders={orders} className="mb-6" />
                 )}
 
@@ -1307,7 +1312,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                 )}
 
                 {/* Enhanced Orders Table with Price Comparison */}
-                {!ordersLoading && orders.length > 0 && (
+                {!ordersLoading && orders?.length > 0 && (
                   <div className="overflow-x-auto max-h-96 overflow-y-auto">
                     <table className="w-full text-sm">
                       <thead className="sticky top-0 bg-space-dark z-10">
