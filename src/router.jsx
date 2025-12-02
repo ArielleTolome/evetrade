@@ -17,6 +17,8 @@ const WatchlistPage = lazy(() => import('./pages/WatchlistPage'));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
 const NotesPage = lazy(() => import('./pages/NotesPage'));
 const ToolsPage = lazy(() => import('./pages/ToolsPage'));
+const TradingDashboardPage = lazy(() => import('./pages/TradingDashboardPage'));
+const LongTermTradingPage = lazy(() => import('./pages/LongTermTradingPage'));
 
 /**
  * Lazy page wrapper with loading fallback
@@ -142,6 +144,22 @@ export const router = createBrowserRouter([
     element: (
       <LazyPage>
         <ToolsPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/dashboard',
+    element: (
+      <LazyPage>
+        <TradingDashboardPage />
+      </LazyPage>
+    ),
+  },
+  {
+    path: '/predictions',
+    element: (
+      <LazyPage>
+        <LongTermTradingPage />
       </LazyPage>
     ),
   },

@@ -14,6 +14,7 @@ import { BreakEvenCalculator } from '../components/trading/BreakEvenCalculator';
 import { OptimalPricing } from '../components/trading/OptimalPricing';
 import { MarginErosionTracker } from '../components/trading/MarginErosionTracker';
 import { BulkOrderCalculator } from '../components/trading/BulkOrderCalculator';
+import { ComprehensiveProfitCalculator } from '../components/trading/ComprehensiveProfitCalculator';
 
 // Inventory Management Components
 import { StockAlertPanel } from '../components/inventory/StockAlertPanel';
@@ -211,6 +212,7 @@ function MarketAnalysisTools({ activeTool, setActiveTool }) {
  */
 function TradingEfficiencyTools({ activeTool, setActiveTool }) {
   const tools = [
+    { id: 'profit', name: 'Profit Calculator', desc: 'Comprehensive profit calculator with all fees' },
     { id: 'tax', name: 'Tax Calculator', desc: 'Calculate broker fees & taxes' },
     { id: 'breakeven', name: 'Break-Even Calculator', desc: 'Find minimum sell price' },
     { id: 'pricing', name: 'Optimal Pricing', desc: 'Get pricing suggestions' },
@@ -227,13 +229,17 @@ function TradingEfficiencyTools({ activeTool, setActiveTool }) {
   return (
     <div>
       <BackButton onClick={() => setActiveTool(null)} />
-      <GlassmorphicCard className="p-6">
-        {activeTool === 'tax' && <TaxCalculator />}
-        {activeTool === 'breakeven' && <BreakEvenCalculator />}
-        {activeTool === 'pricing' && <OptimalPricing />}
-        {activeTool === 'erosion' && <MarginErosionTracker />}
-        {activeTool === 'bulk' && <BulkOrderCalculator />}
-      </GlassmorphicCard>
+      {activeTool === 'profit' ? (
+        <ComprehensiveProfitCalculator />
+      ) : (
+        <GlassmorphicCard className="p-6">
+          {activeTool === 'tax' && <TaxCalculator />}
+          {activeTool === 'breakeven' && <BreakEvenCalculator />}
+          {activeTool === 'pricing' && <OptimalPricing />}
+          {activeTool === 'erosion' && <MarginErosionTracker />}
+          {activeTool === 'bulk' && <BulkOrderCalculator />}
+        </GlassmorphicCard>
+      )}
     </div>
   );
 }

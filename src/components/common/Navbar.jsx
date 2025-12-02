@@ -4,14 +4,16 @@ import { useTheme } from '../../store/ThemeContext';
 
 const navItems = [
   { path: '/', label: 'Home', icon: '🏠' },
+  { path: '/dashboard', label: 'Dashboard', icon: '🎯' },
   { path: '/station-trading', label: 'Station Trading', icon: '📊' },
   { path: '/station-hauling', label: 'Station Hauling', icon: '🚀' },
   { path: '/region-hauling', label: 'Region Hauling', icon: '🌌' },
+  { path: '/predictions', label: 'Predictions', icon: '📈' },
   { path: '/tools', label: 'Tools', icon: '🛠️' },
   { path: '/price-compare', label: 'Price Compare', icon: '💹' },
   { path: '/watchlist', label: 'Watchlist', icon: '👁' },
   { path: '/saved-routes', label: 'Saved Routes', icon: '⭐' },
-  { path: '/portfolio', label: 'Portfolio', icon: '📈' },
+  { path: '/portfolio', label: 'Portfolio', icon: '💼' },
   { path: '/calculator', label: 'Calculator', icon: '🧮' },
   { path: '/notes', label: 'Notes', icon: '📝' },
   { path: '/help', label: 'Help', icon: '❓' },
