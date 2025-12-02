@@ -365,19 +365,37 @@ export function StationTradingPage() {
     }
   }, [isAuthenticated, form.station, loadOrders]);
 
-  // Handle row click to view orders
+  // Handle row click to view item details
   const handleRowClick = useCallback(
     (item) => {
       const stationData = getStationData(form.station, universeList);
       if (!stationData) return;
 
       const itemId = item['Item ID'] || item.itemId;
-      const fromLocation = `${stationData.region}:${stationData.station}`;
+      const itemName = item['Item'] || item.name || 'Unknown Item';
+      const buyPrice = item['Buy Price'] || item.buyPrice || 0;
+      const sellPrice = item['Sell Price'] || item.sellPrice || 0;
+      const margin = item['Gross Margin'] || item.margin || 0;
+      const volume = item['Volume'] || item.volume || 0;
+      const profit = item['Profit per Unit'] || item['Net Profit'] || item.profit || 0;
 
       // Track view
       trackView(item);
 
-      navigate(`/orders?itemId=${itemId}&from=${fromLocation}&to=${fromLocation}`);
+      // Navigate to item detail page with all trading data
+      const params = new URLSearchParams({
+        itemId,
+        itemName,
+        stationId: stationData.stationId || '',
+        regionId: stationData.regionId || '10000002',
+        buyPrice: buyPrice.toString(),
+        sellPrice: sellPrice.toString(),
+        margin: margin.toString(),
+        volume: volume.toString(),
+        profit: profit.toString(),
+      });
+
+      navigate(`/item-detail?${params.toString()}`);
     },
     [form.station, universeList, navigate, trackView]
   );

@@ -36,6 +36,7 @@ const LPOptimizerPage = lazy(() => import('./pages/LPOptimizerPage'));
 const ContractFinderPage = lazy(() => import('./pages/ContractFinderPage'));
 const CorpOrdersPage = lazy(() => import('./pages/CorpOrdersPage'));
 const SmartRouteOptimizerPage = lazy(() => import('./pages/SmartRouteOptimizerPage'));
+const ItemDetailPage = lazy(() => import('./pages/ItemDetailPage'));
 
 /**
  * Lazy page wrapper with loading fallback
@@ -309,6 +310,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyPage>
             <SmartRouteOptimizerPage />
+          </LazyPage>
+        ),
+      },
+      {
+        path: 'item-detail',
+        element: (
+          <LazyPage>
+            <ItemDetailPage />
           </LazyPage>
         ),
       },
