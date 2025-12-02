@@ -206,6 +206,74 @@ function calculateTrend(history) {
 }
 
 /**
+ * Calculate estimated daily volume from market history
+ * Uses average volume over the past 7 and 30 days
+ */
+function calculateDailyVolume(history) {
+  if (!history || history.length === 0) {
+    return {
+      avg7Day: 0,
+      avg30Day: 0,
+      trend: 'unknown',
+      trendPercent: 0,
+      totalValue7Day: 0,
+      totalValue30Day: 0,
+      peakVolume: 0,
+      lowVolume: 0,
+    };
+  }
+
+  // Get last 7 and 30 days of data
+  const last7Days = history.slice(-7);
+  const last30Days = history.slice(-30);
+
+  // Calculate average daily volume
+  const avg7Day = last7Days.length > 0
+    ? last7Days.reduce((sum, d) => sum + (d.volume || 0), 0) / last7Days.length
+    : 0;
+
+  const avg30Day = last30Days.length > 0
+    ? last30Days.reduce((sum, d) => sum + (d.volume || 0), 0) / last30Days.length
+    : 0;
+
+  // Calculate total ISK value traded
+  const totalValue7Day = last7Days.reduce((sum, d) => sum + ((d.volume || 0) * (d.average || 0)), 0);
+  const totalValue30Day = last30Days.reduce((sum, d) => sum + ((d.volume || 0) * (d.average || 0)), 0);
+
+  // Find peak and low volume days
+  const peakVolume = Math.max(...last30Days.map(d => d.volume || 0));
+  const lowVolume = Math.min(...last30Days.filter(d => d.volume > 0).map(d => d.volume || 0));
+
+  // Calculate volume trend (comparing last 7 days to previous 7 days)
+  const previous7Days = history.slice(-14, -7);
+  let trend = 'stable';
+  let trendPercent = 0;
+
+  if (previous7Days.length > 0) {
+    const prevAvg = previous7Days.reduce((sum, d) => sum + (d.volume || 0), 0) / previous7Days.length;
+    if (prevAvg > 0) {
+      trendPercent = ((avg7Day - prevAvg) / prevAvg) * 100;
+      if (trendPercent > 20) trend = 'increasing';
+      else if (trendPercent > 5) trend = 'slightly_increasing';
+      else if (trendPercent < -20) trend = 'decreasing';
+      else if (trendPercent < -5) trend = 'slightly_decreasing';
+      else trend = 'stable';
+    }
+  }
+
+  return {
+    avg7Day,
+    avg30Day,
+    trend,
+    trendPercent,
+    totalValue7Day,
+    totalValue30Day,
+    peakVolume,
+    lowVolume,
+  };
+}
+
+/**
  * Quick Profit Calculator Component
  */
 function QuickProfitCalculator({ buyPrice, sellPrice, tax = 0.08, brokerFee = 0.03, quantity = 1 }) {
@@ -628,6 +696,114 @@ function VolatilityTrendCard({ volatility, trend }) {
 }
 
 /**
+ * Daily Volume Card - Shows estimated daily buy/sell volumes
+ */
+function DailyVolumeCard({ dailyVolume, marketAnalysis }) {
+  const trendConfig = {
+    increasing: { icon: '↑↑', color: 'text-green-400', label: 'Increasing' },
+    slightly_increasing: { icon: '↑', color: 'text-green-400', label: 'Slightly Up' },
+    stable: { icon: '→', color: 'text-yellow-400', label: 'Stable' },
+    slightly_decreasing: { icon: '↓', color: 'text-red-400', label: 'Slightly Down' },
+    decreasing: { icon: '↓↓', color: 'text-red-400', label: 'Decreasing' },
+    unknown: { icon: '?', color: 'text-gray-400', label: 'Unknown' },
+  };
+
+  const trendInfo = trendConfig[dailyVolume.trend] || trendConfig.unknown;
+
+  // Estimate buy/sell split based on market order volumes
+  const totalOrderVolume = (marketAnalysis?.totalBuyVolume || 0) + (marketAnalysis?.totalSellVolume || 0);
+  const buyRatio = totalOrderVolume > 0 ? (marketAnalysis?.totalBuyVolume || 0) / totalOrderVolume : 0.5;
+  const sellRatio = 1 - buyRatio;
+
+  const estimatedDailyBuy = dailyVolume.avg7Day * buyRatio;
+  const estimatedDailySell = dailyVolume.avg7Day * sellRatio;
+
+  return (
+    <GlassmorphicCard>
+      <h3 className="text-lg font-semibold text-accent-cyan mb-4 flex items-center gap-2">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        Estimated Daily Volume
+      </h3>
+
+      {/* Main Volume Stats */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+          <div className="text-xs text-text-secondary mb-1">Est. Daily Buys</div>
+          <div className="text-2xl font-bold text-green-400 font-mono">
+            {formatNumber(Math.round(estimatedDailyBuy))}
+          </div>
+          <div className="text-xs text-green-400/70">units/day</div>
+        </div>
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="text-xs text-text-secondary mb-1">Est. Daily Sells</div>
+          <div className="text-2xl font-bold text-red-400 font-mono">
+            {formatNumber(Math.round(estimatedDailySell))}
+          </div>
+          <div className="text-xs text-red-400/70">units/day</div>
+        </div>
+      </div>
+
+      {/* Volume Averages */}
+      <div className="space-y-3 mb-4">
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-text-secondary">7-Day Average:</span>
+          <span className="text-white font-mono font-semibold">{formatNumber(Math.round(dailyVolume.avg7Day))}</span>
+        </div>
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-text-secondary">30-Day Average:</span>
+          <span className="text-white font-mono">{formatNumber(Math.round(dailyVolume.avg30Day))}</span>
+        </div>
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-text-secondary">Volume Trend:</span>
+          <span className={`flex items-center gap-1 font-semibold ${trendInfo.color}`}>
+            {trendInfo.icon} {trendInfo.label}
+            {dailyVolume.trendPercent !== 0 && (
+              <span className="text-xs">({dailyVolume.trendPercent > 0 ? '+' : ''}{dailyVolume.trendPercent.toFixed(1)}%)</span>
+            )}
+          </span>
+        </div>
+      </div>
+
+      {/* Volume Range */}
+      <div className="pt-3 border-t border-white/10">
+        <div className="text-xs text-text-secondary mb-2">30-Day Volume Range</div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-red-400">{formatNumber(dailyVolume.lowVolume)}</span>
+          <div className="flex-1 h-2 bg-space-dark rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-red-400 via-yellow-400 to-green-400"
+              style={{
+                width: dailyVolume.peakVolume > 0
+                  ? `${Math.min(100, (dailyVolume.avg7Day / dailyVolume.peakVolume) * 100)}%`
+                  : '50%'
+              }}
+            />
+          </div>
+          <span className="text-xs text-green-400">{formatNumber(dailyVolume.peakVolume)}</span>
+        </div>
+        <div className="text-xs text-text-secondary text-center mt-1">
+          Current avg: {formatNumber(Math.round(dailyVolume.avg7Day))}
+        </div>
+      </div>
+
+      {/* ISK Value Traded */}
+      <div className="mt-4 pt-3 border-t border-white/10">
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-text-secondary">7-Day ISK Traded:</span>
+          <span className="text-accent-cyan font-mono">{formatISK(dailyVolume.totalValue7Day)}</span>
+        </div>
+        <div className="flex justify-between items-center text-sm mt-1">
+          <span className="text-text-secondary">Avg Daily ISK:</span>
+          <span className="text-accent-cyan font-mono">{formatISK(dailyVolume.totalValue7Day / 7)}</span>
+        </div>
+      </div>
+    </GlassmorphicCard>
+  );
+}
+
+/**
  * Main Item Detail Page Component
  */
 export default function ItemDetailPage() {
@@ -701,6 +877,7 @@ export default function ItemDetailPage() {
   // Calculate derived metrics
   const volatility = useMemo(() => calculateVolatility(priceHistory), [priceHistory]);
   const trend = useMemo(() => calculateTrend(priceHistory), [priceHistory]);
+  const dailyVolume = useMemo(() => calculateDailyVolume(priceHistory), [priceHistory]);
 
   const tradingSignal = useMemo(() => {
     return calculateTradingSignal({
@@ -854,6 +1031,9 @@ export default function ItemDetailPage() {
               {isAuthenticated && (
                 <WalletFundingStatus walletBalance={walletBalance} tradeCost={buyPrice} />
               )}
+
+              {/* Daily Volume Estimates */}
+              <DailyVolumeCard dailyVolume={dailyVolume} marketAnalysis={marketAnalysis} />
 
               {/* Volatility & Trend */}
               <VolatilityTrendCard volatility={volatility} trend={trend} />
