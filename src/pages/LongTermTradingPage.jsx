@@ -860,6 +860,173 @@ Confidence: ${pred.confidence}%`;
           />
         )}
 
+        {/* Prediction Summary for searched item */}
+        {selectedItem && priceHistory && priceHistory.length > 30 && (() => {
+          const prediction = calculatePredictionFromHistory(priceHistory, 3);
+          if (!prediction) return null;
+
+          // Generate analysis text based on trends
+          const getAnalysisSummary = () => {
+            const trend = prediction.monthlyTrend;
+            const vol = prediction.volatility;
+            const volTrend = prediction.volumeTrend;
+
+            let summary = '';
+            let outlook = '';
+
+            // Price trend analysis
+            if (trend > 2) {
+              summary = `${selectedItem.name} shows a strong upward trend with ${trend.toFixed(1)}% monthly growth.`;
+              outlook = 'bullish';
+            } else if (trend > 0.5) {
+              summary = `${selectedItem.name} shows moderate growth at ${trend.toFixed(1)}% per month.`;
+              outlook = 'slightly bullish';
+            } else if (trend > -0.5) {
+              summary = `${selectedItem.name} is trading sideways with minimal price movement.`;
+              outlook = 'neutral';
+            } else if (trend > -2) {
+              summary = `${selectedItem.name} shows a slight downward trend at ${Math.abs(trend).toFixed(1)}% monthly decline.`;
+              outlook = 'slightly bearish';
+            } else {
+              summary = `${selectedItem.name} is in a downtrend with ${Math.abs(trend).toFixed(1)}% monthly decline.`;
+              outlook = 'bearish';
+            }
+
+            // Volatility context
+            if (vol > 30) {
+              summary += ` High volatility (${vol.toFixed(0)}%) suggests significant price swings - higher risk but potential for larger gains.`;
+            } else if (vol > 15) {
+              summary += ` Moderate volatility (${vol.toFixed(0)}%) indicates normal market activity.`;
+            } else {
+              summary += ` Low volatility (${vol.toFixed(0)}%) suggests stable pricing.`;
+            }
+
+            // Volume context
+            if (volTrend === 'up') {
+              summary += ' Rising trading volume supports the current trend.';
+            } else if (volTrend === 'down') {
+              summary += ' Declining volume may indicate weakening momentum.';
+            }
+
+            return { summary, outlook };
+          };
+
+          const analysis = getAnalysisSummary();
+
+          return (
+            <GlassmorphicCard className="mb-8">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="p-2 bg-accent-cyan/10 rounded-lg">
+                  <svg className="w-6 h-6 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-semibold text-text-primary">
+                    Price Prediction & Analysis
+                  </h3>
+                  <p className="text-sm text-text-secondary">
+                    Based on {prediction.dataPoints} days of historical data
+                  </p>
+                </div>
+              </div>
+
+              {/* Analysis Summary */}
+              <div className="p-4 bg-space-dark/30 rounded-lg mb-4 border border-accent-cyan/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                    analysis.outlook === 'bullish' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                    analysis.outlook === 'slightly bullish' ? 'bg-green-500/10 text-green-300 border border-green-500/20' :
+                    analysis.outlook === 'neutral' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                    analysis.outlook === 'slightly bearish' ? 'bg-red-500/10 text-red-300 border border-red-500/20' :
+                    'bg-red-500/20 text-red-400 border border-red-500/30'
+                  }`}>
+                    {analysis.outlook.charAt(0).toUpperCase() + analysis.outlook.slice(1)} Outlook
+                  </span>
+                  <span className="text-xs text-text-secondary">
+                    Confidence: {prediction.confidence}%
+                  </span>
+                </div>
+                <p className="text-sm text-text-primary leading-relaxed">
+                  {analysis.summary}
+                </p>
+              </div>
+
+              {/* Multi-Month Predictions */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {prediction.futurePredictions && prediction.futurePredictions.slice(0, 3).map((pred) => (
+                  <div
+                    key={pred.month}
+                    className="p-4 bg-space-dark/50 border border-white/10 rounded-lg hover:border-accent-cyan/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-text-secondary">
+                        {pred.month} Month{pred.month > 1 ? 's' : ''}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${
+                        pred.confidence >= 70 ? 'bg-green-500/20 text-green-400' :
+                        pred.confidence >= 50 ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-red-500/20 text-red-400'
+                      }`}>
+                        {pred.confidence}% conf.
+                      </span>
+                    </div>
+
+                    <div className={`text-2xl font-bold font-mono mb-1 ${
+                      pred.roi > 0 ? 'text-green-400' : pred.roi < 0 ? 'text-red-400' : 'text-yellow-400'
+                    }`}>
+                      {pred.roi > 0 ? '+' : ''}{pred.roi.toFixed(1)}%
+                    </div>
+
+                    <div className="text-sm text-text-primary font-mono mb-2">
+                      {formatISK(pred.price, false)}
+                    </div>
+
+                    <div className="text-xs text-text-secondary space-y-1">
+                      <div className="flex justify-between">
+                        <span>Low estimate:</span>
+                        <span className="font-mono text-red-400">{formatISK(pred.volatilityRange.low, false)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>High estimate:</span>
+                        <span className="font-mono text-green-400">{formatISK(pred.volatilityRange.high, false)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Key Metrics */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-white/5">
+                <div>
+                  <div className="text-xs text-text-secondary">Current Price</div>
+                  <div className="text-sm font-mono text-text-primary">{formatISK(prediction.currentPrice, false)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-text-secondary">Monthly Trend</div>
+                  <div className={`text-sm font-mono ${prediction.monthlyTrend > 0 ? 'text-green-400' : prediction.monthlyTrend < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
+                    {prediction.monthlyTrend > 0 ? '+' : ''}{prediction.monthlyTrend.toFixed(2)}%
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-text-secondary">Volatility</div>
+                  <div className="text-sm font-mono text-purple-400">{prediction.volatility.toFixed(1)}%</div>
+                </div>
+                <div>
+                  <div className="text-xs text-text-secondary">Volume Trend</div>
+                  <div className={`text-sm font-mono ${
+                    prediction.volumeTrend === 'up' ? 'text-green-400' :
+                    prediction.volumeTrend === 'down' ? 'text-red-400' : 'text-yellow-400'
+                  }`}>
+                    {prediction.volumeTrend === 'up' ? '↑ Rising' :
+                     prediction.volumeTrend === 'down' ? '↓ Falling' : '→ Stable'}
+                  </div>
+                </div>
+              </div>
+            </GlassmorphicCard>
+          );
+        })()}
+
         {/* Price History Table */}
         {selectedItem && priceHistory && priceHistory.length > 0 && (
           <GlassmorphicCard className="mb-8">
@@ -1303,8 +1470,75 @@ Confidence: ${pred.confidence}%`;
                         />
 
                         {/* Prediction Summary - Real Data vs Generated */}
-                        {realPrediction && (
+                        {realPrediction && (() => {
+                          // Generate analysis text for this item
+                          const getItemAnalysis = () => {
+                            const trend = realPrediction.monthlyTrend;
+                            const vol = realPrediction.volatility;
+                            const volTrend = realPrediction.volumeTrend;
+
+                            let summary = '';
+                            let outlook = '';
+
+                            if (trend > 2) {
+                              summary = `${row.itemName} shows a strong upward trend with ${trend.toFixed(1)}% monthly growth.`;
+                              outlook = 'bullish';
+                            } else if (trend > 0.5) {
+                              summary = `${row.itemName} shows moderate growth at ${trend.toFixed(1)}% per month.`;
+                              outlook = 'slightly bullish';
+                            } else if (trend > -0.5) {
+                              summary = `${row.itemName} is trading sideways with minimal price movement.`;
+                              outlook = 'neutral';
+                            } else if (trend > -2) {
+                              summary = `${row.itemName} shows a slight downward trend at ${Math.abs(trend).toFixed(1)}% monthly decline.`;
+                              outlook = 'slightly bearish';
+                            } else {
+                              summary = `${row.itemName} is in a downtrend with ${Math.abs(trend).toFixed(1)}% monthly decline.`;
+                              outlook = 'bearish';
+                            }
+
+                            if (vol > 30) {
+                              summary += ` High volatility (${vol.toFixed(0)}%) suggests significant price swings.`;
+                            } else if (vol > 15) {
+                              summary += ` Moderate volatility (${vol.toFixed(0)}%) indicates normal market activity.`;
+                            } else {
+                              summary += ` Low volatility (${vol.toFixed(0)}%) suggests stable pricing.`;
+                            }
+
+                            if (volTrend === 'up') {
+                              summary += ' Rising volume supports the trend.';
+                            } else if (volTrend === 'down') {
+                              summary += ' Declining volume may indicate weakening momentum.';
+                            }
+
+                            return { summary, outlook };
+                          };
+
+                          const itemAnalysis = getItemAnalysis();
+
+                          return (
                           <div className="space-y-4 mt-4">
+                            {/* Analysis Summary */}
+                            <div className="p-4 bg-space-dark/30 rounded-lg border border-accent-cyan/10">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                  itemAnalysis.outlook === 'bullish' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                                  itemAnalysis.outlook === 'slightly bullish' ? 'bg-green-500/10 text-green-300 border border-green-500/20' :
+                                  itemAnalysis.outlook === 'neutral' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                                  itemAnalysis.outlook === 'slightly bearish' ? 'bg-red-500/10 text-red-300 border border-red-500/20' :
+                                  'bg-red-500/20 text-red-400 border border-red-500/30'
+                                }`}>
+                                  {itemAnalysis.outlook.charAt(0).toUpperCase() + itemAnalysis.outlook.slice(1)} Outlook
+                                </span>
+                                <span className="text-xs text-text-secondary">
+                                  Based on {realPrediction.dataPoints} days of data
+                                </span>
+                              </div>
+                              <p className="text-sm text-text-primary leading-relaxed">
+                                {itemAnalysis.summary}
+                              </p>
+                            </div>
+
                             {/* Multi-Month Predictions */}
                             {realPrediction.futurePredictions && realPrediction.futurePredictions.length > 0 && (
                               <div className="p-4 bg-space-dark/30 border border-accent-cyan/20 rounded-lg">
@@ -1312,7 +1546,7 @@ Confidence: ${pred.confidence}%`;
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                   </svg>
-                                  Future Price Predictions (Based on {realPrediction.dataPoints} days of history)
+                                  Future Price Predictions
                                 </h4>
                                 <div className="grid grid-cols-3 gap-3">
                                   {realPrediction.futurePredictions.slice(0, 3).map((pred) => (
@@ -1487,7 +1721,8 @@ Confidence: ${pred.confidence}%`;
                               </div>
                             </div>
                           </div>
-                        )}
+                          );
+                        })()}
 
                         {/* Data disclaimer */}
                         <div className="text-xs text-text-secondary/70 mt-2 flex items-center gap-1">

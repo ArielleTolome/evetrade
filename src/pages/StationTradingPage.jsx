@@ -32,6 +32,8 @@ import { TradeDecisionBadge, TradeDecisionCard } from '../components/common/Trad
 import { OrderBookCard } from '../components/common/OrderBookPreview';
 import { AffordabilityBadge, AffordabilityCard } from '../components/common/AffordabilityIndicator';
 import { QuickPricePanel, QuickCopyButtons } from '../components/common/QuickPricePanel';
+import { PriceStatusBadge, PriceDifference, RecommendedPrice, OrdersSummaryStats } from '../components/common/OrderPriceStatus';
+import { ProfitSummaryCard, TradeActivityFeed } from '../components/common/ProfitTracker';
 import { useResources } from '../hooks/useResources';
 import { useApiCall } from '../hooks/useApiCall';
 import { useTradeForm } from '../hooks/useTradeForm';
@@ -1284,22 +1286,9 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
             {showOrders && (
               <>
-                {/* Summary Stats */}
+                {/* Enhanced Summary Stats - EVE Tycoon Style */}
                 {orders.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                    <div className="text-center p-3 rounded-lg bg-space-dark/50">
-                      <div className="text-base sm:text-lg font-bold text-red-400">{formatISK(ordersStats.buyEscrow, false)}</div>
-                      <div className="text-xs text-text-secondary">Buy Escrow ({ordersStats.buyOrders})</div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-space-dark/50">
-                      <div className="text-base sm:text-lg font-bold text-green-400">{formatISK(ordersStats.sellValue, false)}</div>
-                      <div className="text-xs text-text-secondary">Sell Value ({ordersStats.sellOrders})</div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-space-dark/50">
-                      <div className="text-base sm:text-lg font-bold text-accent-gold">{formatISK(ordersStats.totalValue, false)}</div>
-                      <div className="text-xs text-text-secondary">Total Locked</div>
-                    </div>
-                  </div>
+                  <OrdersSummaryStats orders={orders} className="mb-6" />
                 )}
 
                 {/* Error */}
@@ -1317,17 +1306,19 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   </div>
                 )}
 
-                {/* Orders Table */}
+                {/* Enhanced Orders Table with Price Comparison */}
                 {!ordersLoading && orders.length > 0 && (
                   <div className="overflow-x-auto max-h-96 overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-space-dark">
+                      <thead className="sticky top-0 bg-space-dark z-10">
                         <tr className="text-text-secondary border-b border-accent-cyan/20">
                           <th className="text-left py-2 px-3">Item</th>
                           <th className="text-left py-2 px-3">Type</th>
-                          <th className="text-right py-2 px-3">Price</th>
+                          <th className="text-right py-2 px-3">Your Price</th>
+                          <th className="text-center py-2 px-3">Status</th>
+                          <th className="text-right py-2 px-3">Difference</th>
+                          <th className="text-left py-2 px-3">Update To</th>
                           <th className="text-right py-2 px-3">Volume</th>
-                          <th className="text-right py-2 px-3">Filled</th>
                           <th className="text-right py-2 px-3">Expires</th>
                         </tr>
                       </thead>
@@ -1339,10 +1330,21 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                           expiresDate.setDate(expiresDate.getDate() + order.duration);
                           const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
 
+                          // Find market price from current trade data
+                          const tradeData = Array.isArray(data) ? data.find(t =>
+                            (t['Item ID'] || t.itemId) === order.type_id
+                          ) : null;
+
+                          // For buy orders, compare to highest buy (Sell Price in our data)
+                          // For sell orders, compare to lowest sell (Buy Price in our data)
+                          const marketPrice = order.is_buy_order
+                            ? tradeData?.['Sell Price']  // Highest buy order price
+                            : tradeData?.['Buy Price'];  // Lowest sell order price
+
                           return (
                             <tr
                               key={order.order_id}
-                              className="border-b border-accent-cyan/10 hover:bg-white/5"
+                              className="border-b border-accent-cyan/10 hover:bg-white/5 transition-colors"
                             >
                               <td className="py-2 px-3 text-text-primary">
                                 {typeNames[order.type_id] || `Type ${order.type_id}`}
@@ -1355,21 +1357,50 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                                   {order.is_buy_order ? 'BUY' : 'SELL'}
                                 </span>
                               </td>
-                              <td className="py-2 px-3 text-right font-mono text-text-primary">
-                                {formatISK(order.price, false)}
+                              <td className="py-2 px-3 text-right">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    copyToClipboard(String(order.price), 'Price copied!');
+                                  }}
+                                  className="font-mono text-text-primary hover:text-accent-cyan transition-colors"
+                                  title="Click to copy"
+                                >
+                                  {formatISK(order.price, false)}
+                                </button>
                               </td>
-                              <td className="py-2 px-3 text-right font-mono text-text-secondary">
-                                {formatNumber(order.volume_remain, 0)} / {formatNumber(order.volume_total, 0)}
+                              <td className="py-2 px-3 text-center">
+                                <PriceStatusBadge
+                                  orderPrice={order.price}
+                                  marketPrice={marketPrice}
+                                  isBuyOrder={order.is_buy_order}
+                                />
                               </td>
                               <td className="py-2 px-3 text-right">
-                                <div className="flex items-center justify-end gap-2">
+                                <PriceDifference
+                                  orderPrice={order.price}
+                                  marketPrice={marketPrice}
+                                  isBuyOrder={order.is_buy_order}
+                                />
+                              </td>
+                              <td className="py-2 px-3">
+                                <RecommendedPrice
+                                  marketPrice={marketPrice}
+                                  isBuyOrder={order.is_buy_order}
+                                  onCopy={setToastMessage}
+                                />
+                              </td>
+                              <td className="py-2 px-3 text-right">
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className="font-mono text-text-secondary text-xs">
+                                    {formatNumber(order.volume_remain, 0)} / {formatNumber(order.volume_total, 0)}
+                                  </span>
                                   <div className="w-16 h-1.5 bg-space-dark rounded-full overflow-hidden">
                                     <div
                                       className="h-full bg-accent-cyan rounded-full"
                                       style={{ width: `${fillPercent}%` }}
                                     />
                                   </div>
-                                  <span className="text-xs text-text-secondary">{formatPercent(fillPercent / 100, 0)}</span>
                                 </div>
                               </td>
                               <td className={`py-2 px-3 text-right text-sm ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'
@@ -1462,12 +1493,32 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
               {/* At-A-Glance Trading Dashboard */}
               {showDashboard && (
-                <TradingDashboard
-                  data={trades}
-                  onItemClick={handleRowClick}
-                  walletBalance={walletBalance}
-                  className="mb-8"
-                />
+                <>
+                  <TradingDashboard
+                    data={trades}
+                    onItemClick={handleRowClick}
+                    walletBalance={walletBalance}
+                    className="mb-6"
+                  />
+
+                  {/* Profit Summary & Activity Feed - EVE Tycoon style */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                    <div className="lg:col-span-2">
+                      <ProfitSummaryCard
+                        trades={trades}
+                        period="30d"
+                        walletBalance={walletBalance}
+                      />
+                    </div>
+                    <div className="lg:col-span-1">
+                      <TradeActivityFeed
+                        trades={trades}
+                        maxItems={5}
+                        className="h-full"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Quick Filters Bar */}
