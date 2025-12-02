@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Button } from './Button';
 import useTradeNotes from '../../hooks/useTradeNotes';
 
 export default function NotesManager() {
@@ -144,21 +145,25 @@ export default function NotesManager() {
             Filter by Tag
           </label>
           <div className="flex flex-wrap gap-2">
-            <button
+            <Button
               onClick={() => setSelectedTag(null)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+              variant={!selectedTag ? 'primary' : 'ghost'}
+              size="sm"
+              className={`px-3 py-1.5 text-sm font-medium
                 ${!selectedTag
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
             >
               All Tags
-            </button>
+            </Button>
             {QUICK_TAGS.map(tag => (
-              <button
+              <Button
                 key={tag.id}
                 onClick={() => setSelectedTag(tag.id)}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+                variant={selectedTag === tag.id ? 'primary' : 'ghost'}
+                size="sm"
+                className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium
                   ${selectedTag === tag.id
                     ? TAG_COLORS[tag.color] + ' ring-2 ring-blue-500'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -166,27 +171,28 @@ export default function NotesManager() {
               >
                 <span>{tag.icon}</span>
                 <span>{tag.label}</span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
 
         {/* Export/Import */}
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={handleExport}
             disabled={stats.totalNotes === 0}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700
-              disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            variant="primary"
+            className="px-4 py-2 bg-green-600 hover:bg-green-700"
           >
             Export Notes
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setShowImport(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+            variant="primary"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700"
           >
             Import Notes
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -216,18 +222,20 @@ export default function NotesManager() {
                     Updated: {formatDate(note.updatedAt)}
                   </div>
                 </div>
-                <button
+                <Button
                   onClick={() => {
                     if (confirm('Delete this note?')) {
                       deleteNote(note.itemId);
                     }
                   }}
-                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 h-auto"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                </button>
+                </Button>
               </div>
 
               {note.tags && note.tags.length > 0 && (
@@ -292,24 +300,25 @@ export default function NotesManager() {
               </p>
             </div>
             <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
-              <button
+              <Button
                 onClick={() => {
                   setShowImport(false);
                   setImportText('');
                   setImportError('');
                 }}
-                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600"
+                variant="secondary"
+                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleImport}
                 disabled={!importText.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700
-                  disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                variant="primary"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700"
               >
                 Import
-              </button>
+              </Button>
             </div>
           </div>
         </div>

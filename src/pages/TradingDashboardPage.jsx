@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { useTradeHistory } from '../hooks/useTradeHistory';
@@ -239,30 +240,36 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                         </div>
                       </div>
                       <div className="flex gap-2 mt-2">
-                        <button
+                        <Button
                           onClick={() => copyToClipboard(trade.item, trade.item)}
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan rounded hover:bg-accent-cyan/20 transition-colors"
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
                         >
                           {copiedItem === trade.item ? 'Copied!' : 'Copy Name'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => copyTradeDetails(trade)}
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan rounded hover:bg-accent-cyan/20 transition-colors"
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
                         >
                           Copy Details
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => addToWatchlist({
                             'Item ID': trade.itemId,
                             'Item': trade.item,
                             'Buy Price': trade.buyPrice,
                             'Sell Price': trade.sellPrice
                           })}
-                          className="px-2 py-1 text-xs bg-green-500/10 text-green-400 rounded hover:bg-green-500/20 transition-colors"
+                          variant="secondary"
+                          size="sm"
+                          className="px-2 py-1 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 border-transparent"
                           title="Add to watchlist"
                         >
                           Watch
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -291,18 +298,22 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                         </div>
                       </div>
                       <div className="flex gap-2 mt-2">
-                        <button
+                        <Button
                           onClick={() => copyToClipboard(route.item, route.item)}
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan rounded hover:bg-accent-cyan/20 transition-colors"
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
                         >
                           {copiedItem === route.item ? 'Copied!' : 'Copy Name'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => copyToClipboard(`${route.item}\n${route.from} → ${route.to}\n${route.jumps} jumps\n${formatISK(route.profit)} profit`, route.item + '_details')}
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan rounded hover:bg-accent-cyan/20 transition-colors"
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
                         >
                           Copy Details
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -317,18 +328,17 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
               <h2 className="text-xl font-display text-accent-cyan">Active Alerts</h2>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-text-secondary">Sound</span>
-                <button
+                <Button
                   onClick={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                    settings.soundEnabled ? 'bg-accent-cyan' : 'bg-gray-600'
-                  }`}
+                  variant="ghost"
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors p-0 border-none ${settings.soundEnabled ? 'bg-accent-cyan' : 'bg-gray-600'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      settings.soundEnabled ? 'translate-x-5' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.soundEnabled ? 'translate-x-5' : 'translate-x-1'
+                      }`}
                   />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -357,15 +367,17 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                           Current: {alert.currentValue}
                         </div>
                       </div>
-                      <button
+                      <Button
                         onClick={() => dismissTriggered(alert.id)}
-                        className="text-text-secondary hover:text-red-400 transition-colors"
+                        variant="ghost"
+                        size="sm"
+                        className="text-text-secondary hover:text-red-400 p-1 h-auto min-h-0"
                         title="Dismiss"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                      </button>
+                      </Button>
                     </div>
                     <div className="text-xs text-text-secondary">
                       Triggered: {formatRelativeTime(alert.triggeredAt)}
@@ -422,18 +434,22 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           onClick={() => copyToClipboard(item.name, item.name)}
-                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan rounded hover:bg-accent-cyan/20 transition-colors"
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
                         >
                           {copiedItem === item.name ? 'Copied!' : 'Copy'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => removeFromWatchlist(item.id)}
-                          className="px-2 py-1 text-xs bg-red-500/10 text-red-400 rounded hover:bg-red-500/20 transition-colors"
+                          variant="secondary"
+                          size="sm"
+                          className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border-transparent"
                         >
                           Remove
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   );
@@ -585,12 +601,13 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={copyCalcResult}
-                className="w-full py-2 bg-accent-cyan/10 text-accent-cyan rounded-lg hover:bg-accent-cyan/20 transition-colors font-medium"
+                variant="secondary"
+                className="w-full py-2 bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 font-medium border-transparent"
               >
                 {copiedItem === 'Calculator Result' ? 'Copied!' : 'Copy Result'}
-              </button>
+              </Button>
             </div>
           </GlassmorphicCard>
 
@@ -598,13 +615,15 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
           <GlassmorphicCard>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-display text-accent-cyan">Session Stats</h2>
-              <button
+              <Button
                 onClick={resetSession}
-                className="text-xs text-text-secondary hover:text-red-400 transition-colors"
+                variant="ghost"
+                size="sm"
+                className="text-xs text-text-secondary hover:text-red-400 p-1 h-auto min-h-0"
                 title="Reset session"
               >
                 Reset
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-4">
@@ -634,24 +653,30 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
               <div>
                 <div className="text-xs text-text-secondary mb-2">Quick Add ISK:</div>
                 <div className="grid grid-cols-3 gap-2">
-                  <button
+                  <Button
                     onClick={() => addSessionISK(1000000)}
-                    className="py-2 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors text-sm font-medium"
+                    variant="secondary"
+                    size="sm"
+                    className="py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 text-sm font-medium border-transparent"
                   >
                     +1M
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => addSessionISK(10000000)}
-                    className="py-2 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors text-sm font-medium"
+                    variant="secondary"
+                    size="sm"
+                    className="py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 text-sm font-medium border-transparent"
                   >
                     +10M
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => addSessionISK(100000000)}
-                    className="py-2 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors text-sm font-medium"
+                    variant="secondary"
+                    size="sm"
+                    className="py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 text-sm font-medium border-transparent"
                   >
                     +100M
-                  </button>
+                  </Button>
                 </div>
               </div>
 

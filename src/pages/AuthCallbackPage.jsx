@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEveAuth } from '../hooks/useEveAuth';
 import PageLayout from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 
 /**
  * EVE SSO OAuth Callback Page
@@ -71,12 +72,13 @@ function AuthCallbackPage() {
               <p className="text-text-secondary text-sm mb-4">
                 {error || 'Unable to authenticate with EVE Online.'}
               </p>
-              <button
+              <Button
                 onClick={() => navigate('/portfolio', { replace: true })}
-                className="px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors"
+                variant="secondary"
+                className="px-4 py-2"
               >
                 Return to Portfolio
-              </button>
+              </Button>
             </>
           )}
         </div>

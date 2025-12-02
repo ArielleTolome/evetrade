@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '../components/common/Button';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { SkillCalculator } from '../components/common/SkillCalculator';
@@ -258,18 +259,18 @@ export function CalculatorPage() {
         {/* Tabs */}
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           {tabs.map((tab) => (
-            <button
+            <Button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-accent-cyan/20 text-accent-cyan'
-                  : 'bg-white/5 text-text-secondary hover:bg-white/10'
-              }`}
+              variant={activeTab === tab.id ? 'secondary' : 'ghost'}
+              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium whitespace-nowrap ${activeTab === tab.id
+                  ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/50'
+                  : 'bg-white/5 text-text-secondary hover:bg-white/10 border-transparent'
+                }`}
             >
               <span>{tab.icon}</span>
               {tab.label}
-            </button>
+            </Button>
           ))}
         </div>
 

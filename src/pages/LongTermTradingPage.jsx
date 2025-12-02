@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 import { TradingTable } from '../components/tables/TradingTable';
 import { Toast } from '../components/common/Toast';
 import { QuickCopyButton } from '../components/common/QuickCopyButtons';
@@ -395,18 +396,20 @@ Confidence: ${pred.confidence}%`;
       render: (name, row) => (
         <div className="flex items-center gap-2">
           <span>{name}</span>
-          <button
+          <Button
             onClick={(e) => {
               e.stopPropagation();
               copyItemName(name);
             }}
-            className="p-1 text-text-secondary hover:text-accent-cyan transition-colors"
+            variant="ghost"
+            size="sm"
+            className="p-1 h-auto min-h-0"
             title="Copy item name"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-          </button>
+          </Button>
         </div>
       ),
     },
@@ -505,9 +508,8 @@ Confidence: ${pred.confidence}%`;
           <span className="text-text-primary">{confidence}%</span>
           <div className="w-16 h-1.5 bg-space-dark rounded-full overflow-hidden mt-1">
             <div
-              className={`h-full rounded-full ${
-                confidence >= 70 ? 'bg-green-400' : confidence >= 50 ? 'bg-yellow-400' : 'bg-red-400'
-              }`}
+              className={`h-full rounded-full ${confidence >= 70 ? 'bg-green-400' : confidence >= 50 ? 'bg-yellow-400' : 'bg-red-400'
+                }`}
               style={{ width: `${confidence}%` }}
             />
           </div>
@@ -519,18 +521,20 @@ Confidence: ${pred.confidence}%`;
       label: 'Actions',
       className: 'w-24',
       render: (_, row) => (
-        <button
+        <Button
           onClick={(e) => {
             e.stopPropagation();
             copyPrediction(row);
           }}
-          className="p-2 text-text-secondary hover:text-accent-cyan transition-colors"
+          variant="ghost"
+          size="sm"
+          className="p-2 h-auto min-h-0"
           title="Copy prediction"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
-        </button>
+        </Button>
       ),
     },
   ], [timeHorizon, copyPrediction, copyItemName]);
@@ -761,13 +765,12 @@ Confidence: ${pred.confidence}%`;
                 <div className="p-4 bg-gradient-to-br from-green-500/10 to-accent-cyan/10 rounded-lg border border-green-500/30">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm text-text-secondary">Expected Profit</div>
-                    <div className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      investmentResults.item.riskLevel === 'low'
-                        ? 'bg-green-500/20 text-green-400'
-                        : investmentResults.item.riskLevel === 'medium'
+                    <div className={`px-2 py-0.5 rounded text-xs font-medium ${investmentResults.item.riskLevel === 'low'
+                      ? 'bg-green-500/20 text-green-400'
+                      : investmentResults.item.riskLevel === 'medium'
                         ? 'bg-yellow-500/20 text-yellow-400'
                         : 'bg-red-500/20 text-red-400'
-                    }`}>
+                      }`}>
                       {investmentResults.item.riskLevel} risk
                     </div>
                   </div>
@@ -855,11 +858,10 @@ Confidence: ${pred.confidence}%`;
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                        idx === 0 ? 'bg-accent-gold/20 text-accent-gold' :
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${idx === 0 ? 'bg-accent-gold/20 text-accent-gold' :
                         idx === 1 ? 'bg-gray-400/20 text-gray-300' :
-                        'bg-orange-600/20 text-orange-400'
-                      }`}>
+                          'bg-orange-600/20 text-orange-400'
+                        }`}>
                         #{idx + 1}
                       </div>
                       <div className="text-xs px-2 py-0.5 bg-accent-cyan/10 text-accent-cyan rounded">
@@ -891,8 +893,8 @@ Confidence: ${pred.confidence}%`;
                       <span className="text-text-secondary">Risk:</span>
                       <span className={
                         pred.riskLevel === 'low' ? 'text-green-400' :
-                        pred.riskLevel === 'medium' ? 'text-yellow-400' :
-                        'text-red-400'
+                          pred.riskLevel === 'medium' ? 'text-yellow-400' :
+                            'text-red-400'
                       }>
                         {pred.riskLevel}
                       </span>

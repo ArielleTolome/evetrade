@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { ItemAutocomplete } from '../components/forms/ItemAutocomplete';
 import { fetchOrders } from '../api/trading';
@@ -134,24 +135,24 @@ export function PriceComparisonPage() {
     const withSellPrices = validData.filter((d) => d.lowestSell !== null);
     const bestToBuy = withSellPrices.length > 0
       ? withSellPrices.reduce((best, curr) =>
-          curr.lowestSell < best.lowestSell ? curr : best
-        )
+        curr.lowestSell < best.lowestSell ? curr : best
+      )
       : null;
 
     // Best place to sell (highest buy price)
     const withBuyPrices = validData.filter((d) => d.highestBuy !== null);
     const bestToSell = withBuyPrices.length > 0
       ? withBuyPrices.reduce((best, curr) =>
-          curr.highestBuy > best.highestBuy ? curr : best
-        )
+        curr.highestBuy > best.highestBuy ? curr : best
+      )
       : null;
 
     // Best margin (highest spread)
     const withSpreads = validData.filter((d) => d.spread !== null && d.spread > 0);
     const bestMargin = withSpreads.length > 0
       ? withSpreads.reduce((best, curr) =>
-          curr.spread > best.spread ? curr : best
-        )
+        curr.spread > best.spread ? curr : best
+      )
       : null;
 
     // Arbitrage opportunity (buy in one hub, sell in another)
@@ -219,21 +220,25 @@ export function PriceComparisonPage() {
                   Trade Hubs
                 </label>
                 <div className="flex gap-2">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => toggleAllHubs(true)}
-                    className="text-xs text-accent-cyan hover:text-accent-cyan/80 transition-colors"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-accent-cyan hover:text-accent-cyan/80 p-0 h-auto min-h-0"
                   >
                     Select All
-                  </button>
+                  </Button>
                   <span className="text-text-secondary/50">|</span>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => toggleAllHubs(false)}
-                    className="text-xs text-accent-cyan hover:text-accent-cyan/80 transition-colors"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-accent-cyan hover:text-accent-cyan/80 p-0 h-auto min-h-0"
                   >
                     Deselect All
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -270,20 +275,15 @@ export function PriceComparisonPage() {
             </div>
 
             {/* Submit Button */}
-            <button
+            <Button
               type="button"
               onClick={fetchPrices}
               disabled={loading || !selectedItem || selectedCount === 0}
-              className="
-                w-full px-6 py-3 rounded-lg font-medium
-                bg-gradient-to-r from-accent-cyan to-accent-purple
-                hover:from-accent-cyan/90 hover:to-accent-purple/90
-                disabled:opacity-50 disabled:cursor-not-allowed
-                text-space-black transition-all duration-200
-              "
+              variant="primary"
+              className="w-full px-6 py-3"
             >
               {loading ? 'Fetching Prices...' : 'Compare Prices'}
-            </button>
+            </Button>
           </div>
         </GlassmorphicCard>
 
@@ -461,12 +461,14 @@ export function PriceComparisonPage() {
                           )}
                         </td>
                         <td className="py-3 text-center">
-                          <button
+                          <Button
                             onClick={() => viewOrderDetails(row.hub)}
-                            className="px-3 py-1 text-xs rounded-lg bg-accent-cyan/20 text-accent-cyan hover:bg-accent-cyan/30 transition-colors"
+                            variant="secondary"
+                            size="sm"
+                            className="px-3 py-1 text-xs bg-accent-cyan/20 text-accent-cyan hover:bg-accent-cyan/30 border-transparent"
                           >
                             View Orders
-                          </button>
+                          </Button>
                         </td>
                       </tr>
                     ))}

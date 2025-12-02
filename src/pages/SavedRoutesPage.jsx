@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 
@@ -93,37 +94,45 @@ function RouteCard({ route, onDelete, onNavigate }) {
 
       {/* Actions */}
       <div className="flex gap-2">
-        <button
+        <Button
           onClick={() => onNavigate(route)}
-          className="flex-1 btn-primary py-2 text-sm"
+          variant="primary"
+          size="sm"
+          className="flex-1 py-2"
         >
           Run Search
-        </button>
+        </Button>
         {showConfirmDelete ? (
           <>
-            <button
+            <Button
               onClick={() => {
                 onDelete(route.id);
                 setShowConfirmDelete(false);
               }}
-              className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
+              variant="danger"
+              size="sm"
+              className="px-4 py-2"
             >
               Confirm
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setShowConfirmDelete(false)}
-              className="px-4 py-2 bg-white/10 text-text-secondary rounded-lg text-sm hover:bg-white/20 transition-colors"
+              variant="ghost"
+              size="sm"
+              className="px-4 py-2 text-text-secondary hover:bg-white/20"
             >
               Cancel
-            </button>
+            </Button>
           </>
         ) : (
-          <button
+          <Button
             onClick={() => setShowConfirmDelete(true)}
-            className="px-4 py-2 bg-white/10 text-text-secondary rounded-lg text-sm hover:bg-red-500/20 hover:text-red-400 transition-colors"
+            variant="ghost"
+            size="sm"
+            className="px-4 py-2 text-text-secondary hover:bg-red-500/20 hover:text-red-400"
           >
             Delete
-          </button>
+          </Button>
         )}
       </div>
 
@@ -153,24 +162,27 @@ function EmptyState() {
         Save your favorite trade routes to quickly access them later. Start by searching for trades and clicking "Save Route".
       </p>
       <div className="flex flex-wrap justify-center gap-3">
-        <button
+        <Button
           onClick={() => navigate('/station-trading')}
-          className="btn-primary px-6 py-2"
+          variant="primary"
+          className="px-6 py-2"
         >
           Station Trading
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => navigate('/station-hauling')}
-          className="btn-secondary px-6 py-2"
+          variant="secondary"
+          className="px-6 py-2"
         >
           Station Hauling
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => navigate('/region-hauling')}
-          className="btn-secondary px-6 py-2"
+          variant="secondary"
+          className="px-6 py-2"
         >
           Region Hauling
-        </button>
+        </Button>
       </div>
     </GlassmorphicCard>
   );
@@ -261,34 +273,38 @@ export function SavedRoutesPage() {
               { value: 'station-hauling', label: 'Station Hauling' },
               { value: 'region-hauling', label: 'Region Hauling' },
             ].map((f) => (
-              <button
+              <Button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === f.value
-                    ? 'bg-accent-cyan/20 text-accent-cyan'
-                    : 'bg-white/5 text-text-secondary hover:bg-white/10'
-                }`}
+                variant={filter === f.value ? 'secondary' : 'ghost'}
+                className={`px-4 py-2 text-sm font-medium ${filter === f.value
+                  ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/50'
+                  : 'bg-white/5 text-text-secondary hover:bg-white/10 border-transparent'
+                  }`}
               >
                 {f.label}
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Import/Export */}
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => setShowImport(!showImport)}
-              className="px-4 py-2 bg-white/10 text-text-secondary rounded-lg text-sm hover:bg-white/20 transition-colors"
+              variant="ghost"
+              size="sm"
+              className="px-4 py-2 bg-white/10 text-text-secondary hover:bg-white/20"
             >
               Import
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleExport}
-              className="px-4 py-2 bg-white/10 text-text-secondary rounded-lg text-sm hover:bg-white/20 transition-colors"
+              variant="ghost"
+              size="sm"
+              className="px-4 py-2 bg-white/10 text-text-secondary hover:bg-white/20"
             >
               Export
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -303,21 +319,23 @@ export function SavedRoutesPage() {
               className="w-full h-32 px-4 py-3 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary placeholder-text-secondary/50 focus:outline-none focus:border-accent-cyan resize-none font-mono text-sm"
             />
             <div className="flex gap-2 mt-4">
-              <button
+              <Button
                 onClick={handleImport}
-                className="btn-primary px-6 py-2"
+                variant="primary"
+                className="px-6 py-2"
               >
                 Import Data
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   setShowImport(false);
                   setImportValue('');
                 }}
-                className="btn-secondary px-6 py-2"
+                variant="secondary"
+                className="px-6 py-2"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </GlassmorphicCard>
         )}

@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 import { TopRecommendations } from '../components/common/TopRecommendations';
 import { TradingStats } from '../components/common/TradingStats';
 import { ProfitDistribution } from '../components/common/ProfitDistribution';
@@ -339,18 +340,20 @@ ROI: ${formatPercent(roi / 100, 1)}`;
 
           return (
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 onClick={(e) => {
                   e.stopPropagation();
                   copyItemName(itemName);
                 }}
-                className="p-1 text-text-secondary hover:text-accent-cyan transition-colors flex-shrink-0"
+                variant="ghost"
+                size="sm"
+                className="p-1 h-auto min-h-0"
                 title="Copy item name"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-              </button>
+              </Button>
               <span className="truncate">{itemName}</span>
               {hasAsset && (
                 <span className="px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400 border border-green-500/30 flex-shrink-0">
@@ -473,11 +476,10 @@ ROI: ${formatPercent(roi / 100, 1)}`;
         render: (data, row) => {
           const jumps = data || row.jumps;
           return (
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-              jumps <= 5 ? 'bg-green-500/20 text-green-400' :
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${jumps <= 5 ? 'bg-green-500/20 text-green-400' :
               jumps <= 15 ? 'bg-yellow-500/20 text-yellow-400' :
-              'bg-red-500/20 text-red-400'
-            }`}>
+                'bg-red-500/20 text-red-400'
+              }`}>
               {jumps || 'N/A'}
             </span>
           );
@@ -488,18 +490,20 @@ ROI: ${formatPercent(roi / 100, 1)}`;
         label: '',
         className: 'w-10',
         render: (_, row) => (
-          <button
+          <Button
             onClick={(e) => {
               e.stopPropagation();
               copyTradeDetails(row);
             }}
-            className="p-2 text-text-secondary hover:text-accent-cyan transition-colors"
+            variant="ghost"
+            size="sm"
+            className="p-2 h-auto min-h-0"
             title="Copy trade details"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-          </button>
+          </Button>
         ),
       },
     ],
@@ -582,13 +586,15 @@ ROI: ${formatPercent(roi / 100, 1)}`;
                       placeholder="Add origin station..."
                     />
                   </div>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => addStation('from', fromInput)}
-                    className="btn-secondary px-3 md:px-4 min-h-[44px]"
+                    variant="secondary"
+                    size="sm"
+                    className="px-3 md:px-4 min-h-[44px]"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex flex-wrap gap-2 min-h-[40px]">
                   {form.fromStations.map((station) => (
@@ -631,13 +637,15 @@ ROI: ${formatPercent(roi / 100, 1)}`;
                       placeholder="Add destination station..."
                     />
                   </div>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => addStation('to', toInput)}
-                    className="btn-secondary px-3 md:px-4 min-h-[44px]"
+                    variant="secondary"
+                    size="sm"
+                    className="px-3 md:px-4 min-h-[44px]"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex flex-wrap gap-2 min-h-[40px]">
                   {form.toStations.map((station) => (
@@ -721,13 +729,16 @@ ROI: ${formatPercent(roi / 100, 1)}`;
               />
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading || resourcesLoading}
-              className="btn-primary w-full py-3 md:py-4 text-base md:text-lg min-h-[44px]"
+              variant="primary"
+              size="lg"
+              className="w-full text-base md:text-lg min-h-[44px]"
+              loading={loading}
             >
               {loading ? 'Searching...' : 'Find Trades'}
-            </button>
+            </Button>
           </form>
         </GlassmorphicCard>
 
@@ -776,7 +787,7 @@ ROI: ${formatPercent(roi / 100, 1)}`;
         {error && (
           <ActionableError
             error={error}
-            onRetry={() => handleSubmit({ preventDefault: () => {} })}
+            onRetry={() => handleSubmit({ preventDefault: () => { } })}
             className="mb-8"
           />
         )}
@@ -819,7 +830,7 @@ ROI: ${formatPercent(roi / 100, 1)}`;
                     </div>
                     <DataFreshnessIndicator
                       lastUpdated={lastUpdated}
-                      onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+                      onRefresh={() => handleSubmit({ preventDefault: () => { } })}
                       isLoading={loading}
                       compact
                     />

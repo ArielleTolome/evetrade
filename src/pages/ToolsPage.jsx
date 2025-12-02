@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 
 // Market Analysis Components
 import { MarketSpreadAnalyzer } from '../components/trading/MarketSpreadAnalyzer';
@@ -143,24 +144,25 @@ export function ToolsPage() {
         {/* Category Tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-8">
           {TOOL_CATEGORIES.map((category) => (
-            <button
+            <Button
               key={category.id}
               onClick={() => {
                 setActiveCategory(category.id);
                 setActiveTool(null);
               }}
+              variant={activeCategory === category.id ? 'primary' : 'secondary'}
               className={`
-                flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+                flex items-center gap-2 px-4 py-2 text-sm
                 transition-all duration-200
                 ${activeCategory === category.id
-                  ? `bg-gradient-to-r ${category.color} text-white shadow-lg`
-                  : 'bg-space-dark/50 text-text-secondary hover:bg-space-dark hover:text-text-primary'
+                  ? `bg-gradient-to-r ${category.color} text-white shadow-lg border-transparent`
+                  : 'bg-space-dark/50 text-text-secondary hover:bg-space-dark hover:text-text-primary border-transparent'
                 }
               `}
             >
               <span>{category.icon}</span>
               <span className="hidden sm:inline">{category.name}</span>
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -414,12 +416,13 @@ function ToolGrid({ tools, onSelect, color }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {tools.map((tool) => (
-        <button
+        <Button
           key={tool.id}
           onClick={() => onSelect(tool.id)}
-          className="group text-left"
+          variant="ghost"
+          className="group text-left p-0 h-auto border-none hover:bg-transparent"
         >
-          <GlassmorphicCard hover className="p-5 h-full">
+          <GlassmorphicCard hover className="p-5 h-full w-full">
             <h3 className={`font-semibold text-text-primary group-hover:text-${color} transition-colors mb-2`}>
               {tool.name}
             </h3>
@@ -431,7 +434,7 @@ function ToolGrid({ tools, onSelect, color }) {
               </svg>
             </div>
           </GlassmorphicCard>
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -483,15 +486,16 @@ function IntegrationsTools({ activeTool, setActiveTool }) {
  */
 function BackButton({ onClick }) {
   return (
-    <button
+    <Button
       onClick={onClick}
-      className="flex items-center gap-2 text-text-secondary hover:text-accent-cyan transition-colors mb-4"
+      variant="ghost"
+      className="flex items-center gap-2 text-text-secondary hover:text-accent-cyan mb-4 pl-0"
     >
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
       </svg>
       <span>Back to Tools</span>
-    </button>
+    </Button>
   );
 }
 

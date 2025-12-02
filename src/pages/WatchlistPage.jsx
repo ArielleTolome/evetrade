@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import { Button } from '../components/common/Button';
 import { ItemAutocomplete } from '../components/forms';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useResources } from '../hooks/useResources';
@@ -28,9 +29,8 @@ function WatchlistItemCard({ item, onRemove, onViewOrders, assetQuantity, active
   const userOwnsItem = assetQuantity > 0;
 
   return (
-    <div className={`bg-space-dark/50 border rounded-lg p-4 hover:border-accent-cyan/40 transition-colors ${
-      userOwnsItem ? 'border-accent-gold/40 shadow-lg shadow-accent-gold/10' : 'border-accent-cyan/20'
-    }`}>
+    <div className={`bg-space-dark/50 border rounded-lg p-4 hover:border-accent-cyan/40 transition-colors ${userOwnsItem ? 'border-accent-gold/40 shadow-lg shadow-accent-gold/10' : 'border-accent-cyan/20'
+      }`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2">
@@ -43,15 +43,17 @@ function WatchlistItemCard({ item, onRemove, onViewOrders, assetQuantity, active
           </div>
           <p className="text-xs text-text-secondary/70">ID: {item.itemId}</p>
         </div>
-        <button
+        <Button
           onClick={() => onRemove(item.id)}
-          className="p-1 text-text-secondary hover:text-red-400 transition-colors"
+          variant="ghost"
+          size="sm"
+          className="p-1 h-auto min-h-0 text-text-secondary hover:text-red-400"
           aria-label="Remove from watchlist"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-3">
@@ -118,12 +120,13 @@ function WatchlistItemCard({ item, onRemove, onViewOrders, assetQuantity, active
         </div>
       )}
 
-      <button
+      <Button
         onClick={() => onViewOrders(item)}
-        className="w-full mt-3 px-3 py-2 text-sm bg-accent-cyan/10 text-accent-cyan rounded-lg hover:bg-accent-cyan/20 transition-colors"
+        variant="secondary"
+        className="w-full mt-3 bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
       >
         View Market Orders
-      </button>
+      </Button>
     </div>
   );
 }
@@ -188,20 +191,22 @@ function AddWatchlistModal({ onClose, onAdd }) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 rounded-lg border border-accent-cyan/20 text-text-secondary hover:bg-white/5 transition-colors"
+              variant="ghost"
+              className="flex-1 border border-accent-cyan/20 text-text-secondary hover:bg-white/5"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={!itemName}
-              className="flex-1 px-4 py-2 rounded-lg bg-accent-cyan text-space-black font-medium hover:bg-accent-cyan/90 transition-colors disabled:opacity-50"
+              variant="primary"
+              className="flex-1"
             >
               Add to Watchlist
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -454,15 +459,16 @@ export function WatchlistPage() {
             </select>
 
             {/* Add Button */}
-            <button
+            <Button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-accent-cyan text-space-black font-medium rounded-lg hover:bg-accent-cyan/90 transition-colors"
+              variant="primary"
+              className="flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               Add Item
-            </button>
+            </Button>
           </div>
         </GlassmorphicCard>
 
@@ -501,12 +507,13 @@ export function WatchlistPage() {
                 <p className="text-text-secondary/70 mt-2">
                   Add items to track their prices and set alerts
                 </p>
-                <button
+                <Button
                   onClick={() => setShowAddModal(true)}
-                  className="mt-4 px-6 py-2 bg-accent-cyan text-space-black font-medium rounded-lg hover:bg-accent-cyan/90 transition-colors"
+                  variant="primary"
+                  className="mt-4 px-6 py-2"
                 >
                   Add Your First Item
-                </button>
+                </Button>
               </>
             )}
           </GlassmorphicCard>
