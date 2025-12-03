@@ -12,7 +12,7 @@
  */
 
 const ESI_BASE = 'https://esi.evetech.net/latest';
-const ESI_TIMEOUT_MS = 15000; // 15 second timeout for ESI requests
+const ESI_TIMEOUT_MS = 30000; // 30 second timeout for ESI requests
 
 /**
  * Validate and parse an integer parameter
@@ -77,7 +77,7 @@ const STATION_REGIONS = {
  * @returns {{ orders: Array, errors: Array }} Results and any errors encountered
  */
 async function fetchPagesInParallel(baseUrl, maxPages) {
-  const batchSize = 10; // Reduced from 20 to avoid rate limiting
+  const batchSize = 20; // Increased for faster fetching
   const allOrders = [];
   const errors = [];
 
@@ -138,9 +138,10 @@ async function fetchRegionOrders(regionId, typeId = null) {
   const buyTotalPages = parseInt(buyFirstResponse.headers.get('x-pages') || '1', 10);
   const sellTotalPages = parseInt(sellFirstResponse.headers.get('x-pages') || '1', 10);
 
-  // Limit pages (40 each = 80 total requests max)
-  const maxBuyPages = Math.min(buyTotalPages, 40);
-  const maxSellPages = Math.min(sellTotalPages, 40);
+  // Fetch more pages to ensure better coverage (The Forge has 200+ pages)
+  // Cap at 150 to avoid timeouts while covering most items
+  const maxBuyPages = Math.min(buyTotalPages, 150);
+  const maxSellPages = Math.min(sellTotalPages, 150);
 
   // Fetch both buy and sell orders in parallel
   const [buyResult, sellResult] = await Promise.all([
