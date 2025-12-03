@@ -399,8 +399,9 @@ export default async function handler(req, res) {
       trade['Item'] = names[trade['Item ID']] || `Unknown Item #${trade['Item ID']}`;
     }
 
-    // Set cache headers (market data updates every 5 minutes in EVE)
-    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
+    // Disable caching temporarily for debugging
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
 
     return res.status(200).json(trades);
   } catch (error) {
