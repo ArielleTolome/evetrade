@@ -268,19 +268,20 @@ function calculateTrades(orders, stationId, params) {
     const lowestSell = sell.reduce((min, o) => o.price < min.price ? o : min, sell[0]);
 
     // For station trading (margin trading):
-    // You place a buy order slightly above the highest current buy (to get filled first)
-    // Then place a sell order slightly below the lowest current sell (to get filled first)
-    // Your profit is the spread minus fees
+    // You place a buy order at or slightly above the highest current buy (to get filled first)
+    // Then place a sell order at or slightly below the lowest current sell (to get filled first)
+    // Your profit is the spread between lowest sell and highest buy, minus fees
 
-    // The "buy price" is what you'd pay (just above highest buy order)
-    // The "sell price" is what you'd receive (just below lowest sell order)
-    const buyPrice = highestBuy.price * 1.0001; // Place buy order 0.01% above best buy
-    const sellPrice = lowestSell.price * 0.9999; // Place sell order 0.01% below best sell
+    // Use actual market prices - this shows the real spread available
+    const buyPrice = highestBuy.price;   // Highest buy order price
+    const sellPrice = lowestSell.price;  // Lowest sell order price
 
-    // Skip if no margin (your buy price must be lower than your sell price)
+    // Skip if no margin (buy price must be lower than sell price for profit)
     if (buyPrice >= sellPrice) continue;
 
     // Calculate fees and profit
+    // When you place a buy order, you pay broker fee on the buy price
+    // When you place a sell order, you pay broker fee on the sell price + sales tax
     const buyFee = buyPrice * brokerFee;
     const sellFee = sellPrice * brokerFee;
     const salesTax = sellPrice * tax;
@@ -289,7 +290,7 @@ function calculateTrades(orders, stationId, params) {
 
     if (profitPerUnit <= 0) continue;
 
-    // Calculate margin
+    // Calculate gross margin (spread as percentage of buy price)
     const grossMargin = ((sellPrice - buyPrice) / buyPrice) * 100;
 
     // Apply margin filters
