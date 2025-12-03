@@ -266,6 +266,7 @@ export function PriceAlertPanel({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInput
+                id="itemName"
                 label="Item Name"
                 value={formData.itemName}
                 onChange={(value) => handleInputChange('itemName', value)}
@@ -275,6 +276,7 @@ export function PriceAlertPanel({
               />
               
               <FormInput
+                id="itemId"
                 label="Item ID (Optional)"
                 value={formData.itemId}
                 onChange={(value) => handleInputChange('itemId', value)}
@@ -315,6 +317,7 @@ export function PriceAlertPanel({
               </div>
               
               <FormInput
+                id="threshold"
                 label="Threshold"
                 value={formData.threshold}
                 onChange={(value) => handleInputChange('threshold', value)}
