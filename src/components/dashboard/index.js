@@ -12,6 +12,7 @@ export { ProgressRing, ProgressRingGroup } from './ProgressRing';
 export { DataCard, DataCardSkeleton } from './DataCard';
 export { QuickActions, QuickActionButton, QuickActionsGroup } from './QuickActions';
 export { ActivityFeed, ActivityFeedCompact, ActivityItemSkeleton } from './ActivityFeed';
+export { RealTimeProfitDashboard } from './RealTimeProfitDashboard';
 
 // Default exports
 export { default as StatCardDefault } from './StatCard';
@@ -20,3 +21,4 @@ export { default as ProgressRingDefault } from './ProgressRing';
 export { default as DataCardDefault } from './DataCard';
 export { default as QuickActionsDefault } from './QuickActions';
 export { default as ActivityFeedDefault } from './ActivityFeed';
+export { default as RealTimeProfitDashboardDefault } from './RealTimeProfitDashboard';

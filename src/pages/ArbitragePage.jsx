@@ -21,6 +21,7 @@ import { getRegionData } from '../utils/stations';
  */
 export function ArbitragePage() {
   const { universeList, loading: resourcesLoading } = useResources();
+  const toast = useToast();
   const {
     data,
     loading,
@@ -40,7 +41,6 @@ export function ArbitragePage() {
   });
 
   // UI state
-  const [toastMessage, setToastMessage] = useState(null);
   const [formError, setFormError] = useState(null);
   const [selectedRegions, setSelectedRegions] = useState(form.regions);
 
@@ -114,12 +114,12 @@ export function ArbitragePage() {
   const copyToClipboard = useCallback(async (text, message = 'Copied!') => {
     try {
       await navigator.clipboard.writeText(text);
-      setToastMessage(message);
+      toast.success(message);
     } catch (err) {
       console.error('Failed to copy:', err);
-      setToastMessage('Failed to copy');
+      toast.error('Failed to copy');
     }
-  }, []);
+  }, [toast]);
 
   // Copy item name
   const copyItemName = useCallback((itemName) => {
@@ -309,15 +309,6 @@ Risk Score: ${item['Risk Score']}/10`;
       subtitle="Discover profitable buy-low, sell-high opportunities across multiple regions"
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Toast for copy feedback */}
-        {toastMessage && (
-          <Toast
-            message={toastMessage}
-            onClose={() => setToastMessage(null)}
-            type="success"
-          />
-        )}
-
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -389,6 +380,7 @@ Risk Score: ${item['Risk Score']}/10`;
                 onChange={(v) => updateForm('minProfit', v)}
                 suffix="ISK"
                 min={0}
+                step={100000}
                 helper="Per trade total profit"
               />
               <FormInput
@@ -398,6 +390,8 @@ Risk Score: ${item['Risk Score']}/10`;
                 onChange={(v) => updateForm('minROI', v)}
                 suffix="%"
                 min={0}
+                max={1000}
+                step={1}
                 helper="Return on investment"
               />
               <FormInput
@@ -407,6 +401,7 @@ Risk Score: ${item['Risk Score']}/10`;
                 onChange={(v) => updateForm('maxVolume', v)}
                 suffix="m³"
                 min={0}
+                step={1000}
                 helper="Cargo space constraint"
               />
               <FormSelect
