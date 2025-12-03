@@ -14,7 +14,7 @@ const STORAGE_KEY = 'eve_market_share';
 export function MarketShareEstimator() {
   const { isAuthenticated, character, getAccessToken } = useEveAuth();
   const [marketShareData, setMarketShareData] = useState({});
-  const [activeOrders, setActiveOrders] = useState([]);
+  const [, setActiveOrders] = useState([]);
   const [regionId, setRegionId] = useState('10000002'); // Jita
   const [loading, setLoading] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -218,8 +218,6 @@ export function MarketShareEstimator() {
         );
     }
   };
-
-  const selectedItem = marketShareData[selectedItemId];
 
   return (
     <div className="space-y-6">

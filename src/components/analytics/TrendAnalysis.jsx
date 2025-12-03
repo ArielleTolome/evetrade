@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { formatPercent, formatCompact } from '../../utils/formatters';
+import { formatCompact } from '../../utils/formatters';
 
 /**
  * Calculate trend direction and confidence
@@ -313,7 +313,7 @@ export function TrendAnalysis({
 /**
  * TrendIndicatorCompact - Minimal trend indicator for tables
  */
-export function TrendIndicatorCompact({ trend, changePercent }) {
+export function TrendIndicatorCompact({ changePercent }) {
   const info = useMemo(() => getTrendInfo(changePercent), [changePercent]);
 
   return (

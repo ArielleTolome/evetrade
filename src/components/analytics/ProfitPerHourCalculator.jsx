@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProfitTracking } from '../../hooks/useProfitTracking';
-import { formatISK, formatDuration } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 import { useEveAuth } from '../../hooks/useEveAuth';
 import { getWalletBalance } from '../../api/esi';
 
@@ -107,8 +107,6 @@ export function ProfitPerHourCalculator() {
         return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
-
-  const selectedSession = sessions.find((s) => s.id === selectedSessionId);
 
   return (
     <div className="space-y-6">

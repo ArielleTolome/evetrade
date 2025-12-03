@@ -209,7 +209,7 @@ async function getLocationNames(locationIds, accessToken) {
         const data = await response.json();
         names[structureId] = data.name;
       }
-    } catch (error) {
+    } catch (_error) {
       names[structureId] = `Structure #${structureId}`;
     }
   }
@@ -408,7 +408,7 @@ function aggregateOrders(orders, marketData, historicalOrders, groupBy = 'item')
 function formatResponse(aggregatedData, itemNames, locationNames) {
   const result = [];
 
-  for (const [key, group] of Object.entries(aggregatedData)) {
+  for (const [_key, group] of Object.entries(aggregatedData)) {
     result.push({
       'Type ID': group.typeId,
       'Item': itemNames[group.typeId] || `Item #${group.typeId}`,
@@ -517,7 +517,6 @@ export default async function handler(req, res) {
     // Get unique type IDs and location IDs
     const typeIds = [...new Set(orders.map(o => o.type_id))];
     const locationIds = [...new Set(orders.map(o => o.location_id))];
-    const regionIds = [...new Set(orders.map(o => o.region_id))];
 
     console.log(`[${requestId}] Found ${orders.length} orders for ${typeIds.length} items across ${locationIds.length} locations`);
 

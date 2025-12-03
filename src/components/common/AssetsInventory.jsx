@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useEveAuth } from '../../hooks/useEveAuth';
 import { getCharacterAssets, getTypeNames, getStationInfo, getStructureInfo } from '../../api/esi';
-import { formatISK, formatNumber } from '../../utils/formatters';
+import { formatNumber } from '../../utils/formatters';
 import { GlassmorphicCard } from './GlassmorphicCard';
 
 /**

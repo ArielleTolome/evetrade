@@ -236,7 +236,7 @@ async function getItemNames(typeIds) {
  * Calculate station trading opportunities
  */
 function calculateTrades(orders, stationId, params) {
-  const { minProfit, tax, minVolume, brokerFee, marginAbove, marginBelow } = params;
+  const { minProfit, tax, brokerFee, marginAbove, marginBelow } = params;
 
   // Filter orders for this station (ensure numeric comparison)
   const stationIdNum = parseInt(stationId);

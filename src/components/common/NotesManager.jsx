@@ -5,8 +5,6 @@ import useTradeNotes from '../../hooks/useTradeNotes';
 export default function NotesManager() {
   const {
     notes,
-    searchNotes,
-    getItemsByTag,
     exportNotes,
     importNotes,
     deleteNote,

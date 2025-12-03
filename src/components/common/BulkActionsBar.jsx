@@ -6,7 +6,6 @@ export function BulkActionsBar({
   selectedIds = [],
   onSelectionChange,
   onBulkFavorite,
-  onBulkUnfavorite,
   onBulkCopy,
   onBulkAddToShoppingList,
   onExport,
@@ -46,15 +45,6 @@ export function BulkActionsBar({
   const deselectAll = useCallback(() => {
     onSelectionChange?.([]);
   }, [onSelectionChange]);
-
-  // Toggle item selection
-  const toggleItem = useCallback((itemId) => {
-    if (selectedIds.includes(itemId)) {
-      onSelectionChange?.(selectedIds.filter(id => id !== itemId));
-    } else {
-      onSelectionChange?.([...selectedIds, itemId]);
-    }
-  }, [selectedIds, onSelectionChange]);
 
   // Copy selected to clipboard
   const copySelected = useCallback(() => {

@@ -224,7 +224,7 @@ async function getTypeNames(typeIds) {
  * Calculate manufacturing costs and profits for blueprints
  */
 async function calculateBlueprintProfits(blueprints, jobs, regionId, params) {
-  const { minProfit, minROI, activity, meLevel } = params;
+  const { meLevel } = params;
 
   const profitableBlueprints = [];
   const typeIdsToFetch = new Set();

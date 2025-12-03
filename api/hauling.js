@@ -58,7 +58,7 @@ const typeInfoCache = new LRUCache(TYPE_CACHE_MAX_SIZE);
 /**
  * Validate and parse an integer parameter
  */
-function validateInt(value, paramName, min = 0, max = Number.MAX_SAFE_INTEGER) {
+function validateInt(value, _paramName, min = 0, max = Number.MAX_SAFE_INTEGER) {
   if (value === undefined || value === null || value === '') return null;
   const num = parseInt(value, 10);
   if (isNaN(num) || num < min || num > max) {
@@ -304,7 +304,7 @@ async function getStationName(stationId) {
  * Calculate hauling opportunities
  */
 async function calculateHaulingTrades(fromOrders, toOrders, fromLocation, toLocation, params) {
-  const { minProfit, maxWeight, minROI, maxBudget, tax, brokerFee = 0 } = params;
+  const { minProfit, maxWeight, minROI, maxBudget, tax } = params;
 
   // Group orders by type_id
   // From location: we want to BUY (look at sell orders) or SELL (look at buy orders)

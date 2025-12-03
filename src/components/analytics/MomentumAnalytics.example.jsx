@@ -52,11 +52,8 @@ export function MomentumAnalyticsExample() {
     7
   );
 
-  const priceChange30d = usePriceChange(
-    marketData?.currentPrice || 0,
-    marketData?.priceHistory || [],
-    30
-  );
+  // 30-day price change available via usePriceChange if needed
+  // usePriceChange(marketData?.currentPrice || 0, marketData?.priceHistory || [], 30)
 
   if (loading) {
     return (

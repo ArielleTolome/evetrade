@@ -252,7 +252,7 @@ async function processLPOffers(offers, regionId, minIskPerLp) {
 
     if (!calculation) continue; // Skip if we couldn't calculate
 
-    const { iskPerLP, revenue, totalCost, netProfit, isk_cost, requiredItemsCost } = calculation;
+    const { iskPerLP, revenue, totalCost, netProfit } = calculation;
 
     // Apply minimum threshold filter
     if (minIskPerLp !== null && iskPerLP < minIskPerLp) continue;
@@ -310,7 +310,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { characterId, corporationId, regionId, minIskPerLp, category } = req.query;
+    const { characterId, corporationId, regionId, minIskPerLp } = req.query;
     const token = req.headers.authorization?.replace('Bearer ', '');
 
     // Validate corporationId (required)

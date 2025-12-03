@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { formatISK, formatPercent } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 
 /**
  * Calculate price projection using linear regression and momentum

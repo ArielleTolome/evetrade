@@ -121,7 +121,7 @@ apiClient.interceptors.response.use(
  * @param {number} maxRetries - Maximum retry attempts
  * @returns {Promise} Response data
  */
-export async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+export async function fetchWithRetry(url, options = {}) {
   try {
     const response = await apiClient.get(url, options);
     return response.data;

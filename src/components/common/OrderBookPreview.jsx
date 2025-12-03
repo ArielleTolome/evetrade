@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getMarketOrders, analyzeMarketOrders } from '../../api/esi';
-import { formatISK, formatNumber } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 
 /**
  * Order Book Preview Component

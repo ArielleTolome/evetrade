@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useClipboard } from '../../hooks/useClipboard';
-import { formatISK, formatNumber } from '../../utils/formatters';
+import { formatNumber } from '../../utils/formatters';
 
 /**
  * BulkCopyPanel Component
@@ -42,19 +42,6 @@ export function BulkCopyPanel({
   const selectedItems = useMemo(() => {
     return items.filter((item, index) => selectedIds.has(item.id || index));
   }, [items, selectedIds]);
-
-  // Toggle individual item selection
-  const toggleItem = useCallback((id) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
 
   // Toggle select all
   const toggleSelectAll = useCallback(() => {

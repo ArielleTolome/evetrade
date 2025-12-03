@@ -505,7 +505,7 @@ async function fetchPlanetDetails(characterId, planetId, accessToken) {
 /**
  * Analyze character's PI setup (authenticated feature)
  */
-async function analyzeCharacterPI(characterId, accessToken, regionId) {
+async function analyzeCharacterPI(characterId, accessToken, _regionId) {
   const planets = await fetchCharacterPlanets(characterId, accessToken);
 
   if (!planets || planets.length === 0) {

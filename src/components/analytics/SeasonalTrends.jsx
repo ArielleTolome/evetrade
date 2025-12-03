@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { getMarketHistory } from '../../api/esi';
 import { formatISK, formatCompact } from '../../utils/formatters';
 

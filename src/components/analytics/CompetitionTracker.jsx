@@ -245,7 +245,6 @@ export function CompetitionTracker() {
   const [newTypeId, setNewTypeId] = useState('');
   const [newTypeName, setNewTypeName] = useState('');
   const [selectedItemId, setSelectedItemId] = useState(null);
-  const selectedItem = trackedItems.find((i) => i.typeId === selectedItemId);
 
   return (
     <div className="space-y-6">
