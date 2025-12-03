@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { PriceHistoryChart } from '../components/common/PriceHistoryChart';
 import { useResources } from '../hooks/useResources';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { useWatchlist } from '../hooks/useWatchlist';
