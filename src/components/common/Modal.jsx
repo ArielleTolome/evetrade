@@ -110,7 +110,7 @@ const unregisterModal = (id) => {
  */
 function ModalHeader({ children, className = '' }) {
   return (
-    <div className={`px-6 py-4 border-b border-white/10 ${className}`}>
+    <div className={`px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 ${className}`}>
       {children}
     </div>
   );
@@ -132,7 +132,7 @@ function ModalTitle({ children, className = '' }) {
  */
 function ModalBody({ children, className = '' }) {
   return (
-    <div className={`px-6 py-4 overflow-y-auto max-h-[60vh] ${className}`}>
+    <div className={`px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto max-h-[60vh] sm:max-h-[70vh] ${className}`}>
       {children}
     </div>
   );
@@ -143,7 +143,7 @@ function ModalBody({ children, className = '' }) {
  */
 function ModalFooter({ children, className = '' }) {
   return (
-    <div className={`px-6 py-4 border-t border-white/10 flex items-center justify-end gap-3 ${className}`}>
+    <div className={`px-4 sm:px-6 py-3 sm:py-4 border-t border-white/10 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pb-safe ${className}`}>
       {children}
     </div>
   );
@@ -235,7 +235,7 @@ export function Modal({
 
   const modalContent = (
     <div
-      className={`fixed inset-0 z-[${zIndexRef.current}] flex items-center justify-center p-4 sm:p-6 ${backdropClassName}`}
+      className={`fixed inset-0 z-[${zIndexRef.current}] flex items-end sm:items-center justify-center p-0 sm:p-6 pt-safe ${backdropClassName}`}
       style={{ zIndex: zIndexRef.current }}
       onClick={handleBackdropClick}
       role="dialog"
@@ -254,10 +254,11 @@ export function Modal({
         className={`
           relative w-full ${sizeClasses[size]}
           bg-space-dark/95 backdrop-blur-xl
-          rounded-2xl shadow-2xl
-          border border-accent-cyan/20
+          rounded-t-2xl sm:rounded-2xl shadow-2xl
+          border border-accent-cyan/20 border-b-0 sm:border-b
           animate-fade-in-up
           overflow-hidden
+          max-h-[90vh] sm:max-h-[85vh]
           ${size === 'full' ? 'flex flex-col' : ''}
           ${className}
         `}

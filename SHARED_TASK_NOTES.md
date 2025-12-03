@@ -2,57 +2,40 @@
 
 ## Completed This Iteration
 
-1. **Fixed Critical Toast Bugs** - StationHaulingPage, RegionHaulingPage, ArbitragePage were rendering `<Toast>` component without importing it. Migrated to using `useToast()` hook properly.
+1. **Mobile-Friendly Footer** - Added `pb-safe` for iOS safe area, improved responsive padding `px-4 sm:px-6 py-6 sm:py-8`, tighter link spacing on mobile
 
-2. **Added Form Input Validation** - Added `min`, `max`, and `step` constraints to numeric form fields (minProfit, maxWeight, minROI, maxBudget) in hauling and arbitrage pages.
+2. **Mobile-Friendly Modal** - Bottom sheet pattern on mobile (slides up from bottom), responsive padding throughout Header/Body/Footer, `pb-safe` for footer buttons, max-height constraints, stacked buttons on mobile
 
-3. **Added ESI API Endpoints** - New endpoints in `src/api/esi.js`:
-   - `getCharacterLoyaltyPoints` - LP balance by NPC corp
-   - `getCharacterIndustryJobs` - Manufacturing jobs
-   - `getCharacterContracts` - Personal contracts
-   - `getCharacterContractItems` - Contract item details
-   - `getStructureMarketOrders` - Citadel market orders
-   - `getCharacterBookmarks` - Bookmarks
-   - `getCharacterBookmarkFolders` - Bookmark folders
-   - `getCharacterBlueprints` - Blueprint library
+3. **TradingTable Scroll Indicator** - Added gradient fade on right edge to hint at horizontal scroll availability on tablet-sized screens
 
-4. **Created useCharacterLP Hook** - `src/hooks/useCharacterLP.js` for LP balance management
-
-5. **Created RealTimeProfitDashboard** - `src/components/dashboard/RealTimeProfitDashboard.jsx` shows wallet, active orders, escrow, daily/weekly profit with sparklines
-
-6. **Fixed Silent Asset Loading Failures** - Added `assetsError` state and toast notifications when asset loading fails
-
-## Next Iteration Tasks
-
-### High Priority
-- [ ] Add aria-label accessibility attributes to icon buttons (identified in initial analysis)
-- [ ] Integrate the new ESI endpoints into the UI:
-  - LP balance display in LP Optimizer page
-  - Industry jobs in Industry Profits page
-  - Personal contracts in Contract Finder page
-  - Structure market support in trading pages
-
-### Medium Priority
-- [ ] Add SSO scope request for new endpoints (`esi-characters.read_loyalty.v1`, `esi-industry.read_character_jobs.v1`, etc.)
-- [ ] Add missing useCallback dependencies in various components
-- [ ] Remove unused console.log statements (320+ found in codebase)
-
-### Lower Priority
-- [ ] Standardize toast notification pattern across all pages (some use hook, some use state)
-- [ ] Add pagination UI warning when results are truncated
-- [ ] Fix unused variable lint warnings
+4. **Form Input Consistency** - Changed text sizing from `text-base sm:text-sm` to consistent `text-sm` across FormInput and FormSelect
 
 ## Architecture Notes
 
-- New ESI endpoints need SSO scopes added in `useEveAuth.jsx`
-- RealTimeProfitDashboard can be added to Dashboard page or used standalone
-- useCharacterLP hook follows same pattern as useLPOptimizer
+- Safe area utilities (`pb-safe`, `pt-safe`) require Tailwind CSS safe-area plugin or custom CSS. Check if these are defined in tailwind config.
+- Modal now uses bottom-sheet pattern on mobile (items-end on small screens, items-center on sm+)
+- TradingTable already had good mobile card view - tablet-sized screens showing table now have scroll hint
 
-## Files Changed
-- `src/pages/StationHaulingPage.jsx`
-- `src/pages/RegionHaulingPage.jsx`
-- `src/pages/ArbitragePage.jsx`
-- `src/api/esi.js`
-- `src/hooks/useCharacterLP.js` (new)
-- `src/components/dashboard/RealTimeProfitDashboard.jsx` (new)
-- `src/components/dashboard/index.js`
+## Next Iteration Tasks
+
+### High Priority - Mobile UX
+- [ ] Test autocomplete dropdowns (ItemAutocomplete, StationAutocomplete) on mobile - may need portal positioning fix for viewport overflow
+- [ ] Check PageLayout padding on extra-small phones (<320px)
+- [ ] Verify safe area CSS utilities are properly defined in Tailwind config
+
+### Medium Priority
+- [ ] Add aria-label accessibility attributes to icon buttons
+- [ ] Integrate ESI endpoints into UI (LP Optimizer, Industry Profits pages)
+- [ ] Add SSO scope requests for new endpoints
+
+### Lower Priority
+- [ ] Standardize toast notification pattern across all pages
+- [ ] Remove unused console.log statements (320+ found)
+- [ ] Add pagination UI warning when results are truncated
+
+## Files Changed This Iteration
+- `src/components/common/Footer.jsx` - safe area, responsive padding
+- `src/components/common/Modal.jsx` - mobile bottom sheet, responsive padding
+- `src/components/tables/TradingTable.jsx` - scroll hint gradient
+- `src/components/forms/FormInput.jsx` - text sizing consistency
+- `src/components/forms/FormSelect.jsx` - text sizing consistency

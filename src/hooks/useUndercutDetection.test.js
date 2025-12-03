@@ -298,11 +298,13 @@ describe('useUndercutDetection', () => {
   it('should handle missing market orders', async () => {
     const { result } = renderHook(() => useUndercutDetection());
 
+    let undercuts;
     await act(async () => {
-      const undercuts = await result.current.checkOrders([mockCharacterOrder], []);
-      expect(undercuts).toEqual([]);
-      expect(result.current.error).toBeTruthy();
+      undercuts = await result.current.checkOrders([mockCharacterOrder], []);
     });
+
+    expect(undercuts).toEqual([]);
+    expect(result.current.error).toBeTruthy();
   });
 
   it('should clear undercut orders', async () => {
