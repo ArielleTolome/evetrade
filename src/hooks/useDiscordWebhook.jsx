@@ -183,10 +183,14 @@ export function useDiscordWebhook() {
    * Send a price alert notification
    */
   const sendPriceAlert = useCallback(async (alert, currentValue) => {
-    if (!settings.sendPriceAlerts) return;
+    if (!settings.sendPriceAlerts) {
+      return { success: false, skipped: true, reason: 'Price alerts disabled in settings' };
+    }
 
     const cooldownKey = `price_${alert.itemId || alert.itemName}`;
-    if (isOnCooldown(cooldownKey)) return;
+    if (isOnCooldown(cooldownKey)) {
+      return { success: false, skipped: true, reason: 'On cooldown' };
+    }
 
     const isHighValue = currentValue >= settings.highValueThreshold;
     const mention = settings.mentionOnHighValue && isHighValue ? '@everyone ' : '';
@@ -226,11 +230,15 @@ export function useDiscordWebhook() {
    * Send a trade opportunity notification
    */
   const sendTradeOpportunity = useCallback(async (trade) => {
-    if (!settings.sendTradeSummaries) return;
+    if (!settings.sendTradeSummaries) {
+      return { success: false, skipped: true, reason: 'Trade summaries disabled in settings' };
+    }
 
     const profit = trade['Net Profit'] || trade.netProfit || 0;
     const cooldownKey = `trade_${trade['Item ID'] || trade.itemId}`;
-    if (isOnCooldown(cooldownKey)) return;
+    if (isOnCooldown(cooldownKey)) {
+      return { success: false, skipped: true, reason: 'On cooldown' };
+    }
 
     const isHighValue = profit >= settings.highValueThreshold;
     const mention = settings.mentionOnHighValue && isHighValue ? '@everyone ' : '';
@@ -285,10 +293,14 @@ export function useDiscordWebhook() {
    * Send a scam warning notification
    */
   const sendScamWarning = useCallback(async (trade, riskAssessment) => {
-    if (!settings.sendScamWarnings) return;
+    if (!settings.sendScamWarnings) {
+      return { success: false, skipped: true, reason: 'Scam warnings disabled in settings' };
+    }
 
     const cooldownKey = `scam_${trade['Item ID'] || trade.itemId}`;
-    if (isOnCooldown(cooldownKey)) return;
+    if (isOnCooldown(cooldownKey)) {
+      return { success: false, skipped: true, reason: 'On cooldown' };
+    }
 
     const colorMap = {
       extreme: 0xff0000,
@@ -337,10 +349,14 @@ export function useDiscordWebhook() {
    * Send a route alert (for hauling)
    */
   const sendRouteAlert = useCallback(async (route, trades) => {
-    if (!settings.sendRouteAlerts) return;
+    if (!settings.sendRouteAlerts) {
+      return { success: false, skipped: true, reason: 'Route alerts disabled in settings' };
+    }
 
     const cooldownKey = `route_${route.from}_${route.to}`;
-    if (isOnCooldown(cooldownKey)) return;
+    if (isOnCooldown(cooldownKey)) {
+      return { success: false, skipped: true, reason: 'On cooldown' };
+    }
 
     const totalProfit = trades.reduce((sum, t) => sum + (t['Net Profit'] || t.netProfit || 0), 0);
     const isHighValue = totalProfit >= settings.highValueThreshold;
@@ -387,10 +403,14 @@ export function useDiscordWebhook() {
    * Send a daily/session summary
    */
   const sendTradingSummary = useCallback(async (summary) => {
-    if (!settings.sendTradeSummaries) return;
+    if (!settings.sendTradeSummaries) {
+      return { success: false, skipped: true, reason: 'Trade summaries disabled in settings' };
+    }
 
     const cooldownKey = 'summary';
-    if (isOnCooldown(cooldownKey)) return;
+    if (isOnCooldown(cooldownKey)) {
+      return { success: false, skipped: true, reason: 'On cooldown' };
+    }
 
     const embed = {
       title: 'Trading Session Summary',

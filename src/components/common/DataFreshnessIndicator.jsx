@@ -8,6 +8,10 @@ function formatRelativeTime(date) {
 
   const now = new Date();
   const then = new Date(date);
+
+  // Handle invalid dates
+  if (isNaN(then.getTime())) return 'Unknown';
+
   const diffMs = now - then;
   const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffSeconds / 60);
@@ -26,13 +30,20 @@ function formatRelativeTime(date) {
 function getFreshnessStatus(date, thresholds = {}) {
   if (!date) return { status: 'unknown', color: 'text-text-secondary', bgColor: 'bg-gray-500/20' };
 
+  const parsedDate = new Date(date);
+
+  // Handle invalid dates
+  if (isNaN(parsedDate.getTime())) {
+    return { status: 'unknown', color: 'text-text-secondary', bgColor: 'bg-gray-500/20' };
+  }
+
   const {
     fresh = 5 * 60 * 1000,      // 5 minutes
     moderate = 15 * 60 * 1000,  // 15 minutes
     stale = 30 * 60 * 1000,     // 30 minutes
   } = thresholds;
 
-  const age = Date.now() - new Date(date).getTime();
+  const age = Date.now() - parsedDate.getTime();
 
   if (age < fresh) {
     return {
