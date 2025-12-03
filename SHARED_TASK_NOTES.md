@@ -1,47 +1,49 @@
-# Shared Task Notes - Mobile UI/UX Improvements
+# Shared Task Notes - EVE Trade Features
 
 ## Current State
-Added **mobile full-screen search modal** to StationAutocomplete component for better mobile UX.
+Price History Chart feature integrated into ItemDetailPage using ESI market history data.
 
 ## Latest Changes (This Iteration)
 
-### StationAutocomplete Mobile Modal
-- `src/components/forms/StationAutocomplete.jsx` - Added full-screen search modal for mobile (<768px):
-  - `useIsMobile()` hook to detect viewport
-  - `MobileSearchModal` component using React portal
-  - Trade hub quick-select in 2-column grid
-  - Clear button, back navigation, proper keyboard handling
-  - Body scroll prevention when open
-  - All 24 tests pass
+### Price History Chart on ItemDetailPage
+- `src/pages/ItemDetailPage.jsx` - Added visual price history chart:
+  - Uses existing `PriceHistoryChart` component from `src/components/common/PriceHistoryChart.jsx`
+  - Displays last 30 days of ESI market history data
+  - Shows trend direction, high/low/average prices
+  - Interactive hover shows price and volume at each data point
+  - Chart appears above the trading signal panel
 
-## Mobile Foundation Already In Place
-- Bottom navigation (`Sidebar.jsx` - `MobileNav`)
-- TradingTable with card-based `MobileCardView`
-- `MobileQuickActions` - Bottom action drawer
-- Safe area handling for iOS devices
-- PWA with splash screens
+## Previous Mobile Work (Still Valid)
+- StationAutocomplete mobile modal pattern
+- MobileNav, MobileCardView, MobileQuickActions components
+- PWA with safe area handling
 
-## Suggested Next Steps (Mobile UI Focus)
+## Suggested Next Steps (Trading Features)
 
 ### High Priority
-1. **Apply mobile modal pattern to RegionAutocomplete** - Same full-screen treatment
-2. **Optimize form layouts on trading pages** - Better stacking/spacing on mobile
-3. **Improve modal/dialog mobile sizing** - Some modals overflow small screens
+1. **Add time range selector to chart** - 7d/30d/90d toggle like `PriceHistoryCard`
+2. **Volume chart overlay** - Show volume bars alongside price
+3. **Price alert from chart** - Button to create alert at current price level
+4. **Multi-region chart comparison** - Compare same item across regions
 
-### Medium Priority  
-4. **Add responsive chart sizing** - PriceHistoryChart, PriceSparkline
-5. **Tablet breakpoint refinements** - Better md: optimizations
-6. **Touch gesture support** - Swipe to dismiss, pull to refresh
+### Medium Priority
+5. **Order book depth visualization** - `OrderBookDepth` component exists, add to ItemDetailPage
+6. **Margin compression alerts** - `MarginErosionTracker` component exists
+7. **Scam detection enhancements** - `useScamDetection` hook exists but partial
 
-## Key Mobile Files
-- `src/components/forms/StationAutocomplete.jsx` - Mobile modal added
-- `src/components/forms/RegionAutocomplete.jsx` - Needs same treatment
-- `src/components/common/Sidebar.jsx` - MobileNav component
-- `src/components/tables/TradingTable.jsx` - MobileCardView
-- `src/components/common/MobileQuickActions.jsx` - Bottom action bar
-- `src/index.css` - Mobile CSS (safe areas, touch targets)
+### Feature Opportunities
+- Portfolio performance analytics
+- Advanced order automation
+- Supply chain analysis for industry
+- Multi-account optimization
+
+## Key Files for Trading Features
+- `src/pages/ItemDetailPage.jsx` - Item analysis page (chart added here)
+- `src/components/common/PriceHistoryChart.jsx` - SVG chart component
+- `src/components/common/PriceCharts.jsx` - Alternative chart components
+- `src/api/esi.js` - ESI API calls including `getMarketHistory()`
+- `src/hooks/usePriceAlerts.js` - Price alert system
 
 ## Testing Notes
-- StationAutocomplete: 24/24 tests pass
 - Build succeeds
-- Pre-existing lint warnings unrelated to mobile work
+- Pre-existing test failures unrelated to chart work
