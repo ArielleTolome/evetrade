@@ -292,6 +292,239 @@ export function useScamDetection(options = {}) {
   }, [calculateScamRisk]);
 
   /**
+   * Detect advanced scam patterns beyond simple volume=1
+   * These patterns are based on common EVE Online market manipulation tactics
+   *
+   * @param {Object} trade - The trade object to analyze
+   * @param {Array} [allTrades=[]] - All trades for context
+   * @returns {Object} Advanced pattern detection results
+   */
+  const detectAdvancedPatterns = useCallback((trade, allTrades = []) => {
+    const patterns = [];
+    let additionalScore = 0;
+
+    const volume = extractValue(trade, 'Volume', ['volume', 'Vol']);
+    const margin = extractValue(trade, 'Gross Margin', ['margin', 'grossMargin']);
+    const buyPrice = extractValue(trade, 'Buy Price', ['buyPrice', 'buy']);
+    const sellPrice = extractValue(trade, 'Sell Price', ['sellPrice', 'sell']);
+    const netProfit = extractValue(trade, 'Net Profit', ['netProfit', 'profit']);
+    const itemName = trade['Item'] || trade.item || trade.name || '';
+
+    // === PATTERN 1: Round number manipulation ===
+    // Scammers often use very round prices
+    if (buyPrice > 0 && buyPrice === Math.round(buyPrice / 1000000) * 1000000) {
+      if (buyPrice >= 100000000) { // 100M+ ISK items
+        patterns.push({
+          type: 'round_price',
+          severity: 'medium',
+          message: 'Suspiciously round buy price (possible price manipulation)',
+        });
+        additionalScore += 5;
+      }
+    }
+
+    // === PATTERN 2: BPC vs BPO confusion ===
+    // Common scam where Blueprint Copy is sold at BPO prices
+    if (itemName.toLowerCase().includes('blueprint')) {
+      patterns.push({
+        type: 'blueprint_warning',
+        severity: 'high',
+        message: 'Blueprint detected - verify BPO vs BPC in-game before buying',
+      });
+      additionalScore += 15;
+
+      // Extra warning if margin is high
+      if (margin > 30) {
+        patterns.push({
+          type: 'blueprint_high_margin',
+          severity: 'extreme',
+          message: 'High margin blueprint - very likely BPC sold as BPO scam',
+        });
+        additionalScore += 25;
+      }
+    }
+
+    // === PATTERN 3: Faction item confusion ===
+    // Common scam where cheaper variants are sold at faction prices
+    const factionPatterns = [
+      { pattern: /federation navy/i, faction: 'Federation Navy' },
+      { pattern: /republic fleet/i, faction: 'Republic Fleet' },
+      { pattern: /imperial navy/i, faction: 'Imperial Navy' },
+      { pattern: /caldari navy/i, faction: 'Caldari Navy' },
+      { pattern: /true sansha/i, faction: 'True Sansha' },
+      { pattern: /dark blood/i, faction: 'Dark Blood' },
+      { pattern: /shadow serpentis/i, faction: 'Shadow Serpentis' },
+      { pattern: /dread guristas/i, faction: 'Dread Guristas' },
+      { pattern: /domination/i, faction: 'Domination' },
+      { pattern: /officer/i, faction: 'Officer' },
+    ];
+
+    for (const { pattern, faction } of factionPatterns) {
+      if (pattern.test(itemName)) {
+        patterns.push({
+          type: 'faction_item',
+          severity: 'medium',
+          message: `${faction} item - verify exact variant matches expected type`,
+        });
+        additionalScore += 8;
+        break;
+      }
+    }
+
+    // === PATTERN 4: SKIN manipulation ===
+    // SKINs often have confusing names and volatile prices
+    if (/skin|nanocoating/i.test(itemName)) {
+      patterns.push({
+        type: 'skin_warning',
+        severity: 'medium',
+        message: 'SKIN item - prices can be highly volatile and manipulated',
+      });
+      additionalScore += 8;
+
+      if (margin > 40) {
+        patterns.push({
+          type: 'skin_high_margin',
+          severity: 'high',
+          message: 'High margin SKIN - likely overpriced or manipulated market',
+        });
+        additionalScore += 15;
+      }
+    }
+
+    // === PATTERN 5: Implant set confusion ===
+    // High-grade vs Mid-grade implant sets
+    if (/implant|omega|alpha|beta|gamma|delta|epsilon/i.test(itemName)) {
+      if (/high-grade|mid-grade|low-grade/i.test(itemName)) {
+        patterns.push({
+          type: 'implant_set',
+          severity: 'medium',
+          message: 'Implant set item - verify grade (High/Mid/Low) matches expected',
+        });
+        additionalScore += 10;
+      }
+    }
+
+    // === PATTERN 6: Suspicious profit-to-volume ratio ===
+    // Very high profit on low volume is classic manipulation
+    const profitPerUnit = volume > 0 ? netProfit / volume : 0;
+    if (profitPerUnit > 50000000 && volume <= 3) { // >50M ISK profit per unit on <=3 units
+      patterns.push({
+        type: 'profit_volume_mismatch',
+        severity: 'high',
+        message: `Extreme profit per unit (${Math.round(profitPerUnit / 1000000)}M ISK) on very low volume`,
+      });
+      additionalScore += 20;
+    }
+
+    // === PATTERN 7: Price volatility detection ===
+    // If we have historical context, check for recent price spikes
+    if (allTrades.length >= 10) {
+      const pricesInMarket = allTrades
+        .map(t => extractValue(t, 'Buy Price', ['buyPrice', 'buy']))
+        .filter(p => p > 0);
+
+      if (pricesInMarket.length > 0) {
+        const avgPrice = pricesInMarket.reduce((a, b) => a + b, 0) / pricesInMarket.length;
+        const priceDeviation = Math.abs(buyPrice - avgPrice) / avgPrice;
+
+        if (priceDeviation > 0.5) { // 50%+ deviation from average
+          patterns.push({
+            type: 'price_anomaly',
+            severity: 'high',
+            message: `Price deviates ${Math.round(priceDeviation * 100)}% from market average`,
+          });
+          additionalScore += 15;
+        }
+      }
+    }
+
+    // === PATTERN 8: Station trading margin spike ===
+    // Normal station trading margins are 5-15%, anything over 30% is suspicious
+    if (margin > 30 && margin < 50) {
+      patterns.push({
+        type: 'margin_spike',
+        severity: 'medium',
+        message: 'Margin significantly above normal trading range (5-15%)',
+      });
+      additionalScore += 8;
+    }
+
+    // === PATTERN 9: Very old order detection hint ===
+    // Orders that have been sitting for a long time at extreme prices
+    if (volume === 1 && margin > 40) {
+      patterns.push({
+        type: 'stale_order',
+        severity: 'high',
+        message: 'Single unit at high margin - likely a stale manipulation order',
+      });
+      additionalScore += 20;
+    }
+
+    // === PATTERN 10: Combined risk factors ===
+    // Multiple minor issues compound into major concern
+    const minorPatterns = patterns.filter(p => p.severity === 'medium').length;
+    if (minorPatterns >= 3) {
+      patterns.push({
+        type: 'compound_risk',
+        severity: 'high',
+        message: 'Multiple risk factors detected - proceed with extreme caution',
+      });
+      additionalScore += 15;
+    }
+
+    return {
+      patterns,
+      additionalScore: Math.min(additionalScore, 40), // Cap at 40 to prevent over-scoring
+      hasAdvancedWarnings: patterns.length > 0,
+      hasCriticalWarnings: patterns.some(p => p.severity === 'extreme'),
+    };
+  }, [extractValue]);
+
+  /**
+   * Enhanced scam risk calculation including advanced patterns
+   *
+   * @param {Object} trade - The trade object to analyze
+   * @param {Array} [allTrades=[]] - All trades for context
+   * @returns {Object} Complete risk assessment
+   */
+  const calculateEnhancedScamRisk = useCallback((trade, allTrades = []) => {
+    // Get base risk assessment
+    const baseRisk = calculateScamRisk(trade, allTrades);
+
+    // Get advanced pattern detection
+    const advancedPatterns = detectAdvancedPatterns(trade, allTrades);
+
+    // Combine scores
+    const totalScore = Math.min(baseRisk.score + advancedPatterns.additionalScore, 100);
+
+    // Recalculate level based on combined score
+    let level = 'low';
+    if (totalScore >= config.extremeRiskThreshold) {
+      level = 'extreme';
+    } else if (totalScore >= config.highRiskThreshold) {
+      level = 'high';
+    } else if (totalScore >= config.mediumRiskThreshold) {
+      level = 'medium';
+    }
+
+    // Combine all warnings
+    const allReasons = [
+      ...baseRisk.reasons,
+      ...advancedPatterns.patterns.map(p => p.message),
+    ];
+
+    return {
+      score: totalScore,
+      reasons: allReasons,
+      level,
+      metadata: baseRisk.metadata,
+      advancedPatterns: advancedPatterns.patterns,
+      hasAdvancedWarnings: advancedPatterns.hasAdvancedWarnings,
+      hasCriticalWarnings: advancedPatterns.hasCriticalWarnings,
+    };
+  }, [calculateScamRisk, detectAdvancedPatterns, config]);
+
+  /**
    * Batch analyze multiple trades and return sorted by risk
    *
    * @param {Array} trades - Array of trade objects to analyze
@@ -305,10 +538,10 @@ export function useScamDetection(options = {}) {
     return trades
       .map(trade => ({
         ...trade,
-        scamRisk: calculateScamRisk(trade, trades),
+        scamRisk: calculateEnhancedScamRisk(trade, trades),
       }))
       .sort((a, b) => b.scamRisk.score - a.scamRisk.score);
-  }, [calculateScamRisk]);
+  }, [calculateEnhancedScamRisk]);
 
   /**
    * Get statistics about scam prevalence in a trade set
@@ -342,6 +575,8 @@ export function useScamDetection(options = {}) {
 
   return {
     calculateScamRisk,
+    calculateEnhancedScamRisk, // New: includes advanced pattern detection
+    detectAdvancedPatterns, // New: standalone advanced pattern detection
     isLikelyScam,
     getScamWarnings,
     getDetailedAssessment,

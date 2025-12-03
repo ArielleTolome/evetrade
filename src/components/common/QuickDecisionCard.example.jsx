@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { QuickDecisionCard } from './QuickDecisionCard';
 
 /**
@@ -5,6 +6,13 @@ import { QuickDecisionCard } from './QuickDecisionCard';
  * Demonstrates various trade scenarios and decision outcomes
  */
 export function QuickDecisionCardExample() {
+  // Track watched items for demo
+  const [watchedItems, setWatchedItems] = useState(new Set());
+
+  const handleAddToWatchlist = (item) => {
+    setWatchedItems(prev => new Set([...prev, item.itemId]));
+    console.log('Added to watchlist:', item);
+  };
   // Example 1: GO - Excellent trade opportunity
   const excellentTrade = {
     item: { name: 'PLEX', typeId: 44992 },
@@ -17,6 +25,10 @@ export function QuickDecisionCardExample() {
     userCanAfford: true,
     fromLocation: 'Jita IV - Moon 4 - Caldari Navy Assembly Plant',
     toLocation: 'Amarr VIII (Oris) - Emperor Family Academy',
+    buyPrice: 3500000000,
+    sellPrice: 4100000000,
+    onAddToWatchlist: handleAddToWatchlist,
+    isWatched: watchedItems.has(44992),
   };
 
   // Example 2: WAIT - Moderate concerns
@@ -31,6 +43,10 @@ export function QuickDecisionCardExample() {
     userCanAfford: true,
     fromLocation: 'Jita IV - Moon 4 - Caldari Navy Assembly Plant',
     toLocation: 'Dodixie IX - Moon 20 - Federation Navy Assembly Plant',
+    buyPrice: 5.5,
+    sellPrice: 6.0,
+    onAddToWatchlist: handleAddToWatchlist,
+    isWatched: watchedItems.has(34),
   };
 
   // Example 3: AVOID - High risk trade
@@ -45,6 +61,10 @@ export function QuickDecisionCardExample() {
     userCanAfford: true,
     fromLocation: 'Jita IV - Moon 4 - Caldari Navy Assembly Plant',
     toLocation: 'Amarr VIII (Oris) - Emperor Family Academy',
+    buyPrice: 400000000,
+    sellPrice: 580000000,
+    onAddToWatchlist: handleAddToWatchlist,
+    isWatched: watchedItems.has(642),
   };
 
   // Example 4: AVOID - Can't afford
@@ -59,6 +79,10 @@ export function QuickDecisionCardExample() {
     userCanAfford: false,
     fromLocation: 'Jita IV - Moon 4 - Caldari Navy Assembly Plant',
     toLocation: 'Amarr VIII (Oris) - Emperor Family Academy',
+    buyPrice: 70000000000,
+    sellPrice: 80500000000,
+    onAddToWatchlist: handleAddToWatchlist,
+    isWatched: watchedItems.has(11567),
   };
 
   // Example 5: WAIT - Stale data
@@ -73,6 +97,10 @@ export function QuickDecisionCardExample() {
     userCanAfford: true,
     fromLocation: 'Jita IV - Moon 4 - Caldari Navy Assembly Plant',
     toLocation: 'Dodixie IX - Moon 20 - Federation Navy Assembly Plant',
+    buyPrice: 2500000,
+    sellPrice: 2812500,
+    onAddToWatchlist: handleAddToWatchlist,
+    isWatched: watchedItems.has(2929),
   };
 
   // Example 6: AVOID - Low volume scam potential
@@ -87,6 +115,10 @@ export function QuickDecisionCardExample() {
     userCanAfford: true,
     fromLocation: 'Random Lowsec Station',
     toLocation: 'Jita IV - Moon 4 - Caldari Navy Assembly Plant',
+    buyPrice: 500000000,
+    sellPrice: 925000000,
+    onAddToWatchlist: handleAddToWatchlist,
+    isWatched: watchedItems.has(12345),
   };
 
   return (
@@ -152,19 +184,30 @@ export function QuickDecisionCardExample() {
           </h3>
           <pre className="text-sm text-text-secondary overflow-x-auto">
 {`import { QuickDecisionCard } from './components/common/QuickDecisionCard';
+import { useWatchlist } from '../hooks/useWatchlist';
 
-<QuickDecisionCard
-  item={{ name: 'Item Name', typeId: 12345 }}
-  profit={125000000}
-  margin={18.5}
-  volume={150}
-  roi={22.3}
-  competition={3}
-  dataAge={2.5}
-  userCanAfford={true}
-  fromLocation="Jita IV - Moon 4"
-  toLocation="Amarr VIII"
-/>`}
+function MyComponent() {
+  const { addToWatchlist, isWatched } = useWatchlist();
+
+  return (
+    <QuickDecisionCard
+      item={{ name: 'Item Name', typeId: 12345 }}
+      profit={125000000}
+      margin={18.5}
+      volume={150}
+      roi={22.3}
+      competition={3}
+      dataAge={2.5}
+      userCanAfford={true}
+      fromLocation="Jita IV - Moon 4"
+      toLocation="Amarr VIII"
+      buyPrice={3500000000}
+      sellPrice={4100000000}
+      onAddToWatchlist={addToWatchlist}
+      isWatched={isWatched(12345)}
+    />
+  );
+}`}
           </pre>
         </div>
       </div>
