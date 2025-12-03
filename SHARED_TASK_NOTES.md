@@ -1,49 +1,55 @@
 # Shared Task Notes - EVE Trade Features
 
 ## Current State
-Price History Chart feature integrated into ItemDetailPage using ESI market history data.
+Price Alert and Undercut Detection systems are tested and working. PriceAlertPanel has 33 passing tests.
 
 ## Latest Changes (This Iteration)
 
-### Price History Chart on ItemDetailPage
-- `src/pages/ItemDetailPage.jsx` - Added visual price history chart:
-  - Uses existing `PriceHistoryChart` component from `src/components/common/PriceHistoryChart.jsx`
-  - Displays last 30 days of ESI market history data
-  - Shows trend direction, high/low/average prices
-  - Interactive hover shows price and volume at each data point
-  - Chart appears above the trading signal panel
+### PriceAlertPanel Tests Added
+- Created `src/components/common/PriceAlertPanel.test.jsx` with 33 tests covering:
+  - Empty state and alert list rendering
+  - Alert creation form validation
+  - Settings panel (notifications, sound)
+  - CRUD operations (create, delete, reset, clear all)
+  - Alert type display formatting
 
-## Previous Mobile Work (Still Valid)
-- StationAutocomplete mobile modal pattern
-- MobileNav, MobileCardView, MobileQuickActions components
-- PWA with safe area handling
+### PriceAlertPanel Accessibility Fix
+- Added `id` props to FormInput components in `PriceAlertPanel.jsx` for proper label/input association
+
+### useUndercutDetection Hook Verified
+- All 19 tests passing. Hook implements:
+  - Undercut detection for sell orders
+  - Outbid detection for buy orders
+  - Recommended price calculation
+  - Pricing strategies (aggressive, moderate, conservative)
 
 ## Suggested Next Steps (Trading Features)
 
 ### High Priority
-1. **Add time range selector to chart** - 7d/30d/90d toggle like `PriceHistoryCard`
-2. **Volume chart overlay** - Show volume bars alongside price
-3. **Price alert from chart** - Button to create alert at current price level
-4. **Multi-region chart comparison** - Compare same item across regions
+1. **Integrate useUndercutDetection** - Add undercut warnings to station trading page
+2. **Integrate ESI endpoints into UI**:
+   - LP balance display in LP Optimizer page
+   - Industry jobs in Industry Profits page
+   - Personal contracts in Contract Finder page
 
 ### Medium Priority
-5. **Order book depth visualization** - `OrderBookDepth` component exists, add to ItemDetailPage
-6. **Margin compression alerts** - `MarginErosionTracker` component exists
-7. **Scam detection enhancements** - `useScamDetection` hook exists but partial
+3. **Add SSO scopes** for new ESI endpoints (`esi-characters.read_loyalty.v1`, etc.)
+4. **Order book depth visualization** - `OrderBookDepth` component exists
+5. **Margin compression alerts** - `MarginErosionTracker` component exists
 
-### Feature Opportunities
-- Portfolio performance analytics
-- Advanced order automation
-- Supply chain analysis for industry
-- Multi-account optimization
+### Lower Priority (Bugfixes)
+6. Remove unused console.log statements (320+ found)
+7. Standardize toast notification pattern across pages
+8. Add aria-label accessibility to icon buttons
+9. Fix unused imports and hook dependencies
 
 ## Key Files for Trading Features
-- `src/pages/ItemDetailPage.jsx` - Item analysis page (chart added here)
-- `src/components/common/PriceHistoryChart.jsx` - SVG chart component
-- `src/components/common/PriceCharts.jsx` - Alternative chart components
-- `src/api/esi.js` - ESI API calls including `getMarketHistory()`
-- `src/hooks/usePriceAlerts.js` - Price alert system
+- `src/components/common/PriceAlertPanel.jsx` - Price alert UI (33 tests)
+- `src/components/common/PriceAlertPanel.test.jsx` - Test suite
+- `src/hooks/useUndercutDetection.js` - Undercut detection (19 tests)
+- `src/hooks/usePriceAlerts.js` - Price alert system with ESI integration
+- `src/api/esi.js` - ESI API calls
 
 ## Testing Notes
-- Build succeeds
-- Pre-existing test failures unrelated to chart work
+- PriceAlertPanel: 33 tests passing
+- useUndercutDetection: 19 tests passing
