@@ -268,30 +268,30 @@ function calculateTrades(orders, stationId, params) {
     const lowestSell = sell.reduce((min, o) => o.price < min.price ? o : min, sell[0]);
 
     // For station trading (margin trading):
-    // You place a buy order at or slightly above the highest current buy (to get filled first)
-    // Then place a sell order at or slightly below the lowest current sell (to get filled first)
-    // Your profit is the spread between lowest sell and highest buy, minus fees
+    // - "Lowest Sell" = lowest sell order = what you'd place your SELL order at/below
+    // - "Highest Buy" = highest buy order = what you'd place your BUY order at/above
+    // - You profit from the SPREAD between lowest sell and highest buy
 
-    // Use actual market prices - this shows the real spread available
-    const buyPrice = highestBuy.price;   // Highest buy order price
-    const sellPrice = lowestSell.price;  // Lowest sell order price
+    // Market prices:
+    const lowestSellPrice = lowestSell.price;   // Lowest sell order in station
+    const highestBuyPrice = highestBuy.price;   // Highest buy order in station
 
-    // Skip if no margin (buy price must be lower than sell price for profit)
-    if (buyPrice >= sellPrice) continue;
+    // Skip if no spread (need lowest sell > highest buy for profit)
+    if (lowestSellPrice <= highestBuyPrice) continue;
 
     // Calculate fees and profit
-    // When you place a buy order, you pay broker fee on the buy price
-    // When you place a sell order, you pay broker fee on the sell price + sales tax
-    const buyFee = buyPrice * brokerFee;
-    const sellFee = sellPrice * brokerFee;
-    const salesTax = sellPrice * tax;
+    // Your buy order is placed at ~highestBuy price, your sell order at ~lowestSell price
+    const buyFee = highestBuyPrice * brokerFee;   // Broker fee on your buy order
+    const sellFee = lowestSellPrice * brokerFee;  // Broker fee on your sell order
+    const salesTax = lowestSellPrice * tax;       // Sales tax on your sale
 
-    const profitPerUnit = sellPrice - buyPrice - buyFee - sellFee - salesTax;
+    // Profit = what you sell at - what you buy at - all fees
+    const profitPerUnit = lowestSellPrice - highestBuyPrice - buyFee - sellFee - salesTax;
 
     if (profitPerUnit <= 0) continue;
 
-    // Calculate gross margin (spread as percentage of buy price)
-    const grossMargin = ((sellPrice - buyPrice) / buyPrice) * 100;
+    // Calculate gross margin (spread as percentage of buy cost)
+    const grossMargin = ((lowestSellPrice - highestBuyPrice) / highestBuyPrice) * 100;
 
     // Apply margin filters
     if (grossMargin < marginAbove || grossMargin > marginBelow) continue;
@@ -307,8 +307,8 @@ function calculateTrades(orders, stationId, params) {
     trades.push({
       'Item ID': parseInt(typeId),
       'Item': `Item #${typeId}`, // Will be replaced with actual name
-      'Buy Price': Math.round(buyPrice * 100) / 100,
-      'Sell Price': Math.round(sellPrice * 100) / 100,
+      'Buy Price': Math.round(lowestSellPrice * 100) / 100,   // "Lowest Sell" - price to buy at
+      'Sell Price': Math.round(highestBuyPrice * 100) / 100,  // "Highest Buy" - price to sell at
       'Volume': volume,
       'Profit per Unit': Math.round(profitPerUnit * 100) / 100,
       'Net Profit': Math.round(netProfit * 100) / 100,
