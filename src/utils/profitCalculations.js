@@ -4,6 +4,40 @@
  */
 
 /**
+ * Round a number to specified decimal places using precise arithmetic
+ * Avoids floating-point precision issues for financial calculations
+ * @param {number} value - The value to round
+ * @param {number} decimals - Number of decimal places (default 2 for ISK)
+ * @returns {number} Rounded value
+ */
+export function preciseRound(value, decimals = 2) {
+  if (!Number.isFinite(value)) return 0;
+  const multiplier = Math.pow(10, decimals);
+  // Use Math.round with epsilon adjustment for floating-point precision
+  return Math.round((value + Number.EPSILON) * multiplier) / multiplier;
+}
+
+/**
+ * Perform precise subtraction to avoid floating-point errors
+ * @param {number} a - First number
+ * @param {number} b - Second number
+ * @returns {number} Precise difference
+ */
+export function preciseSubtract(a, b) {
+  return preciseRound(a - b, 4);
+}
+
+/**
+ * Perform precise multiplication to avoid floating-point errors
+ * @param {number} a - First number
+ * @param {number} b - Second number
+ * @returns {number} Precise product
+ */
+export function preciseMultiply(a, b) {
+  return preciseRound(a * b, 4);
+}
+
+/**
  * Calculate sales tax based on price, rate, and Accounting skill level
  * @param {number} price - The sale price
  * @param {number} rate - Base sales tax rate (default 0.05 for 5%)
@@ -263,6 +297,9 @@ ROI: ${roi.toFixed(2)}%`;
 }
 
 export default {
+  preciseRound,
+  preciseSubtract,
+  preciseMultiply,
   calculateSalesTax,
   calculateBrokerFee,
   calculateNetProfit,
