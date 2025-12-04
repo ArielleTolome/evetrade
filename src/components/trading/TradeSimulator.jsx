@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
 import { Button } from '../common/Button';
 import { FormInput, FormSelect } from '../forms';
@@ -25,7 +24,7 @@ export function TradeSimulator({ prefillData = null }) {
   const [currentScenario, setCurrentScenario] = useState({
     ...INITIAL_SCENARIO,
     ...(prefillData || {}),
-    id: uuidv4(),
+    id: crypto.randomUUID(),
   });
   const { savedSimulations, saveSimulation, deleteSimulation: deleteSavedSimulation } = useSavedSimulations();
   const [simulationName, setSimulationName] = useState('');
@@ -87,7 +86,7 @@ export function TradeSimulator({ prefillData = null }) {
 
   const addScenario = () => {
     if (currentScenario.buyPrice > 0 && currentScenario.sellPrice > 0 && currentScenario.quantity > 0) {
-      setScenarios(prev => [...prev, { ...currentScenario, id: uuidv4() }]);
+      setScenarios(prev => [...prev, { ...currentScenario, id: crypto.randomUUID() }]);
     }
   };
 
@@ -98,7 +97,7 @@ export function TradeSimulator({ prefillData = null }) {
   const copyScenario = id => {
     const scenarioToCopy = scenarios.find(s => s.id === id);
     if (scenarioToCopy) {
-      setScenarios(prev => [...prev, { ...scenarioToCopy, id: uuidv4() }]);
+      setScenarios(prev => [...prev, { ...scenarioToCopy, id: crypto.randomUUID() }]);
     }
   };
 
