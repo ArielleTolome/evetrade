@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { GlassmorphicCard } from './GlassmorphicCard';
 import { Button } from './Button';
-import { formatISK, formatNumber, formatRelativeTime } from '../../utils/formatters';
+import { formatISK, formatNumber } from '../../utils/formatters';
+import { useWatchlist } from '../../hooks/useWatchlist';
 
 /**
  * Decision levels with their visual styling
@@ -98,9 +99,8 @@ function calculateDecision(factors, userCanAfford) {
     return DECISIONS.AVOID;
   }
 
-  // Count risky, okay, and good factors
+  // Count risky factors
   const riskyCounts = factors.filter(f => f.level === 'risky').length;
-  const goodCounts = factors.filter(f => f.level === 'good').length;
 
   // Calculate average score
   const avgScore = factors.reduce((sum, f) => sum + f.score, 0) / factors.length;
@@ -158,10 +158,8 @@ function FactorIndicator({ factor }) {
  * @param {boolean} props.userCanAfford - Whether user can afford the trade
  * @param {string} props.fromLocation - Source location name
  * @param {string} props.toLocation - Destination location name
- * @param {number} props.buyPrice - Buy price for watchlist integration
- * @param {number} props.sellPrice - Sell price for watchlist integration
- * @param {Function} props.onAddToWatchlist - Callback when item is added to watchlist
- * @param {boolean} props.isWatched - Whether item is already in watchlist
+ * @param {number} props.buyPrice - Buy price for the item
+ * @param {number} props.sellPrice - Sell price for the item
  * @param {string} props.className - Additional CSS classes
  */
 export function QuickDecisionCard({
@@ -177,11 +175,14 @@ export function QuickDecisionCard({
   toLocation,
   buyPrice,
   sellPrice,
-  onAddToWatchlist,
-  isWatched = false,
   className = '',
 }) {
   const [copyFeedback, setCopyFeedback] = useState('');
+  const { addToWatchlist, removeFromWatchlist, isWatched, getWatchlistForItem } = useWatchlist();
+
+  const itemId = item.typeId || item.itemId || item['Item ID'];
+  const watched = isWatched(itemId);
+  const currentWatchlist = getWatchlistForItem(itemId);
 
   // Calculate decision factors
   const { decision, factors } = useMemo(() => {
@@ -222,21 +223,20 @@ Data Age: ${Math.round(dataAge)} minutes ago`;
     }
   };
 
-  // State for watchlist feedback
-  const [watchlistFeedback, setWatchlistFeedback] = useState('');
+  // Handle add/remove from watchlist
+  const handleToggleWatchlist = () => {
+    if (!itemId) return;
 
-  // Handle add to watchlist
-  const handleAddToWatchlist = () => {
-    if (onAddToWatchlist) {
+    if (watched && currentWatchlist) {
+      removeFromWatchlist(itemId, currentWatchlist.id);
+    } else {
       const watchlistItem = {
-        itemId: item.typeId,
+        itemId: itemId,
         name: item.name,
         buyPrice: buyPrice,
         sellPrice: sellPrice,
       };
-      onAddToWatchlist(watchlistItem);
-      setWatchlistFeedback('Added!');
-      setTimeout(() => setWatchlistFeedback(''), 2000);
+      addToWatchlist(watchlistItem);
     }
   };
 
@@ -357,13 +357,12 @@ Data Age: ${Math.round(dataAge)} minutes ago`;
             {copyFeedback || 'Copy Details'}
           </Button>
           <Button
-            variant="ghost"
+            variant={watched ? 'primary' : 'ghost'}
             size="sm"
-            onClick={handleAddToWatchlist}
-            icon={isWatched ? '★' : watchlistFeedback ? '✓' : '☆'}
-            disabled={isWatched || !onAddToWatchlist}
+            onClick={handleToggleWatchlist}
+            icon={watched ? '★' : '☆'}
           >
-            {isWatched ? 'Watching' : watchlistFeedback || 'Add to Watchlist'}
+            {watched ? 'Watching' : 'Add to Watchlist'}
           </Button>
         </div>
       </div>

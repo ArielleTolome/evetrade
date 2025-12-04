@@ -214,4 +214,72 @@ export function MarketDataHeader({
   );
 }
 
+/**
+ * Stale Data Warning Banner Component
+ * Shows a prominent warning when data is too old
+ */
+export function StaleDataWarning({
+  lastUpdated,
+  staleThreshold = 30 * 60 * 1000, // 30 minutes
+  onRefresh,
+  isLoading = false,
+  className = '',
+}) {
+  if (!lastUpdated) return null;
+
+  const age = Date.now() - new Date(lastUpdated).getTime();
+  if (age < staleThreshold) return null;
+
+  const minutes = Math.floor(age / 60000);
+
+  return (
+    <div className={`flex items-center justify-between p-4 rounded-lg bg-red-500/10 border border-red-500/30 ${className}`}>
+      <div className="flex items-center gap-3">
+        <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <p className="text-red-400 font-medium">Stale Market Data</p>
+          <p className="text-sm text-text-secondary">
+            Data is {minutes} minutes old. Prices may have changed significantly.
+          </p>
+        </div>
+      </div>
+      {onRefresh && (
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-sm font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50 flex items-center gap-2"
+        >
+          <svg
+            className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          {isLoading ? 'Refreshing...' : 'Refresh Now'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Hook to get data freshness status
+ * Useful for conditional logic based on data age
+ */
+export function useDataFreshness(lastUpdated, thresholds) {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return useMemo(() => getFreshnessStatus(lastUpdated, thresholds), [lastUpdated, thresholds]);
+}
+
 export default DataFreshnessIndicator;
