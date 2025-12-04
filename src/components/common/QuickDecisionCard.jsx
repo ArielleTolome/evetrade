@@ -158,6 +158,10 @@ function FactorIndicator({ factor }) {
  * @param {boolean} props.userCanAfford - Whether user can afford the trade
  * @param {string} props.fromLocation - Source location name
  * @param {string} props.toLocation - Destination location name
+ * @param {number} props.buyPrice - Buy price for watchlist integration
+ * @param {number} props.sellPrice - Sell price for watchlist integration
+ * @param {Function} props.onAddToWatchlist - Callback when item is added to watchlist
+ * @param {boolean} props.isWatched - Whether item is already in watchlist
  * @param {string} props.className - Additional CSS classes
  */
 export function QuickDecisionCard({
@@ -171,6 +175,10 @@ export function QuickDecisionCard({
   userCanAfford = true,
   fromLocation,
   toLocation,
+  buyPrice,
+  sellPrice,
+  onAddToWatchlist,
+  isWatched = false,
   className = '',
 }) {
   const [copyFeedback, setCopyFeedback] = useState('');
@@ -214,10 +222,22 @@ Data Age: ${Math.round(dataAge)} minutes ago`;
     }
   };
 
-  // Handle add to watchlist (placeholder - would integrate with actual watchlist)
+  // State for watchlist feedback
+  const [watchlistFeedback, setWatchlistFeedback] = useState('');
+
+  // Handle add to watchlist
   const handleAddToWatchlist = () => {
-    console.log('Add to watchlist:', item);
-    // TODO: Integrate with actual watchlist functionality
+    if (onAddToWatchlist) {
+      const watchlistItem = {
+        itemId: item.typeId,
+        name: item.name,
+        buyPrice: buyPrice,
+        sellPrice: sellPrice,
+      };
+      onAddToWatchlist(watchlistItem);
+      setWatchlistFeedback('Added!');
+      setTimeout(() => setWatchlistFeedback(''), 2000);
+    }
   };
 
   // Generate EVE Online link
@@ -340,9 +360,10 @@ Data Age: ${Math.round(dataAge)} minutes ago`;
             variant="ghost"
             size="sm"
             onClick={handleAddToWatchlist}
-            icon="⭐"
+            icon={isWatched ? '★' : watchlistFeedback ? '✓' : '☆'}
+            disabled={isWatched || !onAddToWatchlist}
           >
-            Add to Watchlist
+            {isWatched ? 'Watching' : watchlistFeedback || 'Add to Watchlist'}
           </Button>
         </div>
       </div>

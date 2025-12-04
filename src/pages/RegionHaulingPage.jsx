@@ -12,6 +12,7 @@ import { useApiCall } from '../hooks/useApiCall';
 import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
 import { RegionPresets } from '../components/common/TradeHubPresets';
 import { ActionableError } from '../components/common/ActionableError';
+import { useToast } from '../components/common/ToastProvider';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { fetchRegionHauling } from '../api/trading';
@@ -32,6 +33,7 @@ export function RegionHaulingPage() {
   const { data, loading, error, lastUpdated, execute } = useApiCall(fetchRegionHauling);
   const { saveRoute } = usePortfolio();
   const { isAuthenticated, character, getAccessToken } = useEveAuth();
+  const toast = useToast();
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [routeName, setRouteName] = useState('');
 
@@ -54,15 +56,13 @@ export function RegionHaulingPage() {
   const [walletBalance, setWalletBalance] = useState(null);
   const [assets, setAssets] = useState([]);
   const [assetsLoading, setAssetsLoading] = useState(false);
+  const [assetsError, setAssetsError] = useState(null);
   // Combine related state objects to prevent race conditions
   const [assetMetadata, setAssetMetadata] = useState({
     typeNames: {},
     locationNames: {},
     regionNames: {},
   });
-
-  // Toast state for copy feedback
-  const [toastMessage, setToastMessage] = useState(null);
 
   // Form error state
   const [formError, setFormError] = useState(null);
@@ -71,12 +71,12 @@ export function RegionHaulingPage() {
   const copyToClipboard = useCallback(async (text, message = 'Copied!') => {
     try {
       await navigator.clipboard.writeText(text);
-      setToastMessage(message);
+      toast.success(message);
     } catch (err) {
       console.error('Failed to copy:', err);
-      setToastMessage('Failed to copy');
+      toast.error('Failed to copy');
     }
-  }, []);
+  }, [toast]);
 
   // Copy trade details for in-game use
   const copyTradeDetails = useCallback((item) => {
@@ -135,6 +135,7 @@ Jumps: ${jumps}`;
 
   const loadAssetsAndWallet = async () => {
     setAssetsLoading(true);
+    setAssetsError(null);
     try {
       const accessToken = await getAccessToken();
       if (!accessToken) return;
@@ -225,6 +226,8 @@ Jumps: ${jumps}`;
       });
     } catch (err) {
       console.error('Failed to load assets:', err);
+      setAssetsError(err.message || 'Failed to load assets and wallet');
+      toast.error('Failed to load character assets');
     } finally {
       setAssetsLoading(false);
     }
@@ -581,15 +584,6 @@ Jumps: ${jumps}`;
       subtitle="Find the best trades across entire regions"
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Toast for copy feedback */}
-        {toastMessage && (
-          <Toast
-            message={toastMessage}
-            onClose={() => setToastMessage(null)}
-            type="success"
-          />
-        )}
-
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -688,6 +682,8 @@ Jumps: ${jumps}`;
                 value={form.minProfit}
                 onChange={(v) => updateForm('minProfit', v)}
                 suffix="ISK"
+                min={0}
+                step={100000}
               />
               <FormInput
                 label="Max Cargo Weight"
@@ -695,6 +691,8 @@ Jumps: ${jumps}`;
                 value={form.maxWeight}
                 onChange={(v) => updateForm('maxWeight', v)}
                 suffix="m³"
+                min={0}
+                step={1000}
               />
               <FormInput
                 label="Minimum ROI"
@@ -702,6 +700,9 @@ Jumps: ${jumps}`;
                 value={form.minROI}
                 onChange={(v) => updateForm('minROI', v)}
                 suffix="%"
+                min={0}
+                max={1000}
+                step={1}
               />
               <FormInput
                 label="Max Budget"
@@ -709,6 +710,8 @@ Jumps: ${jumps}`;
                 value={form.maxBudget}
                 onChange={(v) => updateForm('maxBudget', v)}
                 suffix="ISK"
+                min={0}
+                step={10000000}
               />
             </div>
 
