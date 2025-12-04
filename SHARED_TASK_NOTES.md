@@ -42,45 +42,56 @@
 - `src/components/common/PriceAlertPanel.jsx` - Discord status display
 - `src/components/trading/ManipulationDetector.jsx` - Discord alerts
 
-## Mobile Responsiveness Improvements
-
-### Completed
-
-1. **Mobile-Friendly Footer** - Added `pb-safe` for iOS safe area, improved responsive padding `px-4 sm:px-6 py-6 sm:py-8`, tighter link spacing on mobile
-
-2. **Mobile-Friendly Modal** - Bottom sheet pattern on mobile (slides up from bottom), responsive padding throughout Header/Body/Footer, `pb-safe` for footer buttons, max-height constraints, stacked buttons on mobile
-
-3. **TradingTable Scroll Indicator** - Added gradient fade on right edge to hint at horizontal scroll availability on tablet-sized screens
-
-4. **Form Input Consistency** - Changed text sizing from `text-base sm:text-sm` to consistent `text-sm` across FormInput and FormSelect
-
-### Files Changed
-- `src/components/common/Footer.jsx` - safe area, responsive padding
-- `src/components/common/Modal.jsx` - mobile bottom sheet, responsive padding
-- `src/components/tables/TradingTable.jsx` - scroll hint gradient
-- `src/components/forms/FormInput.jsx` - text sizing consistency
-- `src/components/forms/FormSelect.jsx` - text sizing consistency
-
 ## Previous Iteration: ESI Endpoints & Dashboard
 
 ### Completed
 
-1. **Created useCharacterLP Hook** - `src/hooks/useCharacterLP.js` for LP balance management
+1. **Fixed Critical Toast Bugs** - StationHaulingPage, RegionHaulingPage, ArbitragePage were rendering `<Toast>` component without importing it. Migrated to using `useToast()` hook properly.
 
-2. **Created RealTimeProfitDashboard** - `src/components/dashboard/RealTimeProfitDashboard.jsx` shows wallet, active orders, escrow, daily/weekly profit with sparklines
+2. **Added Form Input Validation** - Added `min`, `max`, and `step` constraints to numeric form fields (minProfit, maxWeight, minROI, maxBudget) in hauling and arbitrage pages.
 
-3. **Fixed Silent Asset Loading Failures** - Added `assetsError` state and toast notifications when asset loading fails
+3. **Added ESI API Endpoints** - New endpoints in `src/api/esi.js`:
+   - `getCharacterLoyaltyPoints` - LP balance by NPC corp
+   - `getCharacterIndustryJobs` - Manufacturing jobs
+   - `getCharacterContracts` - Personal contracts
+   - `getCharacterContractItems` - Contract item details
+   - `getStructureMarketOrders` - Citadel market orders
+   - `getCharacterBookmarks` - Bookmarks
+   - `getCharacterBookmarkFolders` - Bookmark folders
+   - `getCharacterBlueprints` - Blueprint library
+
+4. **Created useCharacterLP Hook** - `src/hooks/useCharacterLP.js` for LP balance management
+
+5. **Created RealTimeProfitDashboard** - `src/components/dashboard/RealTimeProfitDashboard.jsx` shows wallet, active orders, escrow, daily/weekly profit with sparklines
+
+6. **Fixed Silent Asset Loading Failures** - Added `assetsError` state and toast notifications when asset loading fails
+
+## Price Alert and Undercut Detection
+
+### PriceAlertPanel Tests Added
+- Created `src/components/common/PriceAlertPanel.test.jsx` with 33 tests covering:
+  - Empty state and alert list rendering
+  - Alert creation form validation
+  - Settings panel (notifications, sound)
+  - CRUD operations (create, delete, reset, clear all)
+  - Alert type display formatting
+
+### PriceAlertPanel Accessibility Fix
+- Added `id` props to FormInput components in `PriceAlertPanel.jsx` for proper label/input association
+
+### useUndercutDetection Hook Verified
+- All 19 tests passing. Hook implements:
+  - Undercut detection for sell orders
+  - Outbid detection for buy orders
+  - Recommended price calculation
+  - Pricing strategies (aggressive, moderate, conservative)
 
 ## Next Iteration Tasks
-
-### High Priority - Mobile UX
-- [ ] Test autocomplete dropdowns (ItemAutocomplete, StationAutocomplete) on mobile - may need portal positioning fix for viewport overflow
-- [ ] Check PageLayout padding on extra-small phones (<320px)
-- [ ] Verify safe area CSS utilities are properly defined in Tailwind config
 
 ### High Priority
 - [ ] Integrate new components into actual pages (they're created but not wired up)
 - [ ] Add aria-label accessibility attributes to icon buttons
+- [ ] Integrate useUndercutDetection - Add undercut warnings to station trading page
 - [ ] Integrate the new ESI endpoints into the UI:
   - LP balance display in LP Optimizer page
   - Industry jobs in Industry Profits page
@@ -93,6 +104,9 @@
 - [ ] Implement real-time price updates using ESI websocket/polling
 - [ ] Add order book visualization component
 - [ ] Create trade journal/history export functionality
+- [ ] Add missing useCallback dependencies in various components
+- [ ] Order book depth visualization - `OrderBookDepth` component exists
+- [ ] Margin compression alerts - `MarginErosionTracker` component exists
 
 ### Lower Priority
 - [ ] Review and remove excessive console.log statements (284+ found in codebase)
@@ -100,13 +114,10 @@
 - [ ] Consider moving station.js pagination limit from 150 to handle larger regions better
 - [ ] Standardize toast notification pattern across all pages
 - [ ] Fix unused variable lint warnings
-- [ ] Add pagination UI warning when results are truncated
+- [ ] Fix unused imports and hook dependencies
 
 ## Architecture Notes
 
-- Safe area utilities (`pb-safe`, `pt-safe`) require Tailwind CSS safe-area plugin or custom CSS. Check if these are defined in tailwind config.
-- Modal now uses bottom-sheet pattern on mobile (items-end on small screens, items-center on sm+)
-- TradingTable already had good mobile card view - tablet-sized screens showing table now have scroll hint
 - New ESI endpoints need SSO scopes added in `useEveAuth.jsx`
 - RealTimeProfitDashboard can be added to Dashboard page or used standalone
 - useCharacterLP hook follows same pattern as useLPOptimizer
@@ -120,6 +131,13 @@
 - Station API caps at 150 pages which may miss items in high-volume regions like The Forge
 - Some console.logs should be converted to Sentry in production
 
+## Key Files for Trading Features
+- `src/components/common/PriceAlertPanel.jsx` - Price alert UI (33 tests)
+- `src/components/common/PriceAlertPanel.test.jsx` - Test suite
+- `src/hooks/useUndercutDetection.js` - Undercut detection (19 tests)
+- `src/hooks/usePriceAlerts.js` - Price alert system with ESI integration
+- `src/api/esi.js` - ESI API calls
+
 ## Files Changed
 - `src/pages/StationHaulingPage.jsx`
 - `src/pages/RegionHaulingPage.jsx`
@@ -128,5 +146,9 @@
 - `src/hooks/useCharacterLP.js` (new)
 - `src/components/dashboard/RealTimeProfitDashboard.jsx` (new)
 - `src/components/dashboard/index.js`
+
+## Testing Notes
+- PriceAlertPanel: 33 tests passing
+- useUndercutDetection: 19 tests passing
 
 Build verified working with `npm run build`.

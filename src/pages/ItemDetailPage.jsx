@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { PriceHistoryChart } from '../components/common/PriceHistoryChart';
 import { useResources } from '../hooks/useResources';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -1009,11 +1010,26 @@ export default function ItemDetailPage() {
             </div>
           </GlassmorphicCard>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Trading Signal & Quick Copy */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Trading Signal */}
-              <TradingSignalCard signal={tradingSignal} />
+          <>
+            {/* Price History Chart - Full Width */}
+            {priceHistory && priceHistory.length > 0 && (
+              <div className="mb-6">
+                <PriceHistoryChart
+                  price={sellPrice || buyPrice}
+                  historyData={priceHistory}
+                  width={800}
+                  height={300}
+                  days={30}
+                  title={`${itemName} - Price History`}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Trading Signal & Quick Copy */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Trading Signal */}
+                <TradingSignalCard signal={tradingSignal} />
 
               {/* Quick Copy Prices */}
               <QuickCopyPrices buyPrice={buyPrice} sellPrice={sellPrice} itemName={itemName} />
@@ -1038,7 +1054,8 @@ export default function ItemDetailPage() {
               {/* Volatility & Trend */}
               <VolatilityTrendCard volatility={volatility} trend={trend} />
             </div>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </PageLayout>
