@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
+import { PageErrorBoundary } from './components/common/ErrorBoundary';
 import { SkeletonPage } from './components/common/SkeletonLoader';
 import { RootLayout } from './components/layout/RootLayout';
 
@@ -43,9 +44,11 @@ const ItemDetailPage = lazy(() => import('./pages/ItemDetailPage'));
  */
 function LazyPage({ children }) {
   return (
-    <Suspense fallback={<SkeletonPage />}>
-      {children}
-    </Suspense>
+    <PageErrorBoundary>
+      <Suspense fallback={<SkeletonPage />}>
+        {children}
+      </Suspense>
+    </PageErrorBoundary>
   );
 }
 

@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import * as Sentry from '@sentry/react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { GlassmorphicCard } from './GlassmorphicCard';
 
 /**
@@ -238,4 +239,103 @@ export function ResourceErrorFallback({ error, resetError, loadingProgress }) {
   );
 }
 
-export default ErrorBoundary;
+export function PageErrorFallback({ error, resetError }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-full p-4 text-center animate-fade-in-up">
+      <GlassmorphicCard className="max-w-xl w-full">
+        <div className="p-6">
+          <div className="mb-4">
+            <svg
+              className="w-12 h-12 mx-auto text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+
+          <h1 className="text-2xl font-bold text-text-primary mb-3">
+            Something Went Wrong on This Page
+          </h1>
+          <p className="text-text-secondary mb-6">
+            An unexpected error occurred while rendering this part of the application.
+          </p>
+
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={resetError}
+              className="px-5 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-space-black font-semibold rounded-lg transition-colors"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={handleGoBack}
+              className="px-5 py-2 bg-space-dark border border-white/10 hover:bg-space-light text-text-primary font-semibold rounded-lg transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+
+          {process.env.NODE_ENV === 'development' && error && (
+            <details className="mt-6 text-left bg-space-black/30 rounded-lg p-3 border border-red-500/20">
+              <summary className="cursor-pointer text-red-400 font-semibold text-sm">
+                Error Details
+              </summary>
+              <pre className="mt-2 text-xs text-text-secondary font-mono overflow-auto max-h-40">
+                {error.stack || error.toString()}
+              </pre>
+            </details>
+          )}
+        </div>
+      </GlassmorphicCard>
+    </div>
+  );
+}
+
+export function PageErrorBoundary({ children }) {
+  const { pathname } = useLocation();
+  return (
+    <ErrorBoundary key={pathname} fallback={PageErrorFallback} name="PageBoundary">
+      {children}
+    </ErrorBoundary>
+  );
+}
+
+function SectionErrorFallback({ error }) {
+  return (
+    <div className="flex items-center justify-center h-full p-2 bg-red-900/20 border border-red-500/30 rounded-lg">
+      <div className="text-center text-red-400">
+        <p className="text-sm font-semibold">Error Loading Section</p>
+        {process.env.NODE_ENV === 'development' && (
+          <p className="text-xs mt-1 truncate max-w-xs">{error.message}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function SectionErrorBoundary({ children, name }) {
+  return (
+    <ErrorBoundary fallback={SectionErrorFallback} name={name}>
+      {children}
+    </ErrorBoundary>
+  );
+}
