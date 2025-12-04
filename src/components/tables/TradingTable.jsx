@@ -168,7 +168,7 @@ function MobileCardView({
                     {badges.map((badge, i) => (
                       <span
                         key={i}
-                        className={`px-1.5 py-0.5 text-[10px] rounded ${badge.color}`}
+                        className={`px-1.5 py-0.5 text-xs rounded ${badge.color}`}
                       >
                         {badge.label}
                       </span>
