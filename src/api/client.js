@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as Sentry from '@sentry/react';
 import { getApiEndpoint, RESOURCE_ENDPOINT } from '../utils/constants';
 import { isSupabaseConfigured, fetchFromSupabase } from '../lib/supabase';
+import { registry as circuitBreakerRegistry, CircuitBreakerError } from '../utils/circuitBreaker';
 
 /**
  * Create axios instance with custom configuration
@@ -23,112 +24,98 @@ const resourceClient = axios.create({
 });
 
 /**
- * Calculate delay with exponential backoff
- * @param {number} retryCount - Current retry attempt
- * @returns {number} Delay in milliseconds
+ * Extracts a descriptive name for a circuit from a URL path.
+ * e.g., /v1/markets/10000002/orders/ -> v1:markets:orders
+ * @param {string} url - The URL to parse.
+ * @returns {string} A circuit name.
  */
-function getRetryDelay(retryCount) {
-  return Math.min(1000 * Math.pow(2, retryCount), 30000);
+function getCircuitNameFromUrl(url) {
+  if (!url) return 'default';
+  try {
+    // Use a simple regex to avoid full URL parsing for relative paths
+    const path = url.split('?')[0];
+    const parts = path.split('/').filter(p => p && !/^\d+$/.test(p) && p !== 'api');
+    return parts.length > 0 ? parts.join(':') : 'default';
+  } catch (e) {
+    return 'default';
+  }
 }
 
 /**
- * Sleep for specified duration
- * @param {number} ms - Milliseconds to sleep
+ * Request Interceptor: Checks if the circuit allows the request.
  */
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+apiClient.interceptors.request.use(
+  (config) => {
+    const circuitName = getCircuitNameFromUrl(config.url);
+    const circuit = circuitBreakerRegistry.getCircuit(circuitName);
+
+    if (!circuit.isRequestAllowed()) {
+      throw new CircuitBreakerError(`Circuit breaker ${circuitName} is OPEN`);
+    }
+
+    // Attach circuit to config for the response interceptor
+    config.circuit = circuit;
+    return config;
+  },
+  (error) => {
+    // Errors in request setup are rare, but we should reject them.
+    return Promise.reject(error);
+  }
+);
+
 
 /**
- * Response interceptor for retry logic
+ * Response Interceptor: Records success or failure on the circuit.
  */
 apiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    // Don't retry if request was cancelled
+  (response) => {
+    // A successful response (2xx) is recorded on the circuit.
+    if (response.config.circuit) {
+      response.config.circuit.recordSuccess();
+    }
+    return response;
+  },
+  (error) => {
+    // Don't record client-side cancellations as failures
     if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
       return Promise.reject(error);
     }
 
-    const config = error.config;
-    if (!config) {
-      return Promise.reject(error);
+    // Record the failure on the circuit.
+    if (error.config?.circuit) {
+      error.config.circuit.recordFailure(error);
     }
 
-    // Initialize retry count
-    if (!config._retryCount) {
-      config._retryCount = 0;
+    // Sentry reporting for non-circuit-breaker errors
+    if (error.name !== 'CircuitBreakerError') {
+       Sentry.withScope((scope) => {
+        scope.setTag('errorType', 'apiError');
+        scope.setExtra('url', error.config?.url);
+        scope.setExtra('method', error.config?.method);
+        scope.setExtra('status', error.response?.status);
+        Sentry.captureException(error);
+      });
     }
-
-    // Handle specific error codes
-    const status = error.response?.status;
-
-    // Rate limiting - retry with backoff
-    if (status === 429 && config._retryCount < 3) {
-      config._retryCount++;
-      const delay = getRetryDelay(config._retryCount);
-      console.log(`Rate limited. Retrying in ${delay}ms (attempt ${config._retryCount}/3)`);
-      await sleep(delay);
-      return apiClient(config);
-    }
-
-    // Auth errors
-    if (status === 401) {
-      throw new Error('Authentication required. Please log in again.');
-    }
-
-    // Forbidden
-    if (status === 403) {
-      throw new Error('Access denied. You may have been temporarily blocked.');
-    }
-
-    // Server errors - retry
-    if (status >= 500 && config._retryCount < 2) {
-      config._retryCount++;
-      const delay = getRetryDelay(config._retryCount);
-      console.log(`Server error. Retrying in ${delay}ms (attempt ${config._retryCount}/2)`);
-      await sleep(delay);
-      return apiClient(config);
-    }
-
-    // Network errors - retry
-    if (!error.response && config._retryCount < 2) {
-      config._retryCount++;
-      const delay = getRetryDelay(config._retryCount);
-      console.log(`Network error. Retrying in ${delay}ms (attempt ${config._retryCount}/2)`);
-      await sleep(delay);
-      return apiClient(config);
-    }
-
-    // Report non-cancelled errors to Sentry
-    Sentry.withScope((scope) => {
-      scope.setTag('errorType', 'apiError');
-      scope.setExtra('url', config?.url);
-      scope.setExtra('method', config?.method);
-      scope.setExtra('status', status);
-      scope.setExtra('retryCount', config?._retryCount || 0);
-      Sentry.captureException(error);
-    });
 
     return Promise.reject(error);
   }
 );
 
+
 /**
- * Fetch with retry wrapper
+ * Fetch data using the API client.
+ * The circuit breaker is applied automatically by the interceptor.
  * @param {string} url - URL to fetch
  * @param {object} options - Fetch options (can include signal for abort)
- * @param {number} maxRetries - Maximum retry attempts
  * @returns {Promise} Response data
  */
-export async function fetchWithRetry(url, options = {}) {
+export async function fetchData(url, options = {}) {
   try {
     const response = await apiClient.get(url, options);
     return response.data;
   } catch (error) {
-    // Re-throw abort/cancel errors without modification
-    if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-      throw error;
+    if (error.name === 'CircuitBreakerError') {
+      console.warn(error.message);
     }
 
     if (error.response) {

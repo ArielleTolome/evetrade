@@ -1,4 +1,4 @@
-import { fetchWithRetry } from './client';
+import { fetchData } from './client';
 
 /**
  * Fetch station trading data
@@ -23,7 +23,7 @@ export async function fetchStationTrading({
     margins: `${marginAbove},${marginBelow}`,
   });
 
-  const data = await fetchWithRetry(`/station?${queryParams.toString()}`);
+  const data = await fetchData(`/station?${queryParams.toString()}`);
   return data;
 }
 
@@ -51,7 +51,7 @@ export async function fetchStationHauling({
     tax: tax,
   });
 
-  const data = await fetchWithRetry(`/hauling?${queryParams.toString()}`);
+  const data = await fetchData(`/hauling?${queryParams.toString()}`);
   return data;
 }
 
@@ -79,7 +79,7 @@ export async function fetchRegionHauling({
     tax: tax,
   });
 
-  const data = await fetchWithRetry(`/hauling?${queryParams.toString()}`);
+  const data = await fetchData(`/hauling?${queryParams.toString()}`);
   return data;
 }
 
@@ -95,7 +95,7 @@ export async function fetchOrders({ itemId, from, to }) {
     to: to,
   });
 
-  const data = await fetchWithRetry(`/orders?${queryParams.toString()}`);
+  const data = await fetchData(`/orders?${queryParams.toString()}`);
   return data;
 }
 
@@ -123,7 +123,7 @@ export async function fetchArbitrage({
     tax: tax.toString(),
   });
 
-  const data = await fetchWithRetry(`/arbitrage?${queryParams.toString()}`);
+  const data = await fetchData(`/arbitrage?${queryParams.toString()}`);
   return data;
 }
 
@@ -155,7 +155,7 @@ export async function fetchOptimizedRoute({
     queryParams.set('cargoValue', cargoValue.toString());
   }
 
-  const data = await fetchWithRetry(`/route-optimizer?${queryParams.toString()}`);
+  const data = await fetchData(`/route-optimizer?${queryParams.toString()}`);
   return data;
 }
 
@@ -205,6 +205,6 @@ export async function fetchPIOpportunities({
     };
   }
 
-  const data = await fetchWithRetry(`/pi-optimizer?${queryParams.toString()}`, options);
+  const data = await fetchData(`/pi-optimizer?${queryParams.toString()}`, options);
   return data;
 }
