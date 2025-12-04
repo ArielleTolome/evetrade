@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useCallback, useRef } from 'react';
+import { createContext, useContext, useReducer, useCallback, useRef, useMemo } from 'react';
 import { Toast } from './Toast';
 
 /**
@@ -9,7 +9,7 @@ const ToastContext = createContext(null);
 /**
  * Maximum number of toasts visible at once
  */
-const MAX_VISIBLE_TOASTS = 5;
+export const MAX_VISIBLE_TOASTS = 5;
 
 // Reducer action types
 const ADD_TOAST = 'ADD_TOAST';
@@ -136,7 +136,7 @@ export function ToastProvider({ children }) {
     return addToast(message, { ...options, type: 'info' });
   }, [addToast]);
 
-  const value = {
+  const value = useMemo(() => ({
     toasts,
     success,
     error,
@@ -144,7 +144,7 @@ export function ToastProvider({ children }) {
     info,
     dismiss: removeToast,
     dismissAll,
-  };
+  }), [toasts, success, error, warning, info, removeToast, dismissAll]);
 
   return (
     <ToastContext.Provider value={value}>

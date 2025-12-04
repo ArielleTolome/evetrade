@@ -1,5 +1,5 @@
 import { render, screen, act } from '@testing-library/react';
-import { useToast, ToastProvider } from './ToastProvider';
+import { useToast, ToastProvider, MAX_VISIBLE_TOASTS } from './ToastProvider';
 import { vi } from 'vitest';
 
 // Mock Toast component to simplify testing
@@ -44,12 +44,14 @@ describe('ToastProvider', () => {
   });
 
   it('should queue toasts when the max limit is reached', async () => {
+    const totalToasts = MAX_VISIBLE_TOASTS + 2;
+
     render(
       <ToastProvider>
         <ToastConsumer>
           {(toast) => (
             <button onClick={() => {
-              for (let i = 0; i < 7; i++) {
+              for (let i = 0; i < totalToasts; i++) {
                 toast.info(`Toast ${i + 1}`);
               }
             }}>Add Toasts</button>
@@ -62,14 +64,14 @@ describe('ToastProvider', () => {
       screen.getByText('Add Toasts').click();
     });
 
-    // Only 5 toasts should be visible initially
-    for (let i = 0; i < 5; i++) {
+    // Only MAX_VISIBLE_TOASTS toasts should be visible initially
+    for (let i = 0; i < MAX_VISIBLE_TOASTS; i++) {
       expect(await screen.findByText(`Toast ${i + 1}`)).toBeInTheDocument();
     }
 
-    // Toasts 6 and 7 should be in the queue
-    expect(screen.queryByText('Toast 6')).not.toBeInTheDocument();
-    expect(screen.queryByText('Toast 7')).not.toBeInTheDocument();
+    // Toasts beyond MAX_VISIBLE_TOASTS should be in the queue
+    expect(screen.queryByText(`Toast ${MAX_VISIBLE_TOASTS + 1}`)).not.toBeInTheDocument();
+    expect(screen.queryByText(`Toast ${MAX_VISIBLE_TOASTS + 2}`)).not.toBeInTheDocument();
 
     // Dismiss one toast
     act(() => {
@@ -77,9 +79,9 @@ describe('ToastProvider', () => {
       firstToast.click();
     });
 
-    // Toast 6 should now be visible
-    expect(await screen.findByText('Toast 6')).toBeInTheDocument();
-    expect(screen.queryByText('Toast 7')).not.toBeInTheDocument();
+    // First queued toast should now be visible
+    expect(await screen.findByText(`Toast ${MAX_VISIBLE_TOASTS + 1}`)).toBeInTheDocument();
+    expect(screen.queryByText(`Toast ${MAX_VISIBLE_TOASTS + 2}`)).not.toBeInTheDocument();
 
     // Dismiss another toast
     act(() => {
@@ -87,8 +89,8 @@ describe('ToastProvider', () => {
       secondToast.click();
     });
 
-    // Toast 7 should now be visible
-    expect(await screen.findByText('Toast 7')).toBeInTheDocument();
+    // Second queued toast should now be visible
+    expect(await screen.findByText(`Toast ${MAX_VISIBLE_TOASTS + 2}`)).toBeInTheDocument();
   });
 
   it('should dismiss all toasts', async () => {
