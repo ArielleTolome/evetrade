@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { fetchWithRetry } from '../api/client';
+import { fetchData } from '../api/client';
 
 /**
  * Custom hook for cross-region arbitrage scanning
@@ -82,7 +82,7 @@ export function useArbitrageScanner() {
       });
 
       // Fetch arbitrage opportunities
-      const result = await fetchWithRetry(
+      const result = await fetchData(
         `/arbitrage?${queryParams.toString()}`,
         { signal: abortController.signal }
       );
