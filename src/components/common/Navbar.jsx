@@ -342,7 +342,7 @@ function SearchBar({ isOpen, onClose }) {
   return (
     <div
       ref={searchRef}
-      className="absolute top-full right-0 mt-2 w-96 bg-space-dark/95 backdrop-blur-xl border border-accent-cyan/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in-up"
+      className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-space-dark/95 backdrop-blur-xl border border-accent-cyan/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in-up"
     >
       <div className="p-3 border-b border-accent-cyan/10">
         <div className="relative">
