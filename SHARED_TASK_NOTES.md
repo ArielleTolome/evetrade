@@ -66,11 +66,32 @@
 
 6. **Fixed Silent Asset Loading Failures** - Added `assetsError` state and toast notifications when asset loading fails
 
+## Price Alert and Undercut Detection
+
+### PriceAlertPanel Tests Added
+- Created `src/components/common/PriceAlertPanel.test.jsx` with 33 tests covering:
+  - Empty state and alert list rendering
+  - Alert creation form validation
+  - Settings panel (notifications, sound)
+  - CRUD operations (create, delete, reset, clear all)
+  - Alert type display formatting
+
+### PriceAlertPanel Accessibility Fix
+- Added `id` props to FormInput components in `PriceAlertPanel.jsx` for proper label/input association
+
+### useUndercutDetection Hook Verified
+- All 19 tests passing. Hook implements:
+  - Undercut detection for sell orders
+  - Outbid detection for buy orders
+  - Recommended price calculation
+  - Pricing strategies (aggressive, moderate, conservative)
+
 ## Next Iteration Tasks
 
 ### High Priority
 - [ ] Integrate new components into actual pages (they're created but not wired up)
 - [ ] Add aria-label accessibility attributes to icon buttons
+- [ ] Integrate useUndercutDetection - Add undercut warnings to station trading page
 - [ ] Integrate the new ESI endpoints into the UI:
   - LP balance display in LP Optimizer page
   - Industry jobs in Industry Profits page
@@ -83,6 +104,9 @@
 - [ ] Implement real-time price updates using ESI websocket/polling
 - [ ] Add order book visualization component
 - [ ] Create trade journal/history export functionality
+- [ ] Add missing useCallback dependencies in various components
+- [ ] Order book depth visualization - `OrderBookDepth` component exists
+- [ ] Margin compression alerts - `MarginErosionTracker` component exists
 
 ### Lower Priority
 - [ ] Review and remove excessive console.log statements (284+ found in codebase)
@@ -90,6 +114,7 @@
 - [ ] Consider moving station.js pagination limit from 150 to handle larger regions better
 - [ ] Standardize toast notification pattern across all pages
 - [ ] Fix unused variable lint warnings
+- [ ] Fix unused imports and hook dependencies
 
 ## Architecture Notes
 
@@ -106,6 +131,13 @@
 - Station API caps at 150 pages which may miss items in high-volume regions like The Forge
 - Some console.logs should be converted to Sentry in production
 
+## Key Files for Trading Features
+- `src/components/common/PriceAlertPanel.jsx` - Price alert UI (33 tests)
+- `src/components/common/PriceAlertPanel.test.jsx` - Test suite
+- `src/hooks/useUndercutDetection.js` - Undercut detection (19 tests)
+- `src/hooks/usePriceAlerts.js` - Price alert system with ESI integration
+- `src/api/esi.js` - ESI API calls
+
 ## Files Changed
 - `src/pages/StationHaulingPage.jsx`
 - `src/pages/RegionHaulingPage.jsx`
@@ -114,5 +146,9 @@
 - `src/hooks/useCharacterLP.js` (new)
 - `src/components/dashboard/RealTimeProfitDashboard.jsx` (new)
 - `src/components/dashboard/index.js`
+
+## Testing Notes
+- PriceAlertPanel: 33 tests passing
+- useUndercutDetection: 19 tests passing
 
 Build verified working with `npm run build`.

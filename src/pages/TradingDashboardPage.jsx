@@ -115,10 +115,18 @@ export function TradingDashboardPage() {
     };
   }, [quickCalc]);
 
-  // Session calculations
-  const sessionDuration = useMemo(() => {
-    const now = Date.now();
-    return Math.floor((now - sessionStats.startTime) / 1000);
+  // Session duration with live updates - use state with interval instead of useMemo
+  // to avoid Date.now() during render (React 19 purity rules)
+  const [sessionDuration, setSessionDuration] = useState(() =>
+    Math.floor((Date.now() - sessionStats.startTime) / 1000)
+  );
+
+  // Update session duration every second for live timer
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSessionDuration(Math.floor((Date.now() - sessionStats.startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
   }, [sessionStats.startTime]);
 
   const iskPerHour = useMemo(() => {
