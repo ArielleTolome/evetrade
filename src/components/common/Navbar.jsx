@@ -509,7 +509,7 @@ function UserMenu() {
             </svg>
           </div>
         )}
-        <span className="hidden sm:block text-sm text-text-primary max-w-[100px] truncate">
+        <span className="text-sm text-text-primary max-w-[60px] sm:max-w-[100px] truncate">
           {character?.name || 'Character'}
         </span>
         <svg className={`w-4 h-4 text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
