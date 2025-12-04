@@ -198,9 +198,12 @@ async function getStationRegion(stationId) {
 }
 
 /**
- * Fetch item names from ESI
+ * Fetch item names from ESI with retry logic
+ * @param {number[]} typeIds - Array of type IDs to fetch names for
+ * @param {number} maxRetries - Maximum retry attempts per chunk (default: 3)
+ * @returns {Object} Map of typeId -> name
  */
-async function getItemNames(typeIds) {
+async function getItemNames(typeIds, maxRetries = 3) {
   if (typeIds.length === 0) return {};
 
   // ESI has a limit of 1000 IDs per request
@@ -210,24 +213,69 @@ async function getItemNames(typeIds) {
   }
 
   const names = {};
+  const failedIds = [];
 
   for (const chunk of chunks) {
-    try {
-      const response = await fetchWithTimeout(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(chunk),
-      });
+    let success = false;
+    let lastError = null;
 
-      if (response.ok) {
-        const data = await response.json();
-        for (const item of data) {
-          names[item.id] = item.name;
+    for (let attempt = 1; attempt <= maxRetries && !success; attempt++) {
+      try {
+        const response = await fetchWithTimeout(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(chunk),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          for (const item of data) {
+            names[item.id] = item.name;
+          }
+          success = true;
+        } else if (response.status === 404) {
+          // Some IDs may not exist, try fetching individually for this chunk
+          console.warn(`Chunk fetch returned 404, attempting individual lookups`);
+          for (const typeId of chunk) {
+            try {
+              const singleResponse = await fetchWithTimeout(
+                `${ESI_BASE}/universe/types/${typeId}/?datasource=tranquility`
+              );
+              if (singleResponse.ok) {
+                const typeData = await singleResponse.json();
+                names[typeId] = typeData.name;
+              }
+            } catch {
+              failedIds.push(typeId);
+            }
+          }
+          success = true; // Mark as handled
+        } else if (response.status >= 500 && attempt < maxRetries) {
+          // Server error, wait before retry with exponential backoff
+          await new Promise(r => setTimeout(r, Math.min(1000 * Math.pow(2, attempt - 1), 5000)));
+          lastError = new Error(`HTTP ${response.status}`);
+        } else {
+          lastError = new Error(`HTTP ${response.status}`);
+          break;
+        }
+      } catch (error) {
+        lastError = error;
+        if (attempt < maxRetries) {
+          // Wait before retry with exponential backoff
+          await new Promise(r => setTimeout(r, Math.min(1000 * Math.pow(2, attempt - 1), 5000)));
         }
       }
-    } catch (error) {
-      console.warn('Failed to fetch item names:', error.message);
     }
+
+    if (!success) {
+      console.warn('Failed to fetch item names after retries:', lastError?.message);
+      failedIds.push(...chunk);
+    }
+  }
+
+  // Log failed IDs for debugging
+  if (failedIds.length > 0) {
+    console.warn(`Failed to fetch names for ${failedIds.length} items:`, failedIds.slice(0, 10));
   }
 
   return names;
@@ -361,14 +409,17 @@ export default async function handler(req, res) {
     const brokerFee = validateFloat(fee, 'fee', 0, 1, 0.03);
 
     // Parse margins (format: "above,below")
-    let marginAbove = 5; // 5%
-    let marginBelow = 50; // 50%
+    // Values come in as decimals (e.g., 0.05 for 5%) and need to be converted to percentages
+    let marginAbove = 5; // 5% default
+    let marginBelow = 50; // 50% default
     if (margins) {
       const parts = margins.split(',');
-      const above = validateFloat(parts[0], 'marginAbove', 0, 100, 0.05);
-      const below = validateFloat(parts[1], 'marginBelow', 0, 100, 0.50);
-      marginAbove = (above || 0.05) * 100; // Convert to percentage
-      marginBelow = (below || 0.50) * 100;
+      const above = validateFloat(parts[0], 'marginAbove', 0, 100, null);
+      const below = validateFloat(parts[1], 'marginBelow', 0, 100, null);
+      // Use null-safe defaults: explicitly check for null/undefined, not falsiness
+      // This allows 0 as a valid value for marginAbove
+      marginAbove = (above !== null ? above : 0.05) * 100; // Convert to percentage
+      marginBelow = (below !== null ? below : 0.50) * 100;
     }
 
     // Get region for this station

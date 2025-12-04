@@ -142,6 +142,79 @@ export async function getCharacterPlanets(characterId, accessToken) {
 }
 
 /**
+ * Get character loyalty points
+ * Returns LP balance by NPC corporation
+ * Requires: esi-characters.read_loyalty.v1 scope
+ */
+export async function getCharacterLoyaltyPoints(characterId, accessToken) {
+  return esiRequest(`/characters/${characterId}/loyalty/points/`, accessToken);
+}
+
+/**
+ * Get character industry jobs
+ * Requires: esi-industry.read_character_jobs.v1 scope
+ * @param {boolean} includeCompleted - Include completed jobs (default: false)
+ */
+export async function getCharacterIndustryJobs(characterId, accessToken, includeCompleted = false) {
+  const endpoint = `/characters/${characterId}/industry/jobs/?include_completed=${includeCompleted}`;
+  return esiRequest(endpoint, accessToken);
+}
+
+/**
+ * Get character personal contracts
+ * Requires: esi-contracts.read_character_contracts.v1 scope
+ * @param {number} page - Page number for pagination
+ */
+export async function getCharacterContracts(characterId, accessToken, page = 1) {
+  return esiRequest(`/characters/${characterId}/contracts/?page=${page}`, accessToken);
+}
+
+/**
+ * Get items in a character contract
+ * Requires: esi-contracts.read_character_contracts.v1 scope
+ */
+export async function getCharacterContractItems(characterId, contractId, accessToken) {
+  return esiRequest(`/characters/${characterId}/contracts/${contractId}/items/`, accessToken);
+}
+
+/**
+ * Get market orders for a player structure
+ * Requires: esi-markets.structure_markets.v1 scope
+ * @param {number} structureId - Structure ID
+ * @param {number} page - Page number for pagination
+ */
+export async function getStructureMarketOrders(structureId, accessToken, page = 1) {
+  return esiRequest(`/markets/structures/${structureId}/?page=${page}`, accessToken);
+}
+
+/**
+ * Get character bookmarks
+ * Requires: esi-bookmarks.read_character_bookmarks.v1 scope
+ * @param {number} page - Page number for pagination
+ */
+export async function getCharacterBookmarks(characterId, accessToken, page = 1) {
+  return esiRequest(`/characters/${characterId}/bookmarks/?page=${page}`, accessToken);
+}
+
+/**
+ * Get character bookmark folders
+ * Requires: esi-bookmarks.read_character_bookmarks.v1 scope
+ * @param {number} page - Page number for pagination
+ */
+export async function getCharacterBookmarkFolders(characterId, accessToken, page = 1) {
+  return esiRequest(`/characters/${characterId}/bookmarks/folders/?page=${page}`, accessToken);
+}
+
+/**
+ * Get character blueprints
+ * Requires: esi-characters.read_blueprints.v1 scope
+ * @param {number} page - Page number for pagination
+ */
+export async function getCharacterBlueprints(characterId, accessToken, page = 1) {
+  return esiRequest(`/characters/${characterId}/blueprints/?page=${page}`, accessToken);
+}
+
+/**
  * Get type information (item details)
  */
 export async function getTypeInfo(typeId) {
@@ -502,6 +575,14 @@ export default {
   getCharacterSkills,
   getCharacterStandings,
   getCharacterPlanets,
+  getCharacterLoyaltyPoints,
+  getCharacterIndustryJobs,
+  getCharacterContracts,
+  getCharacterContractItems,
+  getStructureMarketOrders,
+  getCharacterBookmarks,
+  getCharacterBookmarkFolders,
+  getCharacterBlueprints,
   getTypeInfo,
   getStationInfo,
   getStructureInfo,

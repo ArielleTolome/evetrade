@@ -225,6 +225,8 @@ Data Age: ${Math.round(dataAge)} minutes ago`;
 
   // Handle add/remove from watchlist
   const handleToggleWatchlist = () => {
+    if (!itemId) return;
+
     if (watched && currentWatchlist) {
       removeFromWatchlist(itemId, currentWatchlist.id);
     } else {
