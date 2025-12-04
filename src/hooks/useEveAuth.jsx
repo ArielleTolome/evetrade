@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
+import { useToast } from '../components/common/ToastProvider';
 
 /**
  * EVE Online SSO Configuration
@@ -131,6 +132,9 @@ export function EveAuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [multiCharAuth, setMultiCharAuth] = useState(null);
+  const [authStatus, setAuthStatus] = useState('unauthenticated');
+  const [notificationShown, setNotificationShown] = useState(false);
+  const toast = useToast();
 
   // Ref to track in-flight refresh requests and prevent race conditions
   const refreshPromiseRef = useRef(null);
@@ -443,6 +447,38 @@ export function EveAuthProvider({ children }) {
     return auth.accessToken;
   }, [auth, refreshAccessToken]);
 
+  useEffect(() => {
+    const checkTokenExpiry = () => {
+      if (!auth) {
+        setAuthStatus('unauthenticated');
+        return;
+      }
+
+      const timeUntilExpiry = auth.expiresAt - Date.now();
+      if (timeUntilExpiry <= 0) {
+        setAuthStatus('expired');
+        logout();
+      } else if (timeUntilExpiry <= 5 * 60 * 1000) {
+        setAuthStatus('expiring-soon');
+        if (!notificationShown) {
+          toast.warning('Your session is about to expire.', {
+            action: {
+              label: 'Refresh',
+              onClick: () => getAccessToken(),
+            },
+          });
+          setNotificationShown(true);
+        }
+      } else {
+        setAuthStatus('authenticated');
+        setNotificationShown(false);
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiry, 60 * 1000); // Check every minute
+    return () => clearInterval(interval);
+  }, [auth, getAccessToken, logout, toast]);
+
   const value = {
     isAuthenticated: !!auth,
     character,
@@ -451,6 +487,7 @@ export function EveAuthProvider({ children }) {
     login,
     logout,
     getAccessToken,
+    authStatus,
     clearError: () => setError(null),
   };
 
