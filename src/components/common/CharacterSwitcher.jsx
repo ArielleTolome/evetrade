@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMultiCharacter } from '../../hooks/useMultiCharacter';
 import { useEveAuth } from '../../hooks/useEveAuth';
 import { GlassmorphicCard } from './GlassmorphicCard';
+import { ThemeToggle } from './ThemeToggle';
 
 /**
  * Character Switcher Component
@@ -54,10 +55,11 @@ export function CharacterSwitcher({ compact = false }) {
   if (compact) {
     return (
       <div className="relative">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-3 px-3 py-2 bg-space-dark/60 hover:bg-space-dark/80 rounded-xl transition-all duration-200 border border-white/10 hover:border-accent-cyan/30 min-h-[48px] w-full"
-        >
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex-grow items-center gap-3 px-3 py-2 bg-space-dark/60 hover:bg-space-dark/80 rounded-xl transition-all duration-200 border border-white/10 hover:border-accent-cyan/30 min-h-[48px] w-full"
+          >
           {activeCharacter?.id && (
             <img
               src={getPortraitUrl(activeCharacter.id, 64)}
@@ -84,6 +86,8 @@ export function CharacterSwitcher({ compact = false }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
+        <ThemeToggle />
+        </div>
 
         {/* Mobile: Full-screen overlay */}
         {isOpen && (
