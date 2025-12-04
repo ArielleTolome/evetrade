@@ -7,8 +7,8 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-white/5 bg-space-dark/30 backdrop-blur-sm mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+    <footer className="border-t border-white/5 bg-space-dark/30 backdrop-blur-sm mt-auto pb-safe">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
           {/* Logo & Copyright */}
           <div className="flex flex-col items-center md:items-start gap-2 text-text-secondary text-sm">
@@ -47,7 +47,7 @@ export function Footer() {
           </div>
 
           {/* Links */}
-          <div className="flex items-center gap-8 text-sm font-medium">
+          <div className="flex items-center gap-4 sm:gap-8 text-sm font-medium">
             <Link
               to="/help"
               className="text-text-secondary hover:text-accent-cyan transition-colors relative group"

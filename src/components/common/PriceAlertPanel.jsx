@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { formatNumber } from '../../utils/formatters';
 import { FormInput } from '../forms/FormInput';
+import { useDiscordWebhook } from '../../hooks/useDiscordWebhook';
 
 /**
  * Price Alert Panel Component
  * Manages price alerts for trading items with notification settings
+ * Includes Discord webhook integration for notifications
  */
 export function PriceAlertPanel({
   alerts,
@@ -17,6 +19,7 @@ export function PriceAlertPanel({
   onUpdateSettings,
   onRequestNotificationPermission,
 }) {
+  const { settings: discordSettings, activeCount: discordActiveCount } = useDiscordWebhook();
   const [isCreating, setIsCreating] = useState(false);
   const [showTriggered, setShowTriggered] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -255,6 +258,41 @@ export function PriceAlertPanel({
                   />
                 </div>
               )}
+
+              {/* Discord Notifications Status */}
+              <div className="flex items-start justify-between gap-4 pt-4 border-t border-accent-cyan/10">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg className="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+                    </svg>
+                    <label className="text-sm font-medium text-text-primary">
+                      Discord Notifications
+                    </label>
+                    {discordActiveCount > 0 && discordSettings.sendPriceAlerts ? (
+                      <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
+                        {discordActiveCount} webhook{discordActiveCount !== 1 ? 's' : ''} active
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-gray-500/20 text-gray-400 text-xs font-medium">
+                        Not configured
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-secondary">
+                    {discordActiveCount > 0 && discordSettings.sendPriceAlerts
+                      ? 'Price alerts will be sent to your Discord channels'
+                      : 'Configure Discord webhooks in Settings to receive alerts'}
+                  </p>
+                </div>
+                {discordActiveCount > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-text-secondary">
+                    <span className={discordSettings.sendPriceAlerts ? 'text-green-400' : 'text-gray-400'}>
+                      {discordSettings.sendPriceAlerts ? '✓ Enabled' : '✗ Disabled'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -266,6 +304,7 @@ export function PriceAlertPanel({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInput
+                id="itemName"
                 label="Item Name"
                 value={formData.itemName}
                 onChange={(value) => handleInputChange('itemName', value)}
@@ -275,6 +314,7 @@ export function PriceAlertPanel({
               />
               
               <FormInput
+                id="itemId"
                 label="Item ID (Optional)"
                 value={formData.itemId}
                 onChange={(value) => handleInputChange('itemId', value)}
@@ -315,6 +355,7 @@ export function PriceAlertPanel({
               </div>
               
               <FormInput
+                id="threshold"
                 label="Threshold"
                 value={formData.threshold}
                 onChange={(value) => handleInputChange('threshold', value)}

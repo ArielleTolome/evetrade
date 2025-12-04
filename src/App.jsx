@@ -1,7 +1,7 @@
 import { RouterProvider } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { ResourceProvider } from './hooks/useResources';
-import { ThemeProvider } from './store/ThemeContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { EveAuthProvider } from './hooks/useEveAuth';
 import { MultiCharacterProvider } from './hooks/useMultiCharacter';
 import { ToastProvider } from './components/common/ToastProvider';

@@ -273,12 +273,15 @@ function InventoryTools({ activeTool, setActiveTool }) {
     { id: 'valuation', name: 'Inventory Valuation', desc: 'Total portfolio value' },
   ];
 
-  // Sample inventory data for demos
-  const sampleInventory = [
-    { typeId: 34, typeName: 'Tritanium', quantity: 50000, buyPrice: 5.5, lastSaleDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
-    { typeId: 35, typeName: 'Pyerite', quantity: 25000, buyPrice: 8.2, lastSaleDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
-    { typeId: 36, typeName: 'Mexallon', quantity: 10000, buyPrice: 45, lastSaleDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
-  ];
+  // Sample inventory data for demos - use lazy state initializer to avoid Date.now() on re-renders
+  const [sampleInventory] = useState(() => {
+    const now = Date.now();
+    return [
+      { typeId: 34, typeName: 'Tritanium', quantity: 50000, buyPrice: 5.5, lastSaleDate: new Date(now - 2 * 24 * 60 * 60 * 1000) },
+      { typeId: 35, typeName: 'Pyerite', quantity: 25000, buyPrice: 8.2, lastSaleDate: new Date(now - 10 * 24 * 60 * 60 * 1000) },
+      { typeId: 36, typeName: 'Mexallon', quantity: 10000, buyPrice: 45, lastSaleDate: new Date(now - 1 * 24 * 60 * 60 * 1000) },
+    ];
+  });
 
   if (!activeTool) {
     return (

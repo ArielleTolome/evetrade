@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar, MobileNav } from '../common/Sidebar';
 import { AnimatedBackground } from './AnimatedBackground';
+import Header from './Header';
 import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../../hooks/useKeyboardShortcuts.jsx';
 
 /**
@@ -31,16 +32,22 @@ export function RootLayout() {
       />
 
       {/* Main Content Area */}
-      <main
+      <div
         className={`
-          min-h-screen
           transition-all duration-300
-          pb-20 lg:pb-0
           ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
         `}
       >
-        <Outlet />
-      </main>
+        <Header />
+        <main
+          className={`
+            min-h-screen
+            pb-20 lg:pb-0
+          `}
+        >
+          <Outlet />
+        </main>
+      </div>
 
       {/* Mobile Bottom Navigation */}
       <MobileNav />

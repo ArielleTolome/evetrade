@@ -1,3 +1,4 @@
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -79,12 +80,18 @@ describe('StationAutocomplete', () => {
       expect(screen.getByText('Station is required')).toBeInTheDocument();
     });
 
-    it('shows loading placeholder when resources are loading', () => {
+    it('shows skeleton when resources are loading', () => {
       useResources.mockReturnValue({ stationList: null, universeList: null, loading: true });
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
+      expect(screen.getByTestId('autocomplete-skeleton')).toBeInTheDocument();
+    });
+
+    it('shows loading spinner when loading prop is true', () => {
+      useResources.mockReturnValue({ stationList: [], universeList: {}, loading: false });
+      render(<StationAutocomplete value="" onChange={vi.fn()} loading />);
       const input = screen.getByRole('combobox');
-      expect(input).toHaveAttribute('placeholder', 'Loading stations...');
       expect(input).toBeDisabled();
+      expect(screen.getByText('Submitting...')).toBeInTheDocument();
     });
 
     it('displays initial value when provided', () => {
