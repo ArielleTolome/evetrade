@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useReducer, useCallback, useRef } from 'react';
 import { Toast } from './Toast';
 
 /**
@@ -11,37 +11,81 @@ const ToastContext = createContext(null);
  */
 const MAX_VISIBLE_TOASTS = 5;
 
+// Reducer action types
+const ADD_TOAST = 'ADD_TOAST';
+const REMOVE_TOAST = 'REMOVE_TOAST';
+const DISMISS_ALL = 'DISMISS_ALL';
+
+// Initial state for the reducer
+const initialState = {
+  toasts: [],
+  queue: [],
+};
+
+// Reducer function to manage toast state
+function toastReducer(state, action) {
+  switch (action.type) {
+    case ADD_TOAST: {
+      const { toast } = action.payload;
+      if (state.toasts.length < MAX_VISIBLE_TOASTS) {
+        return {
+          ...state,
+          toasts: [...state.toasts, toast],
+        };
+      } else {
+        return {
+          ...state,
+          queue: [...state.queue, toast],
+        };
+      }
+    }
+    case REMOVE_TOAST: {
+      const { id } = action.payload;
+      const newToasts = state.toasts.filter((t) => t.id !== id);
+
+      // If no toast was removed, do nothing.
+      if (newToasts.length === state.toasts.length) {
+        return state;
+      }
+
+      // A toast was removed, so there's space. Process the queue.
+      const spotsToFill = MAX_VISIBLE_TOASTS - newToasts.length;
+      if (spotsToFill > 0 && state.queue.length > 0) {
+        const toastsFromQueue = state.queue.slice(0, spotsToFill);
+        const remainingQueue = state.queue.slice(spotsToFill);
+
+        return {
+          toasts: [...newToasts, ...toastsFromQueue],
+          queue: remainingQueue,
+        };
+      }
+
+      return {
+        ...state,
+        toasts: newToasts,
+      };
+    }
+    case DISMISS_ALL: {
+      return {
+        ...state,
+        toasts: [],
+        queue: [],
+      };
+    }
+    default:
+      throw new Error(`Unhandled action type: ${action.type}`);
+  }
+}
+
+
 /**
  * Toast Provider Component
  * Manages toast notifications with queueing and automatic dismissal
  */
 export function ToastProvider({ children }) {
-  const [toasts, setToasts] = useState([]);
-  const [queue, setQueue] = useState([]);
+  const [state, dispatch] = useReducer(toastReducer, initialState);
+  const { toasts } = state;
   const toastIdCounter = useRef(0);
-
-  // Process queue when visible toasts change
-  const processQueue = useCallback(() => {
-    setToasts((currentToasts) => {
-      if (currentToasts.length < MAX_VISIBLE_TOASTS) {
-        setQueue((currentQueue) => {
-          if (currentQueue.length === 0) return currentQueue;
-
-          const toastsToAdd = currentQueue.slice(0, MAX_VISIBLE_TOASTS - currentToasts.length);
-          const remainingQueue = currentQueue.slice(MAX_VISIBLE_TOASTS - currentToasts.length);
-
-          // Add queued toasts to visible toasts
-          const newToasts = [...currentToasts, ...toastsToAdd];
-
-          // Return remaining queue
-          return remainingQueue;
-        });
-
-        return currentToasts;
-      }
-      return currentToasts;
-    });
-  }, []);
 
   // Add a toast (either show immediately or queue it)
   const addToast = useCallback((message, options = {}) => {
@@ -60,37 +104,19 @@ export function ToastProvider({ children }) {
       action,
     };
 
-    setToasts((currentToasts) => {
-      if (currentToasts.length < MAX_VISIBLE_TOASTS) {
-        return [...currentToasts, toast];
-      } else {
-        // Queue the toast if we're at max capacity
-        setQueue((currentQueue) => [...currentQueue, toast]);
-        return currentToasts;
-      }
-    });
+    dispatch({ type: ADD_TOAST, payload: { toast } });
 
     return id;
   }, []);
 
   // Remove a toast by id
   const removeToast = useCallback((id) => {
-    setToasts((currentToasts) => {
-      const filtered = currentToasts.filter((t) => t.id !== id);
-
-      // Process queue after removing a toast
-      if (filtered.length < currentToasts.length) {
-        setTimeout(processQueue, 100);
-      }
-
-      return filtered;
-    });
-  }, [processQueue]);
+    dispatch({ type: REMOVE_TOAST, payload: { id } });
+  }, []);
 
   // Dismiss all toasts
   const dismissAll = useCallback(() => {
-    setToasts([]);
-    setQueue([]);
+    dispatch({ type: DISMISS_ALL });
   }, []);
 
   // Convenience methods for different toast types
