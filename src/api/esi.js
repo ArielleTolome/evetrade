@@ -406,6 +406,24 @@ export async function getMarketOrdersMultiRegion(typeId, regionIds, orderType = 
  * @returns {Object} Competition analysis data
  */
 export function analyzeMarketOrders(orders, stationId = null) {
+  // Handle empty or invalid input
+  if (!Array.isArray(orders) || orders.length === 0) {
+    return {
+      buyOrders: 0,
+      sellOrders: 0,
+      bestBuyPrice: 0,
+      bestSellPrice: 0,
+      buyersAtBestPrice: 0,
+      sellersAtBestPrice: 0,
+      totalBuyVolume: 0,
+      totalSellVolume: 0,
+      buyWalls: [],
+      sellWalls: [],
+      spread: 0,
+      competitionLevel: 'none',
+    };
+  }
+
   let filteredOrders = orders;
   if (stationId) {
     filteredOrders = orders.filter(o => o.location_id === stationId);
@@ -418,9 +436,9 @@ export function analyzeMarketOrders(orders, stationId = null) {
   buyOrders.sort((a, b) => b.price - a.price);  // Highest buy first
   sellOrders.sort((a, b) => a.price - b.price); // Lowest sell first
 
-  // Get best prices
-  const bestBuyPrice = buyOrders[0]?.price || 0;
-  const bestSellPrice = sellOrders[0]?.price || 0;
+  // Get best prices with safe array access
+  const bestBuyPrice = buyOrders.length > 0 ? (buyOrders[0].price || 0) : 0;
+  const bestSellPrice = sellOrders.length > 0 ? (sellOrders[0].price || 0) : 0;
 
   // Count orders at best price (competition)
   const buyersAtBestPrice = buyOrders.filter(o => o.price === bestBuyPrice).length;
