@@ -904,7 +904,7 @@ export function Navbar() {
             <div className="w-8 h-8 bg-gradient-to-br from-accent-cyan to-accent-purple rounded-lg flex items-center justify-center shadow-lg shadow-accent-cyan/20 group-hover:shadow-accent-cyan/40 transition-shadow">
               <span className="font-display font-bold text-space-black text-sm">ET</span>
             </div>
-            <span className="font-display text-xl font-bold tracking-wide hidden sm:inline">
+            <span className="font-display text-xl font-bold tracking-wide inline">
               <span className="text-accent-cyan group-hover:text-accent-cyan-dim transition-colors">EVE</span>
               <span className="text-text-primary dark:text-text-primary text-light-text">Trade</span>
             </span>
