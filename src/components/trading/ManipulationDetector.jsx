@@ -45,8 +45,9 @@
  * ```
  */
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { formatISK, formatPercent, formatNumber, formatCompact } from '../../utils/formatters';
+import { useDiscordWebhook } from '../../hooks/useDiscordWebhook';
 
 /**
  * Detect manipulation patterns
@@ -261,6 +262,8 @@ function calculateRiskLevel(issues) {
  * @param {Array} priceHistory - Historical price data (optional)
  * @param {boolean} compact - Whether to show compact view
  * @param {string} className - Additional CSS classes
+ * @param {Object} itemInfo - Item information for alerts { name, itemId }
+ * @param {boolean} enableDiscordAlerts - Whether to send Discord alerts
  */
 export function ManipulationDetector({
   currentPrice,
@@ -271,7 +274,11 @@ export function ManipulationDetector({
   priceHistory = [],
   compact = false,
   className = '',
+  itemInfo = null,
+  enableDiscordAlerts = false,
 }) {
+  const { sendScamWarning, settings: discordSettings } = useDiscordWebhook();
+
   const issues = useMemo(() => {
     return detectManipulation({
       currentPrice,
@@ -286,6 +293,41 @@ export function ManipulationDetector({
   const riskLevel = useMemo(() => {
     return calculateRiskLevel(issues);
   }, [issues]);
+
+  // Send Discord alert for high-risk manipulation
+  useEffect(() => {
+    if (
+      enableDiscordAlerts &&
+      discordSettings?.sendScamWarnings &&
+      itemInfo &&
+      (riskLevel.level === 'critical' || riskLevel.level === 'high')
+    ) {
+      const trade = {
+        Item: itemInfo.name || 'Unknown Item',
+        'Item ID': itemInfo.itemId,
+        'Buy Price': currentPrice,
+        Volume: volume,
+        'Gross Margin': 0,
+      };
+
+      const riskAssessment = {
+        level: riskLevel.level,
+        score: issues.length * 25,
+        reasons: issues.map(i => `${i.icon} ${i.title}: ${i.description}`),
+      };
+
+      sendScamWarning(trade, riskAssessment);
+    }
+  }, [
+    enableDiscordAlerts,
+    discordSettings?.sendScamWarnings,
+    itemInfo,
+    riskLevel.level,
+    issues,
+    currentPrice,
+    volume,
+    sendScamWarning,
+  ]);
 
   // Compact view - show inline indicator
   if (compact) {
