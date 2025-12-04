@@ -19,6 +19,7 @@ import { SessionSummary } from '../components/common/SessionSummary';
 import { PriceSparkline } from '../components/common/PriceSparkline';
 import { CompetitionAnalysis } from '../components/common/CompetitionAnalysis';
 import { ItemTierBadge } from '../components/common/ItemTierBadge';
+import { TradeSimulator } from '../components/trading/TradeSimulator';
 import { AdvancedSortPanel, applySorts } from '../components/common/AdvancedSortPanel';
 import { BulkActionsBar, SelectionCheckbox } from '../components/common/BulkActionsBar';
 import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
@@ -192,6 +193,8 @@ export function StationTradingPage() {
   const [showTradingTools, setShowTradingTools] = useState(false);
   const [walletTransactions, setWalletTransactions] = useState([]);
   const [activeToolTab, setActiveToolTab] = useState('overview'); // overview, orders, analysis, tools
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [simulatorPrefill, setSimulatorPrefill] = useState(null);
 
   // Refs for keyboard shortcuts
   const searchInputRef = useRef(null);
@@ -1072,6 +1075,24 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSimulatorPrefill({
+                    buyPrice: row['Buy Price'],
+                    sellPrice: row['Sell Price'],
+                    quantity: row['Volume'],
+                  });
+                  setShowSimulator(true);
+                  toast.info('Simulator pre-filled with trade data.');
+                }}
+                className="p-1.5 text-text-secondary hover:text-accent-purple transition-colors"
+                title="Simulate this trade"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M12 8h.01M15 8h.01M15 5h.01M12 5h.01M9 5h.01M4 7h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1z" />
+                </svg>
+              </button>
             </div>
           );
         },
@@ -1196,6 +1217,17 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
               </button>
             </div>
 
+            <div className="border-t border-accent-cyan/10 pt-4">
+              <Button
+                  onClick={() => setShowSimulator(!showSimulator)}
+                  variant="secondary"
+                  className="w-full"
+                  data-testid="toggle-simulator-button"
+              >
+                {showSimulator ? 'Hide' : 'Show'} Trade Simulator
+              </Button>
+            </div>
+
             {/* Advanced Filters (Collapsible) */}
             {showAdvanced && (
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fadeIn">
@@ -1254,6 +1286,12 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
             </Button>
           </form>
         </GlassmorphicCard>
+
+        {showSimulator && (
+          <div className="my-8">
+            <TradeSimulator prefillData={simulatorPrefill} />
+          </div>
+        )}
 
         {/* Wallet Balance & Tax Rate Indicator */}
         {isAuthenticated && (
