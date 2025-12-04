@@ -3,6 +3,7 @@ import { useResources, useLocationLookup } from '../../hooks/useResources';
 import { SecurityBadge } from '../common/SecurityBadge';
 import { isCitadel } from '../../utils/security';
 import { TRADE_HUBS } from '../../utils/constants';
+import AutocompleteSkeleton from './AutocompleteSkeleton';
 
 /**
  * Station Autocomplete Component
@@ -15,11 +16,12 @@ export function StationAutocomplete({
   error,
   required = false,
   disabled = false,
+  loading = false, // New prop for external loading state
   className = '',
   maxResults = 10,
   showTradeHubs = true,
 }) {
-  const { stationList, universeList, loading: resourcesLoading } = useResources();
+  const { stationList, universeList, loading: isDataLoading } = useResources();
   const { searchStations } = useLocationLookup();
 
   const [inputValue, setInputValue] = useState(value || '');
@@ -189,6 +191,19 @@ export function StationAutocomplete({
     setHighlightedIndex(-1);
   };
 
+  if (isDataLoading && !stationList) {
+    return <AutocompleteSkeleton label={label} showTradeHubs={showTradeHubs} />;
+  }
+
+  const isInputDisabled = disabled || loading || isDataLoading;
+  const showSpinner = loading || isDataLoading;
+
+  const getLoadingText = () => {
+    if (loading) return 'Submitting...';
+    if (isDataLoading) return 'Loading data...';
+    return null;
+  };
+
   return (
     <div className={`relative ${className}`}>
       {label && (
@@ -199,8 +214,8 @@ export function StationAutocomplete({
       )}
 
       {/* Trade Hub Quick Select */}
-      {showTradeHubs && !disabled && (
-        <div className="mb-3">
+      {showTradeHubs && !isInputDisabled && (
+        <div className="mb-3 animate-fade-in-up">
           <div className="text-xs text-text-secondary mb-2 flex items-center gap-1">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -244,6 +259,7 @@ export function StationAutocomplete({
           aria-expanded={isOpen && filtered.length > 0}
           aria-controls={listboxId}
           aria-activedescendant={highlightedIndex >= 0 ? getOptionId(highlightedIndex) : undefined}
+          aria-busy={showSpinner}
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => {
@@ -263,28 +279,42 @@ export function StationAutocomplete({
             blurTimeoutRef.current = setTimeout(() => setIsOpen(false), 200);
           }}
           onKeyDown={handleKeyDown}
-          placeholder={resourcesLoading ? 'Loading stations...' : placeholder}
-          disabled={disabled || resourcesLoading}
+          placeholder={isDataLoading ? 'Loading stations...' : placeholder}
+          disabled={isInputDisabled}
           required={required}
           title={inputValue || undefined}
           className={`
-            w-full px-4 py-3 rounded-lg
-            bg-space-dark/50 dark:bg-space-dark/50 bg-white
-            border ${error ? 'border-red-500' : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'}
-            text-text-primary dark:text-text-primary text-light-text
+            w-full pl-4 pr-10 py-3 rounded-lg
+            bg-space-dark/50 backdrop-blur-sm
+            border ${error ? 'border-red-500' : 'border-white/10'}
+            text-text-primary
             placeholder-text-secondary/50
             focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan
-            disabled:opacity-50 disabled:cursor-not-allowed
+            disabled:opacity-60 disabled:cursor-not-allowed
             transition-all duration-200
+            ${showSpinner ? 'pl-10' : ''}
           `}
           autoComplete="off"
         />
 
-        {/* Search icon */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        {/* Loading/Search Icon */}
+        <div className={`absolute left-3 top-1/2 -translate-y-1.2 text-text-secondary transition-all duration-200 ${showSpinner ? 'opacity-100' : 'opacity-0'}`}>
+          <svg className="w-5 h-5 animate-spin text-accent-cyan" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
+        </div>
+
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary">
+          {getLoadingText() ? (
+            <span className="text-xs italic text-accent-cyan/80 animate-fade-in-up">{getLoadingText()}</span>
+          ) : (
+            !showSpinner && (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            )
+          )}
         </div>
       </div>
 
