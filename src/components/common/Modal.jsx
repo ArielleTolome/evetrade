@@ -119,9 +119,13 @@ function ModalHeader({ children, className = '' }) {
 /**
  * Modal Title Component
  */
-function ModalTitle({ children, className = '' }) {
+function ModalTitle({ children, className = '', id, ...props }) {
   return (
-    <h2 className={`text-xl font-display font-bold text-text-primary ${className}`}>
+    <h2
+      id={id}
+      className={`text-xl font-display font-bold text-text-primary ${className}`}
+      {...props}
+    >
       {children}
     </h2>
   );
