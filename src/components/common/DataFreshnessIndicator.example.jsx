@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DataFreshnessIndicator } from './DataFreshnessIndicator';
 
-const fiveMinutes = 1000 * 60 * 5;
+const _fiveMinutes = 1000 * 60 * 5;
 
 const scenarios = [
   { title: 'Fresh (Just Now)', lastUpdated: new Date() },

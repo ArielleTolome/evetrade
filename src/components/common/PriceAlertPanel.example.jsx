@@ -11,7 +11,7 @@ import { useToast } from '../../components/common/ToastProvider';
  * into a trading page (like StationTradingPage, RegionHaulingPage, etc.)
  */
 export function ExampleTradingPageWithAlerts() {
-  const [trades, setTrades] = useState([]);
+  const [trades, _setTrades] = useState([]);
   const [showAlertPanel, setShowAlertPanel] = useState(false);
 
   // Initialize price alerts hook
@@ -225,8 +225,8 @@ export function QuickAlertButton({ trade, onCreateAlert }) {
  * Simplest way to add price alerts to any page
  */
 export function MinimalAlertExample() {
-  const { alerts, createAlert, checkAlerts } = usePriceAlerts();
-  const [trades, setTrades] = useState([]);
+  const { alerts: _alerts, createAlert: _createAlert, checkAlerts } = usePriceAlerts();
+  const [trades, _setTrades] = useState([]);
 
   // Check alerts whenever data updates
   useEffect(() => {

@@ -22,7 +22,7 @@ import { useWatchlist } from '../../hooks/useWatchlist';
  * Example Page Component with Smart Alerts Integration
  */
 export function StationTradingPageWithAlerts() {
-  const [trades, setTrades] = useState([]);
+  const [trades, _setTrades] = useState([]);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
 
   // Initialize smart alerts hook
@@ -30,7 +30,7 @@ export function StationTradingPageWithAlerts() {
     alerts,
     activeAlerts,
     triggeredAlerts,
-    acknowledgedAlerts,
+    acknowledgedAlerts: _acknowledgedAlerts,
     triggeredHistory,
     settings,
     notificationPermission,

@@ -7,7 +7,7 @@ import { BulkCopyPanel } from './BulkCopyPanel';
  * Example usage of TradeClipboard component
  */
 export function TradeClipboardExample() {
-  const [testItems, setTestItems] = useState([
+  const [testItems, _setTestItems] = useState([
     'Tritanium',
     'Pyerite',
     'Mexallon',

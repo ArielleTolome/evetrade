@@ -12,7 +12,7 @@ import { SmartFilters } from './SmartFilters';
  * Example: Using SmartFilters with TradingTable
  */
 export function TradingPageWithFilters() {
-  const [tradingData, setTradingData] = useState([]);
+  const [tradingData, _setTradingData] = useState([]);
   const [filters, setFilters] = useState({});
 
   // Apply filters to trading data
