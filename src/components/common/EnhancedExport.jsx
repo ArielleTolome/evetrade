@@ -477,7 +477,7 @@ export function EnhancedExport({
               {showDateRange && (
                 <div className="mb-6 p-4 bg-space-black/50 border border-accent-cyan/10 rounded-lg">
                   <label className="text-sm font-medium text-text-primary mb-3 block">Date Range</label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-text-secondary mb-1 block">Start Date</label>
                       <input
