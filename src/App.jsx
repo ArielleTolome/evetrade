@@ -2,6 +2,7 @@ import { RouterProvider } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { ResourceProvider } from './hooks/useResources';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AccessibilityProvider } from './contexts/AccessibilityContext';
 import { EveAuthProvider } from './hooks/useEveAuth';
 import { MultiCharacterProvider } from './hooks/useMultiCharacter';
 import { ToastProvider } from './components/common/ToastProvider';
@@ -35,9 +36,10 @@ function App() {
         console.error('Sentry caught error:', error, componentStack);
       }}
     >
-      <ThemeProvider>
-        <ToastProvider>
-          <EveAuthProvider>
+      <AccessibilityProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <EveAuthProvider>
             <MultiCharacterProvider>
               <ResourceProvider>
                 <RouterProvider router={router} />
@@ -46,6 +48,7 @@ function App() {
           </EveAuthProvider>
         </ToastProvider>
       </ThemeProvider>
+    </AccessibilityProvider>
     </Sentry.ErrorBoundary>
   );
 }
