@@ -260,6 +260,7 @@ export function StationAutocomplete({
   const inputRef = useRef(null);
   const listRef = useRef(null);
   const blurTimeoutRef = useRef(null);
+  const typeAheadTimeoutRef = useRef(null);
 
   // Generate unique IDs for ARIA attributes
   const listboxId = useId();
@@ -355,6 +356,32 @@ export function StationAutocomplete({
 
   // Handle keyboard navigation
   const handleKeyDown = (e) => {
+    if (e.key.length === 1 && e.key.match(/[a-z0-9]/i)) {
+      if (typeAheadTimeoutRef.current) {
+        clearTimeout(typeAheadTimeoutRef.current);
+      }
+
+      const query = e.key.toLowerCase();
+      const currentIndex = highlightedIndex >= 0 ? highlightedIndex : -1;
+      let nextIndex = filtered.findIndex(
+        (station, index) =>
+          index > currentIndex && station.toLowerCase().startsWith(query)
+      );
+
+      if (nextIndex === -1) {
+        nextIndex = filtered.findIndex((station) =>
+          station.toLowerCase().startsWith(query)
+        );
+      }
+
+      if (nextIndex !== -1) {
+        setHighlightedIndex(nextIndex);
+      }
+
+      typeAheadTimeoutRef.current = setTimeout(() => {
+        // No action needed, just a delay for next keystroke
+      }, 500); // Reset after 500ms of inactivity
+    }
     if (!isOpen) return;
 
     if (filtered.length === 0) {
