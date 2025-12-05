@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback } from 'react';
 
 const ZKILL_API = 'https://zkillboard.com/api';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
@@ -11,7 +11,6 @@ export function useZkillboard() {
   const [cache, setCache] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const abortControllerRef = useRef(null);
 
   /**
    * Fetch recent kills for a solar system
