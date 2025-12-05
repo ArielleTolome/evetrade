@@ -110,20 +110,16 @@ export function PIOptimizerPage() {
     [universeList]
   );
 
-  // Load character planets when authenticated
-  useEffect(() => {
-    if (isAuthenticated && character?.id) {
-      loadCharacterPlanets();
-    }
-  }, [isAuthenticated, character?.id]);
+  const loadCharacterPlanets = useCallback(async () => {
+    const characterId = character?.id;
+    if (!characterId) return;
 
-  const loadCharacterPlanets = async () => {
     setPlanetsLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (!accessToken) return;
 
-      const planetsData = await getCharacterPlanets(character.id, accessToken);
+      const planetsData = await getCharacterPlanets(characterId, accessToken);
       setPlanets(planetsData || []);
     } catch (err) {
       console.error('Failed to load planets:', err);
@@ -131,7 +127,14 @@ export function PIOptimizerPage() {
     } finally {
       setPlanetsLoading(false);
     }
-  };
+  }, [character?.id, getAccessToken]);
+
+  // Load character planets when authenticated
+  useEffect(() => {
+    if (isAuthenticated && character?.id) {
+      loadCharacterPlanets();
+    }
+  }, [isAuthenticated, character?.id, loadCharacterPlanets]);
 
   // Handle form submission
   const handleSubmit = useCallback(
