@@ -188,8 +188,8 @@ function MiniSparkline({ data, color }) {
     purple: '#bc13fe',
   };
 
-  const max = Math.max(...data);
-  const min = Math.min(...data);
+  const max = data.length > 0 ? Math.max(...data) : 0;
+  const min = data.length > 0 ? Math.min(...data) : 0;
   const range = max - min || 1;
 
   const points = data.map((value, index) => {

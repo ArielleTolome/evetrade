@@ -136,7 +136,7 @@ function ModalTitle({ children, className = '', id, ...props }) {
  */
 function ModalBody({ children, className = '' }) {
   return (
-    <div className={`px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto max-h-[60vh] sm:max-h-[70vh] ${className}`}>
+    <div className={`px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto max-h-[60dvh] sm:max-h-[70dvh] ${className}`}>
       {children}
     </div>
   );

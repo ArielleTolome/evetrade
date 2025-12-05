@@ -521,7 +521,7 @@ function UserMenu({ onOpenAccessibility }) {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-space-dark border border-accent-cyan/20 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1rem)] bg-space-dark border border-accent-cyan/20 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
           {/* Character Info */}
           <div className="p-4 border-b border-accent-cyan/10">
             <div className="flex items-center gap-3">
@@ -615,7 +615,7 @@ function MobileAccordion({ category, isOpen, onToggle, location, handleMenuClose
           to={category.path}
           onClick={handleMenuClose}
           className={`
-            flex items-center gap-3 px-4 py-3.5 text-base font-medium min-h-[48px]
+            flex items-center gap-3 px-4 py-4 text-base font-medium min-h-[52px]
             ${location.pathname === category.path
               ? 'bg-accent-cyan/10 text-accent-cyan'
               : 'text-text-secondary active:bg-white/10'
@@ -632,7 +632,7 @@ function MobileAccordion({ category, isOpen, onToggle, location, handleMenuClose
           <button
             onClick={onToggle}
             className={`
-              w-full flex items-center gap-3 px-4 py-3.5 text-base font-medium min-h-[48px]
+              w-full flex items-center gap-3 px-4 py-4 text-base font-medium min-h-[52px]
               transition-colors
               ${isOpen || category.items?.some(item => location.pathname === item.path)
                 ? 'bg-accent-cyan/5 text-text-primary'
@@ -726,10 +726,10 @@ function MobileMenu({ menuRef, isMobileMenuOpen, location, handleMenuClose }) {
                   <img
                     src={getPortraitUrl(character.id, 64)}
                     alt={character.name}
-                    className="w-10 h-10 rounded-full border border-accent-cyan/30"
+                    className="w-12 h-12 rounded-full border border-accent-cyan/30"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center">
                     <svg className="w-5 h-5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
