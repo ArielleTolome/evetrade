@@ -134,13 +134,13 @@ export function PriceProjection({ currentPrice = 0, priceHistory = [], compact =
     return (
       <div className="flex items-center gap-3 text-xs">
         <div>
-          <span className="text-gray-400">1w: </span>
+          <span className="text-text-secondary">1w: </span>
           <span className={projection1w.changePercent > 0 ? 'text-green-400' : projection1w.changePercent < 0 ? 'text-red-400' : 'text-yellow-400'}>
             {projection1w.changePercent > 0 ? '+' : ''}{projection1w.changePercent.toFixed(1)}%
           </span>
         </div>
         <div>
-          <span className="text-gray-400">1m: </span>
+          <span className="text-text-secondary">1m: </span>
           <span className={projection1m.changePercent > 0 ? 'text-green-400' : projection1m.changePercent < 0 ? 'text-red-400' : 'text-yellow-400'}>
             {projection1m.changePercent > 0 ? '+' : ''}{projection1m.changePercent.toFixed(1)}%
           </span>
@@ -162,7 +162,7 @@ export function PriceProjection({ currentPrice = 0, priceHistory = [], compact =
       {/* Current Price */}
       <div className="mb-4 pb-4 border-b border-gray-700">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs text-gray-400">Current Price</span>
+          <span className="text-xs text-text-secondary">Current Price</span>
           <span className="text-lg font-mono font-bold text-accent-cyan">
             {formatISK(currentPrice)}
           </span>
@@ -239,7 +239,7 @@ function ProjectionRow({ label, price, change, changePercent, confidence, upperB
     <div>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 w-16">{label}</span>
+          <span className="text-xs text-text-secondary w-16">{label}</span>
           <span className={`text-sm ${color}`}>{arrow}</span>
         </div>
         <div className="text-right">

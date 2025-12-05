@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { SectionErrorBoundary } from '../common/ErrorBoundary';
 import { Sidebar, MobileNav } from '../common/Sidebar';
+import SkipLink from '../common/SkipLink';
 import { AnimatedBackground } from './AnimatedBackground';
 import Header from './Header';
 import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../../hooks/useKeyboardShortcuts.jsx';
@@ -29,6 +30,7 @@ export function RootLayout() {
 
   return (
     <div className="min-h-screen bg-space-black">
+      <SkipLink />
       <AnimatedBackground />
 
       {/* Desktop Sidebar */}
@@ -48,11 +50,18 @@ export function RootLayout() {
       >
         <Header />
         <main
+          id="main-content"
           className={`
             min-h-screen
             pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0
           `}
         >
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-accent-cyan focus:text-space-black"
+          >
+            Skip to main content
+          </a>
           <SectionErrorBoundary name="MainContent">
             <Outlet />
           </SectionErrorBoundary>
