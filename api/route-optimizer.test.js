@@ -16,43 +16,6 @@ const TEST_SYSTEMS = {
   PERIMETER: 30000144, // The Forge - Near Jita
 };
 
-// Mock request and response objects for local testing
-function createMockReq(query) {
-  return {
-    method: 'GET',
-    query,
-    headers: {},
-  };
-}
-
-function createMockRes() {
-  const res = {
-    statusCode: 200,
-    headers: {},
-    body: null,
-
-    setHeader(key, value) {
-      this.headers[key] = value;
-      return this;
-    },
-
-    status(code) {
-      this.statusCode = code;
-      return this;
-    },
-
-    json(data) {
-      this.body = data;
-      return this;
-    },
-
-    end() {
-      return this;
-    },
-  };
-
-  return res;
-}
 
 // Import the handler (in a real test, this would work)
 // For now, we'll just document the expected behavior
