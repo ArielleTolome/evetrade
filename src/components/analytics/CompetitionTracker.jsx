@@ -71,7 +71,7 @@ export function CompetitionTracker() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, character, getAccessToken]);
+  }, [isAuthenticated, character, getAccessToken, processOrderChanges]);
 
   // Process order changes to detect undercutting
   const processOrderChanges = useCallback((currentOrders) => {
