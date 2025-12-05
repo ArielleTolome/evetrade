@@ -9,9 +9,9 @@ export function IndustryCalculator() {
   const {
     calculateManufacturingProfit,
     calculateInvention,
-    compareBuildVsBuy,
+    compareBuildVsBuy: _compareBuildVsBuy,
     formatISK,
-    formatTime,
+    formatTime: _formatTime,
   } = useIndustry();
 
   const [activeTab, setActiveTab] = useState('manufacturing');

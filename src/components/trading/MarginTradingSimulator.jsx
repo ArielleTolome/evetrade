@@ -33,7 +33,7 @@ export function MarginTradingSimulator({
   const [competitorCount, setCompetitorCount] = useState(
     initialCompetition.buyers + initialCompetition.sellers
   );
-  const [isRunning, setIsRunning] = useState(false);
+  const [_isRunning, _setIsRunning] = useState(false);
 
   // Load tax settings from localStorage
   const taxRates = useMemo(() => {

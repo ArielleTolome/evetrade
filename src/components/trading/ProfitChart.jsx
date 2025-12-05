@@ -12,7 +12,7 @@ export function ProfitChart({ scenarios }) {
     const maxVolatility = Math.max(...scenarios.map(s => s.volatility)) || 10;
 
     const chartScenarios = scenarios.map(scenario => {
-      const { buyPrice, quantity, salesTax, brokerFee, breakEven, sellPrice } = scenario;
+      const { buyPrice, quantity, salesTax, brokerFee, breakEven: _breakEven, sellPrice } = scenario;
       const points = [];
       const priceRange = sellPrice * (maxVolatility / 100) * 2;
       const priceStep = priceRange / dataPoints;

@@ -35,7 +35,6 @@ export function StickyFilterBar({
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- sticky state derived from scroll position is standard pattern
     setIsSticky(scrollPosition.y > originalTop - offset);
   }, [scrollPosition, offset, originalTop]);
 

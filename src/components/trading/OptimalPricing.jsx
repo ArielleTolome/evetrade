@@ -69,8 +69,8 @@ export function OptimalPricing() {
       expectedFillTime = dailyTurnover > 0 ? (buyOrderVolume / dailyVolume) * 48 : 12;
     } else {
       // Balanced: slight undercut with good margin
-      const buyOffset = spread * 0.05;
-      const sellOffset = spread * 0.05;
+      const _buyOffset = spread * 0.05;
+      const _sellOffset = spread * 0.05;
       suggestedBuyPrice = highestBuyOrder + 0.01;
       suggestedSellPrice = lowestSellOrder - 0.01;
       expectedFillTime = dailyTurnover > 0 ? (buyOrderVolume / dailyVolume) * 12 : 4;

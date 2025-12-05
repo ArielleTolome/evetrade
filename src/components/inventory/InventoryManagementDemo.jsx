@@ -77,6 +77,7 @@ export function InventoryManagementDemo() {
   ]);
 
   // Sample sales history (last 30 days)
+  /* eslint-disable react-hooks/purity -- Date.now() used for demo data initialization */
   const [salesHistory] = useState([
     // Tritanium - selling steadily
     { itemId: 34, quantity: 5000, date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
@@ -103,6 +104,7 @@ export function InventoryManagementDemo() {
     // Obsolete Item - no recent sales (last sale was 15 days ago)
     { itemId: 1234, quantity: 20, date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) },
   ]);
+  /* eslint-enable react-hooks/purity */
 
   // Current market prices (same as inventory for demo)
   const [currentPrices] = useState({
