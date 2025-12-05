@@ -61,7 +61,7 @@ export function AffordabilityBadge({
     unauthenticated: {
       bg: 'bg-gray-500/20',
       border: 'border-gray-500/30',
-      text: 'text-gray-400',
+      text: 'text-text-secondary',
       icon: (
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -71,7 +71,7 @@ export function AffordabilityBadge({
     loading: {
       bg: 'bg-gray-500/20',
       border: 'border-gray-500/30',
-      text: 'text-gray-400',
+      text: 'text-text-secondary',
       icon: (
         <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
