@@ -680,3 +680,10 @@ body {
   padding: 1rem;
   border-radius: 0 0.5rem 0.5rem 0;
 }
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import useRipple from '../../hooks/useRipple';
 
 /**
  * Button Component
@@ -17,10 +18,33 @@ export function Button({
     to,
     onClick,
     type = 'button',
+    disableRipple = false,
     ...props
 }) {
+    const [ripples, createRipple] = useRipple();
+
+    const handleMouseDown = (e) => {
+        if (!disableRipple) {
+            createRipple(e);
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (!disableRipple && (e.key === 'Enter' || e.key === ' ')) {
+            const { width, height, left, top } = e.currentTarget.getBoundingClientRect();
+            const event = {
+                ...e,
+                currentTarget: e.currentTarget,
+                clientX: left + width / 2,
+                clientY: top + height / 2,
+            };
+            createRipple(event);
+        }
+    };
+
     // Base classes
     const baseClasses = `
+    relative overflow-hidden
     inline-flex items-center justify-center
     font-display font-medium tracking-wide
     transition-all duration-300
@@ -79,18 +103,37 @@ export function Button({
         </svg>
     );
 
+    const rippleColor = (variant === 'primary' || variant === 'danger') ? 'rgba(224, 225, 221, 0.2)' : 'rgba(65, 90, 119, 0.3)';
+
     const content = (
         <>
             {loading && spinner}
             {!loading && icon && iconPosition === 'left' && <span className="text-lg">{icon}</span>}
-            <span>{children}</span>
+            <span className="relative z-10">{children}</span>
             {!loading && icon && iconPosition === 'right' && <span className="text-lg">{icon}</span>}
+            {!disableRipple && ripples.map((ripple) => (
+                <span
+                    key={ripple.key}
+                    className="ripple"
+                    style={{
+                        position: 'absolute',
+                        borderRadius: '50%',
+                        transform: 'scale(0)',
+                        animation: 'ripple 600ms linear',
+                        backgroundColor: rippleColor,
+                        left: `${ripple.x - (ripple.size/2)}px`,
+                        top: `${ripple.y - (ripple.size/2)}px`,
+                        width: `${ripple.size}px`,
+                        height: `${ripple.size}px`,
+                    }}
+                />
+            ))}
         </>
     );
 
     if (to) {
         return (
-            <Link to={to} className={classes} {...props}>
+            <Link to={to} className={classes} onMouseDown={handleMouseDown} onKeyDown={handleKeyDown} {...props}>
                 {content}
             </Link>
         );
@@ -101,6 +144,8 @@ export function Button({
             type={type}
             className={classes}
             onClick={onClick}
+            onMouseDown={handleMouseDown}
+            onKeyDown={handleKeyDown}
             disabled={disabled || loading}
             {...props}
         >
