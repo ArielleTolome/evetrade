@@ -3,6 +3,82 @@ import { formatNumber } from '../../utils/formatters';
 import { FormInput } from '../forms/FormInput';
 import { useDiscordWebhook } from '../../hooks/useDiscordWebhook';
 
+function AlertRow({
+  alert,
+  onRemoveAlert,
+  onResetAlert,
+  getAlertTypeLabel,
+  getConditionLabel,
+  formatThreshold,
+}) {
+  return (
+    <div
+      key={alert.id}
+      className={`p-4 rounded-lg border transition-all ${
+        alert.triggered
+          ? 'bg-accent-gold/5 border-accent-gold/30'
+          : 'bg-space-mid/30 border-accent-cyan/10 hover:border-accent-cyan/30'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-accent-cyan font-medium">{alert.itemName}</span>
+            {alert.triggered && (
+              <span className="px-2 py-0.5 rounded-full bg-accent-gold/20 text-accent-gold text-xs font-medium">
+                Triggered
+              </span>
+            )}
+            {alert.oneTime && !alert.triggered && (
+              <span className="px-2 py-0.5 rounded-full bg-accent-purple/20 text-accent-purple text-xs font-medium">
+                One-time
+              </span>
+            )}
+          </div>
+
+          <div className="text-sm text-text-secondary space-y-1">
+            <p>
+              <span className="text-text-primary">{getAlertTypeLabel(alert.type)}</span>{' '}
+              <span className="text-accent-cyan">{getConditionLabel(alert.condition).toLowerCase()}</span>{' '}
+              <span className="text-text-primary font-mono">{formatThreshold(alert.threshold, alert.type)}</span>
+            </p>
+
+            {alert.triggeredAt && (
+              <p className="text-xs">
+                Triggered: {new Date(alert.triggeredAt).toLocaleString()}
+              </p>
+            )}
+
+            <p className="text-xs">
+              Created: {new Date(alert.createdAt).toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          {alert.triggered && (
+            <button
+              type="button"
+              onClick={() => onResetAlert?.(alert.id)}
+              className="px-3 py-1.5 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-xs font-medium transition-all hover:bg-accent-cyan/20"
+              title="Reset alert"
+            >
+              Reset
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onRemoveAlert?.(alert.id)}
+            className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium transition-all hover:bg-red-500/20"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Price Alert Panel Component
  * Manages price alerts for trading items with notification settings
@@ -412,72 +488,15 @@ export function PriceAlertPanel({
           <>
             <div className="space-y-3">
               {(showTriggered ? triggeredAlerts : activeAlerts).map((alert) => (
-                <div
+                <AlertRow
                   key={alert.id}
-                  className={`p-4 rounded-lg border transition-all $${
-                    alert.triggered
-                      ? 'bg-accent-gold/5 border-accent-gold/30'
-                      : 'bg-space-mid/30 border-accent-cyan/10 hover:border-accent-cyan/30'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-accent-cyan font-medium">{alert.itemName}</span>
-                        {alert.triggered && (
-                          <span className="px-2 py-0.5 rounded-full bg-accent-gold/20 text-accent-gold text-xs font-medium">
-                            Triggered
-                          </span>
-                        )}
-                        {alert.oneTime && !alert.triggered && (
-                          <span className="px-2 py-0.5 rounded-full bg-accent-purple/20 text-accent-purple text-xs font-medium">
-                            One-time
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="text-sm text-text-secondary space-y-1">
-                        <p>
-                          <span className="text-text-primary">{getAlertTypeLabel(alert.type)}</span>
-                          {' '}
-                          <span className="text-accent-cyan">{getConditionLabel(alert.condition).toLowerCase()}</span>
-                          {' '}
-                          <span className="text-text-primary font-mono">{formatThreshold(alert.threshold, alert.type)}</span>
-                        </p>
-                        
-                        {alert.triggeredAt && (
-                          <p className="text-xs">
-                            Triggered: {new Date(alert.triggeredAt).toLocaleString()}
-                          </p>
-                        )}
-                        
-                        <p className="text-xs">
-                          Created: {new Date(alert.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      {alert.triggered && (
-                        <button
-                          type="button"
-                          onClick={() => onResetAlert?.(alert.id)}
-                          className="px-3 py-1.5 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-xs font-medium transition-all hover:bg-accent-cyan/20"
-                          title="Reset alert"
-                        >
-                          Reset
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => onRemoveAlert?.(alert.id)}
-                        className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium transition-all hover:bg-red-500/20"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  alert={alert}
+                  onRemoveAlert={onRemoveAlert}
+                  onResetAlert={onResetAlert}
+                  getAlertTypeLabel={getAlertTypeLabel}
+                  getConditionLabel={getConditionLabel}
+                  formatThreshold={formatThreshold}
+                />
               ))}
             </div>
             
