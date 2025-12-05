@@ -57,7 +57,7 @@ export function AnimatedBackground() {
 
       {/* Nebula effects */}
       <div
-        className="absolute w-[600px] h-[600px] rounded-full blur-[100px] opacity-20"
+        className="absolute w-[300px] h-[300px] rounded-full blur-[50px] opacity-20 sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] sm:blur-[80px] md:blur-[100px]"
         style={{
           background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)',
           top: '10%',
@@ -65,7 +65,7 @@ export function AnimatedBackground() {
         }}
       />
       <div
-        className="absolute w-[500px] h-[500px] rounded-full blur-[80px] opacity-15"
+        className="absolute w-[250px] h-[250px] rounded-full blur-[40px] opacity-15 sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] sm:blur-[60px] md:blur-[80px]"
         style={{
           background: 'radial-gradient(circle, rgba(0,212,255,0.3) 0%, transparent 70%)',
           bottom: '-5%',
@@ -73,7 +73,7 @@ export function AnimatedBackground() {
         }}
       />
       <div
-        className="absolute w-[400px] h-[400px] rounded-full blur-[60px] opacity-10"
+        className="absolute w-[200px] h-[200px] rounded-full blur-[30px] opacity-10 sm:w-[300px] sm:h-[300px] md:w-[400px] md:h-[400px] sm:blur-[50px] md:blur-[60px]"
         style={{
           background: 'radial-gradient(circle, rgba(255,215,0,0.2) 0%, transparent 70%)',
           top: '50%',
