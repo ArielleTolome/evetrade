@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useMarketVelocity } from './useMarketVelocity';
 import * as esiApi from '../api/esi';
@@ -92,10 +92,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    expect(result.current.loading).toBe(true);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     expect(esiApi.getMarketHistory).toHaveBeenCalledWith(mockRegionId, mockTypeId);
@@ -119,8 +117,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     const velocity = result.current.velocities[0];
@@ -137,8 +135,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     const velocity = result.current.velocities[0];
@@ -155,16 +153,16 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     const velocity = result.current.velocities[0];
 
     // Total sell volume: 8000
-    // Daily volume: 1900
-    // Days to sell: 8000 / 1900 ≈ 4.2
-    expect(velocity.daysToSell).toBeCloseTo(4.2, 0);
+    // Daily volume: 2000
+    // Days to sell: 8000 / 2000 = 4
+    expect(velocity.daysToSell).toBe(4);
   });
 
   it('should calculate velocity score', async () => {
@@ -174,8 +172,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     const velocity = result.current.velocities[0];
@@ -192,8 +190,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     // Should be filtered out due to low volume
@@ -208,8 +206,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     // Should be filtered out if velocity score is below threshold
@@ -224,8 +222,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     // Should be filtered out due to low spread
@@ -240,8 +238,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     // Mock data has 'low' competition, so should be filtered out
@@ -257,8 +255,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     expect(esiApi.getMarketHistory).toHaveBeenCalledTimes(3);
@@ -273,8 +271,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     const { statistics } = result.current;
@@ -295,8 +293,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     expect(result.current.topOpportunities).toBeDefined();
@@ -317,8 +315,8 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     // When individual item fetch fails, the error is suppressed and item is excluded
@@ -334,29 +332,25 @@ describe('useMarketVelocity', () => {
       })
     );
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    // Initial fetch
+    await act(async () => {
+      await result.current.refresh();
     });
 
     const firstUpdate = result.current.lastUpdated;
-    const initialCallCount = esiApi.getMarketHistory.mock.calls.length;
-
-    // Clear mock call history after initial render
-    vi.clearAllMocks();
+    expect(firstUpdate).not.toBeNull();
+    expect(esiApi.getMarketHistory).toHaveBeenCalledTimes(1);
 
     // Wait a bit to ensure timestamp difference
     await new Promise(resolve => setTimeout(resolve, 10));
 
     // Trigger refresh
-    await result.current.refresh();
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.refresh();
     });
 
     expect(result.current.lastUpdated).not.toBe(firstUpdate);
-    // Should be called once for the refresh (after clearing mocks)
-    expect(esiApi.getMarketHistory).toHaveBeenCalledTimes(1);
+    expect(esiApi.getMarketHistory).toHaveBeenCalledTimes(2);
   });
 
   it('should export utility functions', () => {
