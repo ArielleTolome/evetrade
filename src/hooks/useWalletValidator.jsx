@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useEveAuth } from './useEveAuth';
 import { formatISK } from '../utils/formatters';
 
