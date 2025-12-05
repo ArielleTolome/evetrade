@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { SearchX } from 'lucide-react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { EmptyState } from '../components/common/EmptyState';
+import PullToRefresh from '../components/common/PullToRefresh';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { QuickTradeCalculator } from '../components/common/QuickTradeCalculator';
@@ -329,6 +330,13 @@ export function StationTradingPage() {
       onSubmit,
     }
   );
+
+  const handleRefresh = useCallback(async () => {
+    if (form.station) {
+      await handleSubmit(new Event('submit'));
+      toast.info('Data refreshed!');
+    }
+  }, [form.station, handleSubmit, toast]);
 
   // Load orders when authenticated and station selected
   const loadOrders = useCallback(async () => {
@@ -1112,8 +1120,9 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       title="Station Trading"
       subtitle="Find profitable buy/sell margins within a single station"
     >
-      {/* Add padding-bottom for mobile quick actions bar */}
-      <div className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8">
+      <PullToRefresh onRefresh={handleRefresh}>
+        {/* Add padding-bottom for mobile quick actions bar */}
+        <div className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8">
 
         {/* Price Alert Notifications */}
         {triggeredAlerts.length > 0 && (
@@ -2052,7 +2061,8 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
             </>
           );
         })()}
-      </div>
+        </div>
+      </PullToRefresh>
 
       {/* Bulk Actions Bar */}
       <BulkActionsBar

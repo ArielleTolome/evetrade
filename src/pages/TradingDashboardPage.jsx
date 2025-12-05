@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
+import PullToRefresh from '../components/common/PullToRefresh';
 import { Button } from '../components/common/Button';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { useTradeHistory } from '../hooks/useTradeHistory';
+import { useToast } from '../components/common/ToastProvider';
 import { formatISK, formatPercent, formatRelativeTime } from '../utils/formatters';
 
 /**
@@ -15,6 +17,7 @@ import { formatISK, formatPercent, formatRelativeTime } from '../utils/formatter
 export function TradingDashboardPage() {
   const { currentList, removeFromWatchlist, addToWatchlist } = useWatchlist();
   const { triggeredAlerts, dismissTriggered, settings, updateSettings } = usePriceAlerts();
+  const toast = useToast();
   const { stats, tradeAnalysis } = useTradeHistory();
 
   const [sessionStats, setSessionStats] = useState(() => {
@@ -185,6 +188,12 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
     }
   }, []);
 
+  const handleRefresh = useCallback(async () => {
+    // In a real app, you'd re-fetch data here.
+    // For this mock-data page, we'll just show a toast.
+    toast.info('Dashboard data refreshed!');
+  }, [toast]);
+
   // Add ISK to session
   const addSessionISK = useCallback((amount) => {
     setSessionStats(prev => ({
@@ -199,9 +208,10 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
       title="Trading Dashboard"
       subtitle="Your command center for EVE Online trading"
     >
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Main Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Main Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Top Opportunities Panel */}
           <GlassmorphicCard className="md:col-span-2">
@@ -723,7 +733,8 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
             <li>• Session stats track your performance in real-time - reset when starting a new session</li>
           </ul>
         </div>
-      </div>
+        </div>
+      </PullToRefresh>
     </PageLayout>
   );
 }
