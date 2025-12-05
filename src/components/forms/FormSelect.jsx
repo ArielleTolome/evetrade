@@ -10,6 +10,7 @@ export const FormSelect = forwardRef(function FormSelect(
     name,
     value,
     onChange,
+    onSubmit,
     options = [],
     placeholder = 'Select an option',
     error,
@@ -28,6 +29,13 @@ export const FormSelect = forwardRef(function FormSelect(
 
   const handleChange = (e) => {
     onChange?.(e.target.value);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSubmit?.();
+    }
   };
 
   return (
@@ -49,6 +57,7 @@ export const FormSelect = forwardRef(function FormSelect(
           name={name}
           value={value}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
           required={required}
           aria-invalid={!!error}

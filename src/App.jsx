@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { ResourceProvider } from './hooks/useResources';
@@ -7,12 +8,27 @@ import { MultiCharacterProvider } from './hooks/useMultiCharacter';
 import { ToastProvider } from './components/common/ToastProvider';
 import { router } from './router';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 
 /**
  * Main App Component
  * Wrapped with Sentry error boundary for automatic error reporting
  */
 function App() {
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+
+  // Placeholder for global search modal functionality
+  const toggleSearchModal = () => {
+    console.log('Toggling search modal...');
+  };
+
+  const toggleShortcutsModal = () => {
+    setIsShortcutsModalOpen((prev) => !prev);
+  };
+
+  useKeyboardShortcuts(toggleShortcutsModal, toggleSearchModal);
+
   return (
     <Sentry.ErrorBoundary
       fallback={({ error, resetError }) => (
@@ -41,6 +57,7 @@ function App() {
             <MultiCharacterProvider>
               <ResourceProvider>
                 <RouterProvider router={router} />
+                <KeyboardShortcuts isOpen={isShortcutsModalOpen} onClose={toggleShortcutsModal} />
               </ResourceProvider>
             </MultiCharacterProvider>
           </EveAuthProvider>

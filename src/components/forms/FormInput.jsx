@@ -11,6 +11,8 @@ export const FormInput = forwardRef(function FormInput(
     type = 'text',
     value,
     onChange,
+    onClear,
+    onSubmit,
     placeholder,
     error,
     helper,
@@ -32,10 +34,24 @@ export const FormInput = forwardRef(function FormInput(
   const helperId = `${inputId}-helper`;
 
   const handleChange = (e) => {
-    const newValue = type === 'number'
-      ? (e.target.value === '' ? '' : Number(e.target.value))
-      : e.target.value;
+    const newValue =
+      type === 'number'
+        ? e.target.value === ''
+          ? ''
+          : Number(e.target.value)
+        : e.target.value;
     onChange?.(newValue);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onClear?.();
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSubmit?.();
+    }
   };
 
   return (
@@ -64,6 +80,7 @@ export const FormInput = forwardRef(function FormInput(
           name={name}
           value={value}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
           required={required}
@@ -75,7 +92,11 @@ export const FormInput = forwardRef(function FormInput(
           className={`
             w-full px-3 sm:px-4 py-3 rounded-lg
             bg-space-dark/50 dark:bg-space-dark/50 bg-white
-            border ${error ? 'border-red-500' : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'}
+            border ${
+              error
+                ? 'border-red-500'
+                : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'
+            }
             text-text-primary dark:text-text-primary text-light-text text-sm
             placeholder-text-secondary/50
             focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan
@@ -97,11 +118,15 @@ export const FormInput = forwardRef(function FormInput(
       </div>
 
       {error && (
-        <p id={errorId} role="alert" className="text-sm text-red-400">{error}</p>
+        <p id={errorId} role="alert" className="text-sm text-red-400">
+          {error}
+        </p>
       )}
 
       {helper && !error && (
-        <p id={helperId} className="text-sm text-text-secondary/70">{helper}</p>
+        <p id={helperId} className="text-sm text-text-secondary/70">
+          {helper}
+        </p>
       )}
     </div>
   );

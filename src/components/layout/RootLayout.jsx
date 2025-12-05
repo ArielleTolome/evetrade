@@ -43,11 +43,18 @@ export function RootLayout() {
       >
         <Header />
         <main
+          id="main-content"
           className={`
             min-h-screen
             pb-20 lg:pb-0
           `}
         >
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-accent-cyan focus:text-space-black"
+          >
+            Skip to main content
+          </a>
           <SectionErrorBoundary name="MainContent">
             <Outlet />
           </SectionErrorBoundary>

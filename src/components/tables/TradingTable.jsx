@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Button } from '../common/Button';
 
 /**
@@ -331,6 +331,7 @@ export function TradingTable({
   selectedRowIndex = -1,
   enableMobileCards = true, // New prop to enable/disable mobile card view
 }) {
+  const tableRef = useRef(null);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(pageLength);
@@ -340,7 +341,8 @@ export function TradingTable({
 
   // Expanded rows state
   const [expandedRows, setExpandedRows] = useState(new Set());
-
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [selectedCell, setSelectedCell] = useState({ rowIndex: 0, colIndex: 0 });
   // Sort state
   const [sortConfig, setSortConfig] = useState(() => {
     if (defaultSort) {
@@ -471,6 +473,79 @@ export function TradingTable({
     });
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!tableRef.current || !tableRef.current.contains(document.activeElement)) {
+        return;
+      }
+
+      const visibleColumns = columns.filter(c => c.visible !== false);
+      const numRows = paginatedData.length;
+      const numCols = visibleColumns.length;
+
+      let { rowIndex, colIndex } = selectedCell;
+
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          rowIndex = Math.max(0, rowIndex - 1);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          rowIndex = Math.min(numRows - 1, rowIndex + 1);
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          colIndex = Math.max(0, colIndex - 1);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          colIndex = Math.min(numCols - 1, colIndex + 1);
+          break;
+        case 'Enter':
+          e.preventDefault();
+          onRowClick?.(paginatedData[rowIndex], rowIndex);
+          break;
+        case ' ': // Space
+          e.preventDefault();
+          const rowId = paginatedData[rowIndex]['Item ID'] || rowIndex;
+          setSelectedRows(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(rowId)) {
+              newSet.delete(rowId);
+            } else {
+              newSet.add(rowId);
+            }
+            return newSet;
+          });
+          break;
+        case 'a':
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            const allRowIds = new Set(paginatedData.map((row, idx) => row['Item ID'] || idx));
+            setSelectedRows(allRowIds);
+          }
+          break;
+        default:
+          return;
+      }
+
+      setSelectedCell({ rowIndex, colIndex });
+
+      const cellToFocus = tableRef.current.querySelector(
+        `[data-row-index="${rowIndex}"][data-col-index="${colIndex}"]`
+      );
+      cellToFocus?.focus();
+    };
+
+    const tableElement = tableRef.current;
+    tableElement?.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      tableElement?.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedCell, paginatedData, columns, onRowClick, onAddToWatchlist]);
+
   // Render cell value with special handling for margin trends and badges
   const renderCell = useCallback((row, col) => {
     const value = row[col.key];
@@ -600,7 +675,7 @@ export function TradingTable({
       <div className={`relative overflow-x-auto scrollbar-thin scrollbar-thumb-accent-cyan/30 scrollbar-track-transparent ${enableMobileCards ? 'hidden md:block' : ''}`}>
         {/* Scroll hint for tablet-sized screens */}
         <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-space-dark/80 to-transparent pointer-events-none z-10 lg:hidden" aria-hidden="true" />
-        <table className="w-full border-collapse text-sm text-left">
+        <table ref={tableRef} tabIndex="0" className="w-full border-collapse text-sm text-left">
           <thead>
             <tr>
               {expandableRowContent && (
@@ -659,7 +734,7 @@ export function TradingTable({
               };
 
               // Check if this row is selected via keyboard navigation
-              const isSelected = selectedRowIndex === idx;
+              const isSelected = selectedRows.has(rowId);
 
               return (
                 <>
@@ -668,7 +743,7 @@ export function TradingTable({
                     onClick={() => onRowClick?.(row, idx)}
                     className={`
                       transition-colors
-                      ${isSelected ? 'bg-accent-cyan/10 ring-1 ring-accent-cyan/30' : ''}
+                      ${isSelected ? 'bg-accent-cyan/20' : ''}
                       ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-white/5' : ''}
                       ${onRowClick ? 'cursor-pointer' : ''}
                     `}
@@ -725,8 +800,14 @@ export function TradingTable({
                         </button>
                       </td>
                     )}
-                    {columns.filter(c => c.visible !== false).map(col => (
-                      <td key={col.key} className={`px-2 sm:px-4 py-2.5 sm:py-3 text-text-primary text-xs sm:text-sm ${col.className || ''}`}>
+                    {columns.filter(c => c.visible !== false).map((col, colIdx) => (
+                      <td
+                        key={col.key}
+                        data-row-index={idx}
+                        data-col-index={colIdx}
+                        tabIndex={-1}
+                        className={`px-2 sm:px-4 py-2.5 sm:py-3 text-text-primary text-xs sm:text-sm ${col.className || ''} focus:outline-none focus:bg-accent-cyan/20`}
+                      >
                         {renderCell(row, col)}
                       </td>
                     ))}
