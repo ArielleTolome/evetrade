@@ -127,14 +127,14 @@ export function MarketMomentum({
           <span className={`text-2xl ${style.color}`}>{style.arrow}</span>
           <div>
             <div className={`text-lg font-bold ${style.color}`}>{style.label}</div>
-            <div className="text-xs text-gray-400">Market Condition</div>
+            <div className="text-xs text-text-secondary">Market Condition</div>
           </div>
         </div>
         <div className="text-right">
           <div className={`text-xl font-mono font-bold ${style.color}`}>
             {momentum > 0 ? '+' : ''}{momentum.toFixed(0)}
           </div>
-          <div className="text-xs text-gray-400">Momentum</div>
+          <div className="text-xs text-text-secondary">Momentum</div>
         </div>
       </div>
 
@@ -166,7 +166,7 @@ export function MarketMomentum({
         <div className="flex items-center gap-2">
           <span className={volumeStyle.color}>{volumeStyle.icon}</span>
           <div className="flex-1">
-            <div className="text-gray-400">Volume</div>
+            <div className="text-text-secondary">Volume</div>
             <div className={`font-medium ${volumeStyle.color}`}>
               {volumeStyle.label}
             </div>
@@ -177,7 +177,7 @@ export function MarketMomentum({
         <div className="flex items-center gap-2">
           <span className={spreadStyle.color}>◆</span>
           <div className="flex-1">
-            <div className="text-gray-400">Spread</div>
+            <div className="text-text-secondary">Spread</div>
             <div className={`font-medium ${spreadStyle.color}`}>
               {spreadStyle.label}
             </div>

@@ -30,15 +30,13 @@ export default {
         'accent-green': '#00ff9d', // Neon green
 
         // Text
-        'text-primary': '#f0f2f5',
-        'text-secondary': '#9ca3af',
-        'text-muted': '#6b7280',
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-muted': 'var(--color-text-muted)',
 
-        // Light mode colors (Clean, modern)
-        'light-bg': '#f8fafc',
-        'light-surface': '#ffffff',
-        'light-text': '#0f172a',
-        'light-text-secondary': '#64748b',
+        // Backgrounds
+        'bg-primary': 'var(--color-bg-primary)',
+        'bg-secondary': 'var(--color-bg-secondary)',
 
         // Security status colors (EVE accurate)
         'sec-10': '#2fefef',   // 1.0

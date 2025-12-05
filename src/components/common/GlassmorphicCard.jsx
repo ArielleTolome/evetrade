@@ -11,12 +11,13 @@ export function GlassmorphicCard({
   onClick,
 }) {
   const baseClasses = `
-    bg-white/80 dark:bg-space-dark/60
+    bg-bg-secondary
     backdrop-blur-xl
-    border border-gray-200/50 dark:border-white/5
+    border border-border-default
     rounded-xl
-    shadow-lg shadow-black/20
+    shadow-lg
     relative overflow-hidden
+    high-contrast:backdrop-blur-none high-contrast:shadow-none high-contrast:border-2
   `;
 
   const hoverClasses = hover
@@ -35,7 +36,7 @@ export function GlassmorphicCard({
       tabIndex={onClick ? 0 : undefined}
     >
       {/* Subtle gradient overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none high-contrast:hidden" />
 
       {/* Content */}
       <div className="relative z-10">
