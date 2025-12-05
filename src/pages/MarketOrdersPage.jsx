@@ -56,60 +56,7 @@ export function MarketOrdersPage() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
 
-  // Load orders when authenticated
-  useEffect(() => {
-    if (isAuthenticated && character?.id) {
-      loadOrders();
-    }
-  }, [isAuthenticated, character?.id]);
-
-  // Auto-refresh every 5 minutes if enabled
-  useEffect(() => {
-    if (autoRefresh && isAuthenticated) {
-      const interval = setInterval(loadOrders, 5 * 60 * 1000);
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, isAuthenticated]);
-
-  const loadOrders = useCallback(async () => {
-    if (!isAuthenticated || !character?.id) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const accessToken = await getAccessToken();
-      if (!accessToken) return;
-
-      const orderData = await getCharacterOrders(character.id, accessToken);
-      setOrders(orderData || []);
-      setLastRefresh(new Date());
-
-      // Get unique type IDs and fetch names
-      const typeIds = [...new Set(orderData.map((o) => o.type_id))];
-      if (typeIds.length > 0) {
-        const names = await getTypeNames(typeIds);
-        const nameMap = {};
-        names.forEach((n) => {
-          nameMap[n.id] = n.name;
-        });
-        setTypeNames(nameMap);
-      }
-
-      // Load location names
-      const locationIds = [...new Set(orderData.map((o) => o.location_id))];
-      await loadLocationNames(locationIds, accessToken);
-
-      // Load price status for each order
-      await loadPriceStatus(orderData, accessToken);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated, character?.id, getAccessToken]);
-
-  const loadLocationNames = async (locationIds, accessToken) => {
+  const loadLocationNames = useCallback(async (locationIds, accessToken) => {
     const names = {};
 
     for (const locationId of locationIds) {
@@ -129,9 +76,9 @@ export function MarketOrdersPage() {
     }
 
     setLocationNames(names);
-  };
+  }, []);
 
-  const loadPriceStatus = async (orderData, accessToken) => {
+  const loadPriceStatus = useCallback(async (orderData) => {
     if (!orderData || orderData.length === 0) return;
 
     setPriceLoading(true);
@@ -199,6 +146,7 @@ export function MarketOrdersPage() {
           }
         }
       } catch (err) {
+        console.error(`Failed to load price status for group ${group.typeId}-${group.locationId}:`, err);
         // Mark as unknown if we can't fetch market data
         for (const order of group.orders) {
           status[order.order_id] = { status: 'unknown', priceDiff: 0 };
@@ -208,7 +156,60 @@ export function MarketOrdersPage() {
 
     setPriceStatus(status);
     setPriceLoading(false);
-  };
+  }, []);
+
+  const loadOrders = useCallback(async () => {
+    if (!isAuthenticated || !character?.id) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const accessToken = await getAccessToken();
+      if (!accessToken) return;
+
+      const orderData = await getCharacterOrders(character.id, accessToken);
+      setOrders(orderData || []);
+      setLastRefresh(new Date());
+
+      // Get unique type IDs and fetch names
+      const typeIds = [...new Set(orderData.map((o) => o.type_id))];
+      if (typeIds.length > 0) {
+        const names = await getTypeNames(typeIds);
+        const nameMap = {};
+        names.forEach((n) => {
+          nameMap[n.id] = n.name;
+        });
+        setTypeNames(nameMap);
+      }
+
+      // Load location names
+      const locationIds = [...new Set(orderData.map((o) => o.location_id))];
+      await loadLocationNames(locationIds, accessToken);
+
+      // Load price status for each order
+      await loadPriceStatus(orderData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, character?.id, getAccessToken, loadLocationNames, loadPriceStatus]);
+
+  // Load orders when authenticated
+  useEffect(() => {
+    if (isAuthenticated && character?.id) {
+      loadOrders();
+    }
+  }, [isAuthenticated, character?.id, loadOrders]);
+
+  // Auto-refresh every 5 minutes if enabled
+  useEffect(() => {
+    if (autoRefresh && isAuthenticated) {
+      const interval = setInterval(loadOrders, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [autoRefresh, isAuthenticated, loadOrders]);
 
   // Separate buy and sell orders
   const { sellOrders, buyOrders } = useMemo(() => {
@@ -235,13 +236,6 @@ export function MarketOrdersPage() {
       remainingToCover,
     };
   }, [sellOrders, buyOrders]);
-
-  // Filter orders for display
-  const displayOrders = useMemo(() => {
-    if (filter === 'sell') return sellOrders;
-    if (filter === 'buy') return buyOrders;
-    return orders;
-  }, [orders, sellOrders, buyOrders, filter]);
 
   if (!isAuthenticated) {
     return (
