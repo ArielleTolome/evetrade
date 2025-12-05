@@ -45,6 +45,13 @@ export default {
         'sec-02': '#f04800',   // 0.2
         'sec-01': '#d73000',   // 0.1
         'sec-00': '#f00000',   // 0.0 and below
+
+        // Help Button "Deep Sea" Palette
+        'help-bg': '#415A77',
+        'help-bg-hover': '#778DA9',
+        'help-icon': '#E0E1DD',
+        'help-menu-bg': '#1B263B',
+        'help-menu-border': '#415A77',
       },
       fontFamily: {
         'display': ['Orbitron', 'sans-serif'],
@@ -84,6 +91,7 @@ export default {
         'scale-in': 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'fade-in-down': 'fadeInDown 0.4s ease-out forwards',
         'slide-in-up': 'slideInUp 0.4s ease-out forwards',
+        'pulse-help': 'pulse-help 2.5s ease-in-out infinite',
       },
       keyframes: {
         twinkle: {
@@ -170,6 +178,16 @@ export default {
         scaleIn: {
           '0%': { opacity: '0', transform: 'scale(0.9)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'pulse-help': {
+          '0%, 100%': {
+            transform: 'scale(1)',
+            boxShadow: '0 0 0 0 rgba(119, 141, 169, 0.7)',
+           },
+          '50%': {
+            transform: 'scale(1.05)',
+            boxShadow: '0 0 15px 10px rgba(119, 141, 169, 0)',
+          },
         },
       },
     },
