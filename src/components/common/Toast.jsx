@@ -187,7 +187,7 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
                 onClick={action.onClick}
                 className={`
                   mt-2 text-xs font-semibold ${toastConfig.iconColor}
-                  hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-cyan/50 rounded
+                  hover:underline focus:outline-none focus-visible:ring-2 focus:ring-offset-2 focus:ring-accent-cyan/50 rounded
                   transition-all
                 `}
               >
@@ -201,7 +201,7 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
             onClick={handleDismiss}
             className="
               flex-shrink-0 text-text-secondary hover:text-text-primary
-              transition-colors focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 rounded p-1
+              transition-colors focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan/50 rounded p-1
             "
             aria-label="Dismiss notification"
           >

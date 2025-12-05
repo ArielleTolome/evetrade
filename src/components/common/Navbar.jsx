@@ -246,14 +246,15 @@ function NavItem({ category }) {
         <Link
           to={category.path}
           className={`
-            flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+            relative group flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
             transition-all duration-200
             ${isActive
               ? 'bg-accent-cyan/10 text-accent-cyan shadow-[0_0_10px_rgba(0,240,255,0.1)]'
-              : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+              : 'text-text-secondary hover:text-text-primary'
             }
           `}
         >
+          <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-cyan scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
           {category.icon}
           <span>{category.label}</span>
         </Link>

@@ -185,7 +185,7 @@ export function BulkCopyPanel({
             type="checkbox"
             checked={selectedIds.size === items.length}
             onChange={toggleSelectAll}
-            className="w-4 h-4 rounded border-accent-cyan/30 bg-space-light/10 text-accent-cyan focus:ring-2 focus:ring-accent-cyan/50 cursor-pointer"
+            className="w-4 h-4 rounded border-accent-cyan/30 bg-space-light/10 text-accent-cyan focus-visible:ring-2 focus:ring-accent-cyan/50 cursor-pointer"
           />
           <span className="text-sm font-medium text-text-primary group-hover:text-accent-cyan transition-colors">
             Select All ({items.length})
@@ -305,7 +305,7 @@ export function BulkCopyList({
               type="checkbox"
               checked={isSelected}
               onChange={() => onToggleItem(itemId)}
-              className="w-4 h-4 rounded border-accent-cyan/30 bg-space-light/10 text-accent-cyan focus:ring-2 focus:ring-accent-cyan/50 cursor-pointer"
+              className="w-4 h-4 rounded border-accent-cyan/30 bg-space-light/10 text-accent-cyan focus-visible:ring-2 focus:ring-accent-cyan/50 cursor-pointer"
             />
             <div className="flex-1 min-w-0">
               {renderItem ? renderItem(item, index) : (

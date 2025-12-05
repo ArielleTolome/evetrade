@@ -27,7 +27,7 @@ export function InfoTooltip({ content, position = 'top', className = '' }) {
           w-4 h-4
           text-text-secondary hover:text-accent-cyan
           transition-colors
-          focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 rounded-full
+          focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan/50 rounded-full
           ${className}
         `}
         aria-label="More information"

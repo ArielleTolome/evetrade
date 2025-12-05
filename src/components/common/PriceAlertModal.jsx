@@ -173,7 +173,7 @@ export function PriceAlertModal({ isOpen, onClose, onSave, initialAlert = null }
             <select
               value={formData.alertType}
               onChange={(e) => handleChange('alertType', e.target.value)}
-              className="w-full px-4 py-3 min-h-[44px] rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan focus:ring-2 focus:ring-accent-cyan/20 transition-all"
+              className="w-full px-4 py-3 min-h-[44px] rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan focus-visible:ring-2 focus:ring-accent-cyan/20 transition-all"
             >
               <option value="price_below">Price Drops Below</option>
               <option value="price_above">Price Rises Above</option>
@@ -198,7 +198,7 @@ export function PriceAlertModal({ isOpen, onClose, onSave, initialAlert = null }
                 w-full px-4 py-3 min-h-[44px] rounded-lg
                 bg-space-dark/50 border ${errors.threshold ? 'border-red-500' : 'border-accent-cyan/20'}
                 text-text-primary placeholder-text-secondary/50
-                focus:outline-none focus:border-accent-cyan focus:ring-2 focus:ring-accent-cyan/20
+                focus:outline-none focus:border-accent-cyan focus-visible:ring-2 focus:ring-accent-cyan/20
                 transition-all font-mono
               `}
             />

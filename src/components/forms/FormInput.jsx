@@ -96,7 +96,7 @@ export const FormInput = forwardRef(function FormInput(
             border ${error ? 'border-red-500' : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'}
             text-text-primary dark:text-text-primary text-light-text text-sm
             placeholder-text-secondary/50
-            focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan
+            focus:outline-none focus:border-accent-cyan focus:shadow-[0_0_0_2px_rgba(0,240,255,0.2)]
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all duration-200
             min-h-[44px]
