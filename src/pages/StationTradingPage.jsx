@@ -56,7 +56,8 @@ import { useTradeForm } from '../hooks/useTradeForm';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { useFavorites } from '../hooks/useFavorites';
-import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../hooks/useKeyboardShortcuts';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import KeyboardShortcutsModal from '../components/common/KeyboardShortcutsModal';
 import { useScamDetection } from '../hooks/useScamDetection';
 import { useTradeSession } from '../hooks/useTradeSession';
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
@@ -766,11 +767,14 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     },
   }), [form.station, data, handleSubmit, showSaveModal, showOrders, sortedData, selectedRowIndex, showFavoritesOnly, highQualityOnly, showDashboard, copyRowToClipboard, copyMultibuyFormat, handleRowClick, toggleFavorite, isFavorite, quickFilterIds]);
 
+  // Local state for keyboard shortcuts help modal
+  const [showHelp, setShowHelp] = useState(false);
+
   // Initialize keyboard shortcuts
-  const { showHelp, setShowHelp } = useKeyboardShortcuts(keyboardHandlers, undefined, {
-    navigate,
-    pathname: location.pathname,
-  });
+  useKeyboardShortcuts(
+    () => setShowHelp(prev => !prev),  // toggleShortcutsModal
+    undefined  // toggleSearchModal
+  );
 
   // Define custom shortcuts for help modal
   const customShortcuts = useMemo(() => [
@@ -2158,10 +2162,9 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       )}
 
       {/* Keyboard Shortcuts Help Modal */}
-      <KeyboardShortcutsHelp
+      <KeyboardShortcutsModal
         isOpen={showHelp}
         onClose={() => setShowHelp(false)}
-        customShortcuts={customShortcuts}
       />
     </PageLayout>
   );

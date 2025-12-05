@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Database } from 'lucide-react';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';

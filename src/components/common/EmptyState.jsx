@@ -32,7 +32,7 @@ const variants = {
 export function EmptyState({ icon, title, description, action, variant = 'default', className = '' }) {
   const selectedVariant = variants[variant] || variants.default;
 
-  const ActionButton = () => {
+  const renderActionButton = () => {
     if (!action) return null;
 
     if (action.to) {
@@ -68,7 +68,7 @@ export function EmptyState({ icon, title, description, action, variant = 'defaul
             {description}
           </p>
         )}
-        <ActionButton />
+        {renderActionButton()}
       </div>
     </GlassmorphicCard>
   );

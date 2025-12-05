@@ -76,7 +76,7 @@ const DataExport = ({
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       switch (exportOptions.format) {
-        case 'pdf':
+        case 'pdf': {
           const doc = new jsPDF(exportOptions.pdfOrientation, 'pt', 'a4');
           if (exportOptions.pdfTitle) doc.text(exportOptions.pdfTitle, 40, 40);
           if (exportOptions.pdfIncludeTimestamp) {
@@ -86,15 +86,17 @@ const DataExport = ({
           doc.autoTable({ head: [headers], body });
           doc.save(`${filename}.pdf`);
           break;
+        }
 
-        case 'xlsx':
+        case 'xlsx': {
           const ws = XLSX.utils.aoa_to_sheet([headers, ...body]);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
           XLSX.writeFile(wb, `${filename}.xlsx`);
           break;
+        }
 
-        case 'json':
+        case 'json': {
           const json = JSON.stringify(dataToExport, null, 2);
           const blobJson = new Blob([json], { type: 'application/json' });
           const urlJson = URL.createObjectURL(blobJson);
@@ -104,8 +106,9 @@ const DataExport = ({
           aJson.click();
           URL.revokeObjectURL(urlJson);
           break;
+        }
 
-        case 'clipboard':
+        case 'clipboard': {
           const tsv = [
             headers.join('\t'),
             ...body.map(row => row.map(val => String(val).replace(/\t/g, ' ')).join('\t'))
@@ -113,9 +116,10 @@ const DataExport = ({
           await navigator.clipboard.writeText(tsv);
           toast.success('Data copied to clipboard!');
           break;
+        }
 
         case 'csv':
-        default:
+        default: {
           const csv = [
             headers.map(escapeCsvValue).join(','),
             ...body.map(row => row.map(escapeCsvValue).join(','))
@@ -128,6 +132,7 @@ const DataExport = ({
           aCsv.click();
           URL.revokeObjectURL(urlCsv);
           break;
+        }
       }
       if (exportOptions.format !== 'clipboard') {
         toast.success(`Successfully exported ${filename}.${exportOptions.format}`);
