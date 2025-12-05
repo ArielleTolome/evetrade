@@ -235,7 +235,10 @@ export function StationTradingPage() {
         // Load wallet transactions for ISK/hour calculation
         try {
           const transactions = await getWalletTransactions(character.id, accessToken);
-          setWalletTransactions(transactions || []);
+          if (!Array.isArray(transactions)) {
+            console.warn('Wallet transactions response was not an array', transactions);
+          }
+          setWalletTransactions(Array.isArray(transactions) ? transactions : []);
         } catch (txErr) {
           console.error('Failed to load wallet transactions:', txErr);
           setWalletTransactions([]);

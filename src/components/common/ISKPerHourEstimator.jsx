@@ -12,6 +12,10 @@ export function ISKPerHourEstimator({
   className = '',
 }) {
   const [timeframe, setTimeframe] = useState('session'); // session, day, week, month
+  const safeTransactions = useMemo(
+    () => (Array.isArray(transactions) ? transactions : []),
+    [transactions]
+  );
 
   // Calculate ISK/hour metrics
   const metrics = useMemo(() => {
@@ -39,7 +43,7 @@ export function ISKPerHourEstimator({
     const hours = Math.max(0.1, (now - timeframeStart) / (1000 * 60 * 60));
 
     // Calculate profit from transactions
-    const relevantTransactions = transactions.filter(t => {
+    const relevantTransactions = safeTransactions.filter(t => {
       const txDate = new Date(t.date);
       return txDate >= timeframeStart;
     });
@@ -88,7 +92,7 @@ export function ISKPerHourEstimator({
       projectedMonthly,
       efficiency: grossProfit > 0 ? (netProfit / grossProfit) * 100 : 0,
     };
-  }, [transactions, activeSession, timeframe]);
+  }, [safeTransactions, activeSession, timeframe]);
 
   // Historical comparison
   const comparison = useMemo(() => {
