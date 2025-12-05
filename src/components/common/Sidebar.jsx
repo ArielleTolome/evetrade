@@ -142,7 +142,7 @@ export function Sidebar({ isCollapsed, onToggle }) {
                           ? 'bg-accent-cyan/15 text-accent-cyan shadow-[0_0_20px_rgba(0,212,255,0.1)]'
                           : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                         }
-                        focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none
+                        focus-visible:ring-2 focus-visible:ring-accent-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-space-dark focus:outline-none
                       `}
                     >
                       <NavIcon path={item.icon} className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-accent-cyan' : ''}`} />

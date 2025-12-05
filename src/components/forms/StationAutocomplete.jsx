@@ -557,10 +557,10 @@ export function StationAutocomplete({
             className={`
               w-full pl-4 pr-10 py-3 rounded-lg
               bg-space-dark/50 backdrop-blur-sm
-              border ${error ? 'border-red-500' : 'border-white/10'}
+              border ${error ? 'border-red-500/60' : 'border-white/10'}
               text-text-primary
               placeholder-text-secondary/50
-              focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan
+              focus:outline-none focus-visible:ring-2 ${error ? 'focus-visible:ring-red-500/50' : 'focus-visible:ring-accent-cyan/50'}
               disabled:opacity-60 disabled:cursor-not-allowed
               transition-all duration-200
               ${showSpinner ? 'pl-10' : ''}
@@ -623,10 +623,12 @@ export function StationAutocomplete({
                       flex items-center justify-between
                       px-4 py-3 cursor-pointer border-b border-white/5 last:border-0
                       transition-colors
+                      outline-none
                       ${index === highlightedIndex
                         ? 'bg-accent-cyan/20'
                         : 'hover:bg-accent-cyan/10'
                       }
+                      focus-visible:ring-2 focus-visible:ring-accent-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-space-dark
                     `}
                   >
                     <div className="flex flex-col overflow-hidden mr-2">
