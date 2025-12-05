@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
@@ -27,52 +26,10 @@ function generatePredictions(invTypes, timeHorizon = 90) {
   // Convert to a more usable format if it's an array
   let typesArray = Array.isArray(invTypes) ? invTypes : Object.values(invTypes);
 
-  // Sample popular trading items (focusing on commonly traded categories)
-  // These are actual EVE Online group IDs for tradeable items
-  const tradingItemGroups = [
-    25,   // Frigate
-    26,   // Cruiser
-    27,   // Battleship
-    28,   // Industrial
-    29,   // Capsule
-    30,   // Titan
-    31,   // Shuttle
-    324,  // Assault Frigate
-    358,  // Heavy Assault Cruiser
-    419,  // Combat Battlecruiser
-    420,  // Destroyer
-    100,  // Drone Bay
-    101,  // Electronic Warfare Drone
-    549,  // Mining Drone
-    639,  // Combat Drone
-    266,  // Security Tags
-    275,  // Hybrid Charges
-    278,  // Projectile Ammo
-    18,   // Minerals (like Plagioclase)
-    423,  // Ice Products
-    424,  // Misc Items
-    427,  // Moon Materials
-    40,   // Mining Laser
-    41,   // Standard Missiles
-    46,   // Hybrid Turrets
-    53,   // Energy Turrets
-    55,   // Projectile Turrets
-    // Add more tradeable groups
-    34,   // Ship Modules
-    87,   // Ships
-    65,   // Arkonor
-    60,   // Mining Barge
-    380,  // Transport Ships
-    463,  // Mining Frigate
-    1022, // Interdiction Nullifiers
-    1283, // Battlecruisers
-  ];
-
-  // Filter to items with positive volume and in trading groups
+  // Filter to items with positive volume
   const selectedItems = typesArray
     .filter(item => {
       if (!item) return false;
-      const groupId = item.groupID || item.groupId || item.group_id;
       const hasVolume = item.volume !== null && item.volume > 0;
       const hasName = item.typeName || item.name || item.type_name;
       // For now, include items that have volume (tradeable items)
@@ -89,8 +46,8 @@ function generatePredictions(invTypes, timeHorizon = 90) {
     const basePrice = generateBasePrice(item);
 
     // Calculate price momentum and trends
-    const volumeTrend = calculateVolumeTrend(item);
-    const priceMomentum = calculatePriceMomentum(item, volumeTrend);
+    const volumeTrend = calculateVolumeTrend();
+    const priceMomentum = calculatePriceMomentum(volumeTrend);
     const seasonality = calculateSeasonality(item);
     const volatility = calculateVolatility(item);
 
@@ -115,7 +72,7 @@ function generatePredictions(invTypes, timeHorizon = 90) {
       predictions.push({
         itemId: typeId,
         itemName: itemName,
-        groupID: groupId,
+        groupID: item.groupID || item.groupId || item.group_id,
         currentPrice: basePrice,
         predictedPrice: predictedPrice,
         priceChange: predictedPrice - basePrice,
@@ -169,7 +126,7 @@ function generateBasePrice(item) {
 /**
  * Calculate volume trend (up/stable/down)
  */
-function calculateVolumeTrend(item) {
+function calculateVolumeTrend() {
   // Mock volume trend based on item characteristics
   const trendValue = Math.random();
 
@@ -181,7 +138,7 @@ function calculateVolumeTrend(item) {
 /**
  * Calculate price momentum (-1 to 1)
  */
-function calculatePriceMomentum(item, volumeTrend) {
+function calculatePriceMomentum(volumeTrend) {
   // Base momentum on volume trend
   let baseMomentum = 0;
 
@@ -324,12 +281,10 @@ function getCategoryName(groupID) {
  * Long-Term Trading Predictions Page
  */
 export function LongTermTradingPage() {
-  const navigate = useNavigate();
   const { invTypes, loading: resourcesLoading, loadInvTypes } = useResources();
 
   // Loading state for invTypes
   const [invTypesLoading, setInvTypesLoading] = useState(true);
-  const [invTypesError, setInvTypesError] = useState(null);
 
   // Load invTypes on mount (it's loaded on-demand)
   useEffect(() => {
@@ -338,7 +293,6 @@ export function LongTermTradingPage() {
     const loadTypes = async () => {
       try {
         setInvTypesLoading(true);
-        setInvTypesError(null);
         await loadInvTypes();
         // Add a small delay to ensure state has propagated
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -348,7 +302,6 @@ export function LongTermTradingPage() {
       } catch (err) {
         console.error('Failed to load invTypes:', err);
         if (isMounted) {
-          setInvTypesError(err);
           setInvTypesLoading(false);
         }
       }
@@ -572,7 +525,6 @@ Confidence: ${pred.confidence}%`;
     for (let m = 1; m <= Math.max(months, 3); m++) {
       // Apply trend with diminishing confidence for longer periods
       const trendMultiplier = 1 + weightedTrend * m;
-      const volatilityFactor = 1 + (volatility * 0.5 * m); // Price may deviate more over time
       const predictedPrice = currentPrice * trendMultiplier;
 
       // Confidence decreases for longer predictions
@@ -619,7 +571,7 @@ Confidence: ${pred.confidence}%`;
       key: 'itemName',
       label: 'Item',
       className: 'font-medium min-w-[200px]',
-      render: (name, row) => (
+      render: (name) => (
         <div className="flex items-center gap-2">
           <span>{name}</span>
           <Button
