@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { SearchX } from 'lucide-react';
 import { PageLayout } from '../components/layout/PageLayout';
+import { EmptyState } from '../components/common/EmptyState';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { QuickTradeCalculator } from '../components/common/QuickTradeCalculator';
@@ -121,6 +123,7 @@ const ITEM_CATEGORIES = {
  */
 export function StationTradingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { universeList, loading: resourcesLoading, loadInvTypes, invTypes } = useResources();
   const { data, loading, error, lastUpdated, execute } = useApiCall(fetchStationTrading);
   const { saveRoute } = usePortfolio();
@@ -756,7 +759,10 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
   }), [form.station, data, handleSubmit, showSaveModal, showOrders, sortedData, selectedRowIndex, showFavoritesOnly, highQualityOnly, showDashboard, copyRowToClipboard, copyMultibuyFormat, handleRowClick, toggleFavorite, isFavorite, quickFilterIds]);
 
   // Initialize keyboard shortcuts
-  const { showHelp, setShowHelp } = useKeyboardShortcuts(keyboardHandlers);
+  const { showHelp, setShowHelp } = useKeyboardShortcuts(keyboardHandlers, undefined, {
+    navigate,
+    pathname: location.pathname,
+  });
 
   // Define custom shortcuts for help modal
   const customShortcuts = useMemo(() => [
@@ -1739,27 +1745,23 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
           if (allTrades.length === 0) {
             return (
-              <GlassmorphicCard className="text-center py-12">
-                <p className="text-text-secondary text-lg">
-                  No trades found matching your criteria.
-                </p>
-                <p className="text-text-secondary/70 mt-2">
-                  Try lowering your minimum profit or adjusting margin ranges.
-                </p>
-              </GlassmorphicCard>
+              <EmptyState
+                icon={<SearchX className="w-10 h-10" />}
+                title="No trades found"
+                description="Try adjusting your filters or try different parameters to find more opportunities."
+                variant="search"
+              />
             );
           }
 
           if (trades.length === 0 && allTrades.length > 0) {
             return (
-              <GlassmorphicCard className="text-center py-12">
-                <p className="text-text-secondary text-lg">
-                  No trades found in the selected category.
-                </p>
-                <p className="text-text-secondary/70 mt-2">
-                  Try selecting a different category or "All Items".
-                </p>
-              </GlassmorphicCard>
+              <EmptyState
+                icon={<SearchX className="w-10 h-10" />}
+                title="No trades found for this category"
+                description="Try selecting a different category or 'All Items' to see results."
+                variant="search"
+              />
             );
           }
 
@@ -1968,6 +1970,22 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                 showQualityIndicators={true}
                 searchInputRef={searchInputRef}
                 selectedRowIndex={selectedRowIndex}
+                onClearFilters={() => {
+                  setSmartFilters({
+                    hideScams: false,
+                    hideLowVolume: false,
+                    highQualityOnly: false,
+                    verifiedOnly: false,
+                    minVolume: 0,
+                    maxVolume: null,
+                    minMargin: 0,
+                    maxMargin: 100,
+                    minProfit: 0,
+                    maxProfit: null,
+                    riskLevels: ['low', 'medium', 'high', 'extreme'],
+                  });
+                  setQuickFilterIds([]);
+                }}
                 expandableRowContent={(row) => {
                   const itemId = row['Item ID'] || row.itemId;
                   const stationData = getStationData(form.station, universeList);

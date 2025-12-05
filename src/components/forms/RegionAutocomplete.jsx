@@ -368,7 +368,7 @@ export function RegionAutocomplete({
             onClick={() => !disabled && !resourcesLoading && setIsMobileModalOpen(true)}
             disabled={disabled || resourcesLoading}
             className={`
-              w-full px-4 py-3 rounded-lg text-left
+              w-full px-3 sm:px-4 py-3 rounded-lg text-left
               bg-space-dark/50 dark:bg-space-dark/50 bg-white
               border ${error ? 'border-red-500' : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'}
               disabled:opacity-50 disabled:cursor-not-allowed
@@ -430,7 +430,7 @@ export function RegionAutocomplete({
             disabled={disabled || resourcesLoading}
             required={required}
             className={`
-              w-full px-4 py-3 rounded-lg
+              w-full px-3 sm:px-4 pr-10 sm:pr-12 py-3 rounded-lg
               bg-space-dark/50 dark:bg-space-dark/50 bg-white
               border ${error ? 'border-red-500' : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'}
               text-text-primary dark:text-text-primary text-light-text

@@ -1,5 +1,8 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { Database } from 'lucide-react';
 import { Button } from '../common/Button';
+import { EmptyState } from '../common/EmptyState';
+import MobileCardView from './MobileCardView';
 
 /**
  * Get quality tier based on row data stats
@@ -113,203 +116,6 @@ function getTradingBadges(row, stats) {
 }
 
 /**
- * Mobile Card View Component
- * Renders a card-based layout for mobile devices
- */
-function MobileCardView({
-  data,
-  columns,
-  onRowClick,
-  qualityStats,
-  showQualityIndicators,
-  onAddToWatchlist,
-  isItemWatched,
-  onCreateAlert,
-  expandableRowContent,
-}) {
-  const [expandedCard, setExpandedCard] = useState(null);
-
-  // Get primary columns for card display (first 4-5 most important)
-  const primaryColumns = columns.filter(c => c.visible !== false).slice(0, 5);
-  const secondaryColumns = columns.filter(c => c.visible !== false).slice(5);
-
-  return (
-    <div className="space-y-3 p-3">
-      {data.map((row, idx) => {
-        const qualityTier = showQualityIndicators ? getRowQualityTier(row, qualityStats) : null;
-        const rowId = row['Item ID'] || row.itemId || idx;
-        const isExpanded = expandedCard === rowId;
-        const badges = showQualityIndicators && qualityStats ? getTradingBadges(row, qualityStats) : [];
-
-        const qualityBorderClasses = {
-          excellent: 'border-l-4 border-l-green-500',
-          good: 'border-l-4 border-l-accent-cyan',
-          fair: 'border-l-4 border-l-yellow-500',
-        };
-
-        return (
-          <div
-            key={rowId}
-            onClick={() => onRowClick?.(row, idx)}
-            className={`
-              bg-space-dark/60 rounded-xl border border-accent-cyan/10 overflow-hidden
-              ${onRowClick ? 'cursor-pointer active:bg-white/5' : ''}
-              ${qualityTier ? qualityBorderClasses[qualityTier] : ''}
-            `}
-          >
-            {/* Card Header - Item Name + Actions */}
-            <div className="flex items-start justify-between gap-2 p-3 pb-2 border-b border-accent-cyan/5">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-text-primary font-medium text-sm truncate">
-                  {row['Item'] || row.item || row.name || 'Unknown Item'}
-                </h3>
-                {badges.length > 0 && (
-                  <div className="flex gap-1 mt-1">
-                    {badges.map((badge, i) => (
-                      <span
-                        key={i}
-                        className={`px-1.5 py-0.5 text-xs rounded ${badge.color}`}
-                      >
-                        {badge.label}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {onAddToWatchlist && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddToWatchlist(row);
-                    }}
-                    disabled={isItemWatched && isItemWatched(row['Item ID'] || row.itemId)}
-                    className={`p-2 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center focus:ring-2 focus:ring-accent-cyan focus:outline-none ${
-                      isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
-                        ? 'bg-accent-purple/20 text-accent-purple/50'
-                        : 'bg-accent-purple/10 text-accent-purple active:bg-accent-purple/30'
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {isItemWatched && isItemWatched(row['Item ID'] || row.itemId) ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      )}
-                    </svg>
-                  </button>
-                )}
-                {onCreateAlert && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCreateAlert({
-                        itemName: row['Item'] || row.item,
-                        itemId: row['Item ID'] || row.itemId,
-                        type: 'margin',
-                        condition: 'above',
-                        threshold: (row['Gross Margin'] || row.margin || 5),
-                      });
-                    }}
-                    className="p-2 rounded-lg bg-accent-gold/10 text-accent-gold active:bg-accent-gold/30 min-w-[36px] min-h-[36px] flex items-center justify-center focus:ring-2 focus:ring-accent-cyan focus:outline-none"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Card Body - Key Stats Grid */}
-            <div className="grid grid-cols-2 gap-2 p-3">
-              {primaryColumns.filter(c => c.key !== 'Item' && c.key !== 'item' && c.key !== 'name').slice(0, 4).map(col => {
-                const value = row[col.key];
-                const displayValue = col.render ? col.render(value, row) : value ?? '-';
-
-                // Special styling for certain columns
-                let valueClass = 'text-text-primary';
-                if (col.key === 'Net Profit' || col.key === 'profit') {
-                  valueClass = Number(value) > 0 ? 'text-green-400' : 'text-red-400';
-                } else if (col.key === 'Gross Margin' || col.key === 'margin') {
-                  const marginPercent = Number(value) || 0;
-                  const trend = getMarginTrend(marginPercent);
-                  valueClass = trend.color;
-                }
-
-                return (
-                  <div key={col.key} className="min-w-0">
-                    <span className="text-[10px] text-text-secondary uppercase tracking-wide block truncate">
-                      {col.label}
-                    </span>
-                    <span className={`text-sm font-mono ${valueClass} truncate block`}>
-                      {displayValue}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Expandable Section */}
-            {secondaryColumns.length > 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setExpandedCard(isExpanded ? null : rowId);
-                  }}
-                  className="w-full px-3 py-2 flex items-center justify-center gap-1 text-xs text-text-secondary border-t border-accent-cyan/5 active:bg-white/5 focus:ring-2 focus:ring-accent-cyan focus:outline-none"
-                >
-                  <span>{isExpanded ? 'Show less' : 'Show more'}</span>
-                  <svg
-                    className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {isExpanded && (
-                  <div className="grid grid-cols-2 gap-2 p-3 pt-0 border-t border-accent-cyan/5 bg-space-dark/30">
-                    {secondaryColumns.map(col => {
-                      const value = row[col.key];
-                      const displayValue = col.render ? col.render(value, row) : value ?? '-';
-
-                      return (
-                        <div key={col.key} className="min-w-0">
-                          <span className="text-[10px] text-text-secondary uppercase tracking-wide block truncate">
-                            {col.label}
-                          </span>
-                          <span className="text-sm font-mono text-text-primary truncate block">
-                            {displayValue}
-                          </span>
-                        </div>
-                      );
-                    })}
-
-                    {/* Expandable row content if provided */}
-                    {expandableRowContent && (
-                      <div className="col-span-2 mt-2 pt-2 border-t border-accent-cyan/5">
-                        {expandableRowContent(row, idx)}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/**
  * Trading Table Component
  * Custom React table with sorting, pagination, and search
  * Includes automatic mobile card view for small screens
@@ -329,9 +135,36 @@ export function TradingTable({
   onAddToWatchlist = null,
   isItemWatched = null,
   selectedRowIndex = -1,
+  mobileView = 'auto', // 'auto', 'cards', 'table'
+  cardRenderer = null,
+  onDismiss = null,
+  onRefresh = null,
+  onLoadMore = null,
+  hasMore = false,
   enableMobileCards = true, // New prop to enable/disable mobile card view
+  onClearFilters = null,
 }) {
-  const tableRef = useRef(null);
+  const [isMobileView, setIsMobileView] = useState(mobileView === 'cards');
+
+  // Auto-switch between table and card view
+  useEffect(() => {
+    if (mobileView !== 'auto') {
+      setIsMobileView(mobileView === 'cards');
+      return;
+    }
+
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768; // md breakpoint
+      setIsMobileView(isMobile);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [mobileView]);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(pageLength);
@@ -341,8 +174,7 @@ export function TradingTable({
 
   // Expanded rows state
   const [expandedRows, setExpandedRows] = useState(new Set());
-  const [selectedRows, setSelectedRows] = useState(new Set());
-  const [selectedCell, setSelectedCell] = useState({ rowIndex: 0, colIndex: 0 });
+
   // Sort state
   const [sortConfig, setSortConfig] = useState(() => {
     if (defaultSort) {
@@ -473,79 +305,6 @@ export function TradingTable({
     });
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!tableRef.current || !tableRef.current.contains(document.activeElement)) {
-        return;
-      }
-
-      const visibleColumns = columns.filter(c => c.visible !== false);
-      const numRows = paginatedData.length;
-      const numCols = visibleColumns.length;
-
-      let { rowIndex, colIndex } = selectedCell;
-
-      switch (e.key) {
-        case 'ArrowUp':
-          e.preventDefault();
-          rowIndex = Math.max(0, rowIndex - 1);
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          rowIndex = Math.min(numRows - 1, rowIndex + 1);
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          colIndex = Math.max(0, colIndex - 1);
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          colIndex = Math.min(numCols - 1, colIndex + 1);
-          break;
-        case 'Enter':
-          e.preventDefault();
-          onRowClick?.(paginatedData[rowIndex], rowIndex);
-          break;
-        case ' ': // Space
-          e.preventDefault();
-          const rowId = paginatedData[rowIndex]['Item ID'] || rowIndex;
-          setSelectedRows(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(rowId)) {
-              newSet.delete(rowId);
-            } else {
-              newSet.add(rowId);
-            }
-            return newSet;
-          });
-          break;
-        case 'a':
-          if (e.metaKey || e.ctrlKey) {
-            e.preventDefault();
-            const allRowIds = new Set(paginatedData.map((row, idx) => row['Item ID'] || idx));
-            setSelectedRows(allRowIds);
-          }
-          break;
-        default:
-          return;
-      }
-
-      setSelectedCell({ rowIndex, colIndex });
-
-      const cellToFocus = tableRef.current.querySelector(
-        `[data-row-index="${rowIndex}"][data-col-index="${colIndex}"]`
-      );
-      cellToFocus?.focus();
-    };
-
-    const tableElement = tableRef.current;
-    tableElement?.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      tableElement?.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [selectedCell, paginatedData, columns, onRowClick, onAddToWatchlist]);
-
   // Render cell value with special handling for margin trends and badges
   const renderCell = useCallback((row, col) => {
     const value = row[col.key];
@@ -602,12 +361,14 @@ export function TradingTable({
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-space-dark/40 backdrop-blur-md rounded-xl border border-white/5 overflow-hidden shadow-lg">
-        <div className="text-center py-16 text-text-secondary">
-          <div className="text-4xl mb-4 opacity-20">📊</div>
-          <p className="text-lg">{emptyMessage}</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={<Database className="w-10 h-10" />}
+        title="No Results"
+        description={emptyMessage}
+        variant="empty-list"
+        action={onClearFilters ? { text: 'Clear Filters', onClick: onClearFilters } : null}
+        className="border-none"
+      />
     );
   }
 
@@ -638,6 +399,16 @@ export function TradingTable({
             </svg>
             <span className="hidden sm:inline">CSV</span>
           </Button>
+          {mobileView === 'auto' && (
+            <Button
+              onClick={() => setIsMobileView(!isMobileView)}
+              variant="secondary"
+              size="sm"
+              className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm md:hidden"
+            >
+              {isMobileView ? 'Table View' : 'Card View'}
+            </Button>
+          )}
         </div>
         <div className="w-full sm:w-auto sm:max-w-xs order-1 sm:order-2">
           <input
@@ -655,27 +426,28 @@ export function TradingTable({
       </div>
 
       {/* Mobile Card View */}
-      {enableMobileCards && (
-        <div className="md:hidden">
-          <MobileCardView
-            data={paginatedData}
-            columns={columns}
-            onRowClick={onRowClick}
-            qualityStats={qualityStats}
-            showQualityIndicators={showQualityIndicators}
-            onAddToWatchlist={onAddToWatchlist}
-            isItemWatched={isItemWatched}
-            onCreateAlert={onCreateAlert}
-            expandableRowContent={expandableRowContent}
-          />
-        </div>
-      )}
-
-      {/* Desktop Table */}
-      <div className={`relative overflow-x-auto scrollbar-thin scrollbar-thumb-accent-cyan/30 scrollbar-track-transparent ${enableMobileCards ? 'hidden md:block' : ''}`}>
-        {/* Scroll hint for tablet-sized screens */}
-        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-space-dark/80 to-transparent pointer-events-none z-10 lg:hidden" aria-hidden="true" />
-        <table ref={tableRef} tabIndex="0" className="w-full border-collapse text-sm text-left">
+      {enableMobileCards && isMobileView ? (
+        <MobileCardView
+          data={paginatedData}
+          columns={columns}
+          onCardClick={onRowClick}
+          cardRenderer={cardRenderer}
+          onAddToWatchlist={onAddToWatchlist}
+          onDismiss={onDismiss}
+          onCreateAlert={onCreateAlert}
+          onRefresh={onRefresh}
+          onLoadMore={onLoadMore}
+          hasMore={hasMore}
+          qualityStats={qualityStats}
+          showQualityIndicators={showQualityIndicators}
+          isItemWatched={isItemWatched}
+          expandableRowContent={expandableRowContent}
+        />
+      ) : (
+        <div className="relative overflow-x-auto scrollbar-thin scrollbar-thumb-accent-cyan/30 scrollbar-track-transparent">
+          {/* Scroll hint for tablet-sized screens */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-space-dark/80 to-transparent pointer-events-none z-10 lg:hidden" aria-hidden="true" />
+          <table className="w-full border-collapse text-sm text-left">
           <thead>
             <tr>
               {expandableRowContent && (
@@ -734,7 +506,7 @@ export function TradingTable({
               };
 
               // Check if this row is selected via keyboard navigation
-              const isSelected = selectedRows.has(rowId);
+              const isSelected = selectedRowIndex === idx;
 
               return (
                 <>
@@ -743,7 +515,7 @@ export function TradingTable({
                     onClick={() => onRowClick?.(row, idx)}
                     className={`
                       transition-colors
-                      ${isSelected ? 'bg-accent-cyan/20' : ''}
+                      ${isSelected ? 'bg-accent-cyan/10 ring-1 ring-accent-cyan/30' : ''}
                       ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-white/5' : ''}
                       ${onRowClick ? 'cursor-pointer' : ''}
                     `}
@@ -800,14 +572,8 @@ export function TradingTable({
                         </button>
                       </td>
                     )}
-                    {columns.filter(c => c.visible !== false).map((col, colIdx) => (
-                      <td
-                        key={col.key}
-                        data-row-index={idx}
-                        data-col-index={colIdx}
-                        tabIndex={-1}
-                        className={`px-2 sm:px-4 py-2.5 sm:py-3 text-text-primary text-xs sm:text-sm ${col.className || ''} focus:outline-none focus:bg-accent-cyan/20`}
-                      >
+                    {columns.filter(c => c.visible !== false).map(col => (
+                      <td key={col.key} className={`px-2 sm:px-4 py-2.5 sm:py-3 text-text-primary text-xs sm:text-sm ${col.className || ''}`}>
                         {renderCell(row, col)}
                       </td>
                     ))}
@@ -848,7 +614,8 @@ export function TradingTable({
             })}
           </tbody>
         </table>
-      </div>
+        </div>
+      )}
 
       {/* Bottom Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-center p-3 gap-3 bg-space-mid/30 border-t border-accent-cyan/10 text-xs text-text-secondary">
