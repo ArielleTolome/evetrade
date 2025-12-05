@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
@@ -160,7 +160,7 @@ Risk Score: ${item['Risk Score']}/10`;
         key: 'Item',
         label: 'Item',
         className: 'font-medium min-w-[180px]',
-        render: (data, row) => (
+        render: (data, _row) => (
           <div className="flex items-center gap-2">
             <Button
               onClick={(e) => {
@@ -301,7 +301,7 @@ Risk Score: ${item['Risk Score']}/10`;
   );
 
   // Calculate summary statistics
-  const stats = useMemo(() => getStats(), [getStats, data]);
+  const stats = useMemo(() => getStats(), [getStats]);
 
   return (
     <PageLayout
