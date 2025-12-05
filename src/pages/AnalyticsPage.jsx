@@ -826,12 +826,11 @@ function CategoryPieChart({ categories }) {
   ];
 
   // Calculate pie slices
-  let currentAngle = -90; // Start at top
-  const slices = categories.map((cat, idx) => {
+  const slices = categories.reduce((acc, cat, idx) => {
+    const prevAngle = idx === 0 ? -90 : acc[idx - 1].endAngle;
     const angle = (cat.percentage / 100) * 360;
-    const startAngle = currentAngle;
-    const endAngle = currentAngle + angle;
-    currentAngle = endAngle;
+    const startAngle = prevAngle;
+    const endAngle = prevAngle + angle;
 
     // Calculate path for pie slice
     const startRad = (startAngle * Math.PI) / 180;
@@ -844,12 +843,14 @@ function CategoryPieChart({ categories }) {
 
     const path = `M 50 50 L ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2} Z`;
 
-    return {
+    acc.push({
       ...cat,
       path,
+      endAngle,
       color: colors[idx % colors.length],
-    };
-  });
+    });
+    return acc;
+  }, []);
 
   return (
     <div className="flex items-center justify-center">
