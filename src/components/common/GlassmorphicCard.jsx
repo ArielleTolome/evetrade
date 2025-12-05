@@ -20,7 +20,7 @@ export function GlassmorphicCard({
   `;
 
   const hoverClasses = hover
-    ? 'transition-all duration-300 hover:border-accent-cyan/30 hover:shadow-xl hover:shadow-accent-cyan/10 hover:-translate-y-1 cursor-pointer group'
+    ? 'transition-all duration-300 hover:border-accent-cyan/50 hover:shadow-lg hover:shadow-accent-cyan/10 hover:-translate-y-1 cursor-pointer group'
     : '';
 
   const glowClasses = glow

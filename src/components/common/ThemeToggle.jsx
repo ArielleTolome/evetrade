@@ -10,7 +10,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-full bg-space-dark/50 hover:bg-space-light/50 border border-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+      className="p-2 rounded-full bg-space-dark/50 hover:bg-space-light/50 border border-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan"
       aria-label="Toggle theme"
     >
       {isDark ? (

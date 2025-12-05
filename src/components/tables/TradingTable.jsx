@@ -185,7 +185,7 @@ function MobileCardView({
                       onAddToWatchlist(row);
                     }}
                     disabled={isItemWatched && isItemWatched(row['Item ID'] || row.itemId)}
-                    className={`p-2 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center focus:ring-2 focus:ring-accent-cyan focus:outline-none ${
+                    className={`p-2 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none ${
                       isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
                         ? 'bg-accent-purple/20 text-accent-purple/50'
                         : 'bg-accent-purple/10 text-accent-purple active:bg-accent-purple/30'
@@ -213,7 +213,7 @@ function MobileCardView({
                         threshold: (row['Gross Margin'] || row.margin || 5),
                       });
                     }}
-                    className="p-2 rounded-lg bg-accent-gold/10 text-accent-gold active:bg-accent-gold/30 min-w-[36px] min-h-[36px] flex items-center justify-center focus:ring-2 focus:ring-accent-cyan focus:outline-none"
+                    className="p-2 rounded-lg bg-accent-gold/10 text-accent-gold active:bg-accent-gold/30 min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -261,7 +261,7 @@ function MobileCardView({
                     e.stopPropagation();
                     setExpandedCard(isExpanded ? null : rowId);
                   }}
-                  className="w-full px-3 py-2 flex items-center justify-center gap-1 text-xs text-text-secondary border-t border-accent-cyan/5 active:bg-white/5 focus:ring-2 focus:ring-accent-cyan focus:outline-none"
+                  className="w-full px-3 py-2 flex items-center justify-center gap-1 text-xs text-text-secondary border-t border-accent-cyan/5 active:bg-white/5 focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none"
                 >
                   <span>{isExpanded ? 'Show less' : 'Show more'}</span>
                   <svg
@@ -667,9 +667,9 @@ export function TradingTable({
                     key={rowId}
                     onClick={() => onRowClick?.(row, idx)}
                     className={`
-                      transition-colors
+                      transition-colors duration-150
                       ${isSelected ? 'bg-accent-cyan/10 ring-1 ring-accent-cyan/30' : ''}
-                      ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-white/5' : ''}
+                      ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-accent-cyan/10' : ''}
                       ${onRowClick ? 'cursor-pointer' : ''}
                     `}
                   >
@@ -678,7 +678,7 @@ export function TradingTable({
                         <button
                           type="button"
                           onClick={(e) => toggleRowExpansion(rowId, e)}
-                          className="text-accent-cyan hover:text-accent-cyan/80 transition-colors focus:ring-2 focus:ring-accent-cyan focus:outline-none rounded"
+                          className="text-accent-cyan hover:text-accent-cyan/80 transition-colors focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none rounded"
                           aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
                         >
                           <svg
@@ -701,7 +701,7 @@ export function TradingTable({
                             onAddToWatchlist(row);
                           }}
                           disabled={isItemWatched && isItemWatched(row['Item ID'] || row.itemId)}
-                          className={`p-2 rounded-lg transition-all focus:ring-2 focus:ring-accent-cyan focus:outline-none ${isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
+                          className={`p-2 rounded-lg transition-all focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none ${isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
                             ? 'bg-accent-purple/20 text-accent-purple/50 cursor-not-allowed'
                             : 'bg-accent-purple/10 border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/20 hover:border-accent-purple/50'
                             }`}
@@ -744,7 +744,7 @@ export function TradingTable({
                               threshold: (row['Gross Margin'] || row.margin || 5),
                             });
                           }}
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-accent-gold/10 border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/20 hover:border-accent-gold/50 transition-all focus:ring-2 focus:ring-accent-cyan focus:outline-none"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-accent-gold/10 border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/20 hover:border-accent-gold/50 transition-all focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none"
                           title="Set price alert"
                           aria-label="Set price alert"
                         >
@@ -806,7 +806,7 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(0)}
               disabled={currentPage === 0}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10 focus:ring-2 focus:ring-accent-cyan focus:outline-none"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10 focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none"
               aria-label="First page"
             >
               «
@@ -815,7 +815,7 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 0}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10 focus:ring-2 focus:ring-accent-cyan focus:outline-none"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10 focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none"
               aria-label="Previous page"
             >
               ‹
@@ -828,7 +828,7 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage >= totalPages - 1}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10 focus:ring-2 focus:ring-accent-cyan focus:outline-none"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10 focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none"
               aria-label="Next page"
             >
               ›
@@ -837,7 +837,7 @@ export function TradingTable({
               type="button"
               onClick={() => goToPage(totalPages - 1)}
               disabled={currentPage >= totalPages - 1}
-              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10 focus:ring-2 focus:ring-accent-cyan focus:outline-none"
+              className="p-2 rounded hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] flex items-center justify-center active:bg-white/10 focus-visible:ring-2 focus:ring-accent-cyan focus:outline-none"
               aria-label="Last page"
             >
               »
