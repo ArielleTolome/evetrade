@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
@@ -6,7 +6,7 @@ import { FormInput, FormSelect, RegionAutocomplete, ItemAutocomplete } from '../
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useResources } from '../hooks/useResources';
 import { useMarketVelocity } from '../hooks/useMarketVelocity';
-import { formatNumber, formatPercent, formatCompact } from '../utils/formatters';
+import { formatPercent, formatCompact } from '../utils/formatters';
 
 /**
  * Competition level filter options
@@ -137,6 +137,10 @@ export function MarketVelocityPage() {
   const [minVolume, setMinVolume] = useState(1000);
   const [minVelocityScore, setMinVelocityScore] = useState(0);
   const [competitionFilter, setCompetitionFilter] = useState('all');
+
+  useEffect(() => {
+    loadInvTypes();
+  }, [loadInvTypes]);
 
   // Get region ID from region name
   const regionId = useMemo(() => {
