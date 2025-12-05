@@ -680,3 +680,12 @@ body {
   padding: 1rem;
   border-radius: 0 0.5rem 0.5rem 0;
 }
+
+.drop-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #415A77;
+  box-shadow: 0 0 5px #415A77;
+}

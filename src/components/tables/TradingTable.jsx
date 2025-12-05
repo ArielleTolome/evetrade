@@ -1,8 +1,26 @@
-import { useState, useMemo, useCallback } from 'react';
-import { Database } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Database, RotateCcw } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable';
+
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
+import { SortableHeader } from './SortableHeader';
+import { DraggableHeaderCell } from './DraggableHeaderCell';
 
+// ... (utility functions getRowQualityTier, getMarginTrend, getTradingBadges remain the same)
 /**
  * Get quality tier based on row data stats
  * Used to color-code rows based on trade quality
@@ -310,13 +328,12 @@ function MobileCardView({
     </div>
   );
 }
-
 /**
  * Trading Table Component
- * Custom React table with sorting, pagination, and search
- * Includes automatic mobile card view for small screens
+ * Custom React table with sorting, pagination, search, and draggable columns
  */
 export function TradingTable({
+  tableId, // Unique ID for storing column order
   data = [],
   columns = [],
   onRowClick,
@@ -331,9 +348,51 @@ export function TradingTable({
   onAddToWatchlist = null,
   isItemWatched = null,
   selectedRowIndex = -1,
-  enableMobileCards = true, // New prop to enable/disable mobile card view
+  enableMobileCards = true,
   onClearFilters = null,
 }) {
+  // Column order state
+  const [columnOrder, setColumnOrder] = useState(() => {
+    try {
+      const savedOrder = localStorage.getItem(`table-cols-${tableId}`);
+      if (savedOrder) {
+        // Filter out any keys that are no longer in the columns prop
+        const parsedOrder = JSON.parse(savedOrder);
+        const currentKeys = columns.map(c => c.key);
+        return parsedOrder.filter(key => currentKeys.includes(key));
+      }
+    } catch (e) {
+      console.error("Failed to parse column order from localStorage", e);
+    }
+    return columns.map(c => c.key);
+  });
+
+  // Persist column order to localStorage
+  useEffect(() => {
+    if (tableId) {
+      try {
+        localStorage.setItem(`table-cols-${tableId}`, JSON.stringify(columnOrder));
+      } catch (e) {
+        console.error("Failed to save column order to localStorage", e);
+      }
+    }
+  }, [columnOrder, tableId]);
+
+  // Reset column order to default
+  const resetColumnOrder = useCallback(() => {
+    const defaultOrder = columns.map(c => c.key);
+    setColumnOrder(defaultOrder);
+    if (tableId) {
+      localStorage.removeItem(`table-cols-${tableId}`);
+    }
+  }, [columns, tableId]);
+
+  const orderedColumns = useMemo(() => {
+    return columnOrder
+      .map(key => columns.find(col => col.key === key))
+      .filter(Boolean); // Filter out undefined in case a column was removed
+  }, [columnOrder, columns]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(pageLength);
@@ -353,7 +412,7 @@ export function TradingTable({
     return defaultCol ? { key: defaultCol.key, direction: 'desc' } : null;
   });
 
-  // Calculate stats for quality indicators
+    // Calculate stats for quality indicators
   const qualityStats = useMemo(() => {
     if (!showQualityIndicators || !data || data.length === 0) return null;
 
@@ -429,9 +488,9 @@ export function TradingTable({
 
   // Export to CSV
   const exportCSV = useCallback(() => {
-    const headers = columns.map(c => c.label).join(',');
+    const headers = orderedColumns.map(c => c.label).join(',');
     const rows = sortedData.map(row =>
-      columns.map(col => {
+      orderedColumns.map(col => {
         const val = row[col.key];
         // Escape quotes and wrap in quotes if contains comma
         const str = String(val ?? '');
@@ -448,17 +507,17 @@ export function TradingTable({
     a.download = 'trading-data.csv';
     a.click();
     URL.revokeObjectURL(url);
-  }, [sortedData, columns]);
+  }, [sortedData, orderedColumns]);
 
   // Copy to clipboard
   const copyToClipboard = useCallback(() => {
-    const headers = columns.map(c => c.label).join('\t');
+    const headers = orderedColumns.map(c => c.label).join('\t');
     const rows = sortedData.map(row =>
-      columns.map(col => String(row[col.key] ?? '')).join('\t')
+      orderedColumns.map(col => String(row[col.key] ?? '')).join('\t')
     );
     const text = [headers, ...rows].join('\n');
     navigator.clipboard.writeText(text);
-  }, [sortedData, columns]);
+  }, [sortedData, orderedColumns]);
 
   // Toggle row expansion
   const toggleRowExpansion = useCallback((rowId, event) => {
@@ -528,6 +587,35 @@ export function TradingTable({
     return value ?? '';
   }, [qualityStats]);
 
+  // DnD state and handlers
+  const [activeColumn, setActiveColumn] = useState(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragStart = useCallback((event) => {
+    setActiveColumn(columns.find(col => col.key === event.active.id));
+  }, [columns]);
+
+  const handleDragEnd = useCallback((event) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setColumnOrder((items) => {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+    setActiveColumn(null);
+  }, []);
+
+  const activeColumnStyle = activeColumn ? {
+    width: document.getElementById(`header-${activeColumn.key}`)?.offsetWidth,
+    backgroundColor: 'rgba(65, 90, 119, 0.8)', // #415A77 at 80% opacity
+    boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+  } : {};
+
   if (!data || data.length === 0) {
     return (
       <EmptyState
@@ -542,271 +630,286 @@ export function TradingTable({
   }
 
   return (
-    <div className={`bg-space-dark/40 backdrop-blur-md rounded-xl border border-white/5 overflow-hidden flex flex-col shadow-xl ${className}`}>
-      {/* Top Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center p-3 sm:p-4 gap-3 sm:gap-4 bg-space-mid/40 border-b border-white/5">
-        <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-1">
-          <Button
-            onClick={copyToClipboard}
-            variant="secondary"
-            size="sm"
-            className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm"
-          >
-            <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <span className="hidden sm:inline">Copy</span>
-          </Button>
-          <Button
-            onClick={exportCSV}
-            variant="secondary"
-            size="sm"
-            className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm"
-          >
-            <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className="hidden sm:inline">CSV</span>
-          </Button>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className={`bg-space-dark/40 backdrop-blur-md rounded-xl border border-white/5 overflow-hidden flex flex-col shadow-xl ${className}`}>
+        {/* Top Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center p-3 sm:p-4 gap-3 sm:gap-4 bg-space-mid/40 border-b border-white/5">
+          <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-1">
+            <Button
+              onClick={copyToClipboard}
+              variant="secondary"
+              size="sm"
+              className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm"
+            >
+              <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span className="hidden sm:inline">Copy</span>
+            </Button>
+            <Button
+              onClick={exportCSV}
+              variant="secondary"
+              size="sm"
+              className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm"
+            >
+              <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="hidden sm:inline">CSV</span>
+            </Button>
+             <Button
+                onClick={resetColumnOrder}
+                variant="secondary"
+                size="sm"
+                className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm"
+                tooltip="Reset column order to default"
+              >
+                <RotateCcw size={14} className="sm:mr-1" />
+                <span className="hidden sm:inline">Reset Cols</span>
+              </Button>
+          </div>
+          <div className="w-full sm:w-auto sm:max-w-xs order-1 sm:order-2">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(0);
+              }}
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg bg-space-black/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan placeholder-text-secondary/50 min-h-[44px]"
+            />
+          </div>
         </div>
-        <div className="w-full sm:w-auto sm:max-w-xs order-1 sm:order-2">
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(0);
-            }}
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg bg-space-black/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan placeholder-text-secondary/50 min-h-[44px]"
-          />
-        </div>
-      </div>
 
-      {/* Mobile Card View */}
-      {enableMobileCards && (
-        <div className="md:hidden">
-          <MobileCardView
-            data={paginatedData}
-            columns={columns}
-            onRowClick={onRowClick}
-            qualityStats={qualityStats}
-            showQualityIndicators={showQualityIndicators}
-            onAddToWatchlist={onAddToWatchlist}
-            isItemWatched={isItemWatched}
-            onCreateAlert={onCreateAlert}
-            expandableRowContent={expandableRowContent}
-          />
-        </div>
-      )}
+        {/* Mobile Card View */}
+        {enableMobileCards && (
+          <div className="md:hidden">
+            <MobileCardView
+              data={paginatedData}
+              columns={orderedColumns}
+              onRowClick={onRowClick}
+              qualityStats={qualityStats}
+              showQualityIndicators={showQualityIndicators}
+              onAddToWatchlist={onAddToWatchlist}
+              isItemWatched={isItemWatched}
+              onCreateAlert={onCreateAlert}
+              expandableRowContent={expandableRowContent}
+            />
+          </div>
+        )}
 
-      {/* Desktop Table */}
-      <div className={`relative overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-accent-cyan/30 md:scrollbar-track-transparent ${enableMobileCards ? 'hidden md:block' : ''}`}>
-        {/* Scroll hint for tablet-sized screens */}
-        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-space-dark/80 to-transparent pointer-events-none z-10 lg:hidden" aria-hidden="true" />
-        <table className="w-full border-collapse text-sm text-left">
-          <thead>
-            <tr>
-              {expandableRowContent && (
-                <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-10"></th>
-              )}
-              {onAddToWatchlist && (
-                <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-20 text-center">
-                  <div className="flex items-center justify-center" title="Watchlist">
-                    <svg className="w-4 h-4 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
-                </th>
-              )}
-              {columns.filter(c => c.visible !== false).map(col => (
-                <th
-                  key={col.key}
-                  onClick={() => handleSort(col.key)}
-                  className={`
-                    bg-space-mid/60 text-accent-cyan font-display font-semibold text-[10px] sm:text-xs uppercase tracking-wider
-                    px-2 sm:px-4 py-3 sm:py-4 border-b border-white/5
-                    whitespace-nowrap cursor-pointer select-none
-                    hover:bg-white/5 transition-colors
-                    ${sortConfig?.key === col.key ? 'text-accent-cyan' : 'text-text-secondary'}
-                  `}
-                >
-                  <div className="flex items-center gap-1">
-                    {col.label}
-                    {sortConfig?.key === col.key && (
-                      <span className="text-accent-gold text-xs">
-                        {sortConfig.direction === 'asc' ? '▲' : '▼'}
-                      </span>
-                    )}
-                  </div>
-                </th>
-              ))}
-              {onCreateAlert && (
-                <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-10 text-center">
-                  <span className="text-accent-cyan font-display font-semibold text-xs">Alert</span>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-accent-cyan/5">
-            {paginatedData.map((row, idx) => {
-              const qualityTier = showQualityIndicators ? getRowQualityTier(row, qualityStats) : null;
-              const rowId = row['Item ID'] || idx;
-              const isExpanded = expandedRows.has(rowId);
+        {/* Desktop Table */}
+        <div className={`relative overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-accent-cyan/30 md:scrollbar-track-transparent ${enableMobileCards ? 'hidden md:block' : ''}`}>
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-space-dark/80 to-transparent pointer-events-none z-10 lg:hidden" aria-hidden="true" />
+          <table className="w-full border-collapse text-sm text-left">
+            <thead>
+              <tr>
+                {expandableRowContent && (
+                  <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-10"></th>
+                )}
+                {onAddToWatchlist && (
+                  <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-20 text-center">
+                    <div className="flex items-center justify-center" title="Watchlist">
+                      <svg className="w-4 h-4 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </div>
+                  </th>
+                )}
+                <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
+                  {orderedColumns.filter(c => c.visible !== false).map(col => (
+                    <SortableHeader
+                      key={col.key}
+                      column={col}
+                      onSort={handleSort}
+                      sortConfig={sortConfig}
+                    />
+                  ))}
+                </SortableContext>
+                {onCreateAlert && (
+                  <th className="bg-space-mid/80 px-4 py-3 border-b border-accent-cyan/20 w-10 text-center">
+                    <span className="text-accent-cyan font-display font-semibold text-xs">Alert</span>
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-accent-cyan/5">
+              {paginatedData.map((row, idx) => {
+                // ... (row rendering logic remains the same)
+                const qualityTier = showQualityIndicators ? getRowQualityTier(row, qualityStats) : null;
+                const rowId = row['Item ID'] || idx;
+                const isExpanded = expandedRows.has(rowId);
 
-              // Tailwind classes for quality tiers
-              const qualityClasses = {
-                excellent: 'bg-accent-green/5 border-l-2 border-accent-green/60 hover:bg-accent-green/10',
-                good: 'bg-accent-cyan/5 border-l-2 border-accent-cyan/50 hover:bg-accent-cyan/10',
-                fair: 'bg-accent-gold/5 border-l-2 border-accent-gold/30 hover:bg-accent-gold/10',
-              };
+                // Tailwind classes for quality tiers
+                const qualityClasses = {
+                  excellent: 'bg-accent-green/5 border-l-2 border-accent-green/60 hover:bg-accent-green/10',
+                  good: 'bg-accent-cyan/5 border-l-2 border-accent-cyan/50 hover:bg-accent-cyan/10',
+                  fair: 'bg-accent-gold/5 border-l-2 border-accent-gold/30 hover:bg-accent-gold/10',
+                };
 
-              // Check if this row is selected via keyboard navigation
-              const isSelected = selectedRowIndex === idx;
+                // Check if this row is selected via keyboard navigation
+                const isSelected = selectedRowIndex === idx;
 
-              return (
-                <>
-                  <tr
-                    key={rowId}
-                    onClick={() => onRowClick?.(row, idx)}
-                    className={`
-                      transition-colors
-                      ${isSelected ? 'bg-accent-cyan/10 ring-1 ring-accent-cyan/30' : ''}
-                      ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-white/5' : ''}
-                      ${onRowClick ? 'cursor-pointer' : ''}
-                    `}
-                  >
-                    {expandableRowContent && (
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={(e) => toggleRowExpansion(rowId, e)}
-                          className="text-accent-cyan hover:text-accent-cyan/80 transition-colors focus:ring-2 focus:ring-accent-cyan focus:outline-none rounded"
-                          aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
-                        >
-                          <svg
-                            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                return (
+                  <>
+                    <tr
+                      key={rowId}
+                      onClick={() => onRowClick?.(row, idx)}
+                      className={`
+                        transition-colors
+                        ${isSelected ? 'bg-accent-cyan/10 ring-1 ring-accent-cyan/30' : ''}
+                        ${!isSelected && qualityTier ? qualityClasses[qualityTier] : !isSelected ? 'hover:bg-white/5' : ''}
+                        ${onRowClick ? 'cursor-pointer' : ''}
+                      `}
+                    >
+                      {expandableRowContent && (
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={(e) => toggleRowExpansion(rowId, e)}
+                            className="text-accent-cyan hover:text-accent-cyan/80 transition-colors focus:ring-2 focus:ring-accent-cyan focus:outline-none rounded"
+                            aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </td>
-                    )}
-                    {onAddToWatchlist && (
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddToWatchlist(row);
-                          }}
-                          disabled={isItemWatched && isItemWatched(row['Item ID'] || row.itemId)}
-                          className={`p-2 rounded-lg transition-all focus:ring-2 focus:ring-accent-cyan focus:outline-none ${isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
-                            ? 'bg-accent-purple/20 text-accent-purple/50 cursor-not-allowed'
-                            : 'bg-accent-purple/10 border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/20 hover:border-accent-purple/50'
-                            }`}
-                          title={
-                            isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
-                              ? 'Already in watchlist'
-                              : 'Add to watchlist'
-                          }
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {isItemWatched && isItemWatched(row['Item ID'] || row.itemId) ? (
-                              <>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </>
-                            ) : (
-                              <>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </>
-                            )}
-                          </svg>
-                        </button>
-                      </td>
-                    )}
-                    {columns.filter(c => c.visible !== false).map(col => (
-                      <td key={col.key} className={`px-2 sm:px-4 py-2.5 sm:py-3 text-text-primary text-xs sm:text-sm ${col.className || ''}`}>
-                        {renderCell(row, col)}
-                      </td>
-                    ))}
-                    {onCreateAlert && (
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onCreateAlert({
-                              itemName: row['Item'] || row.item,
-                              itemId: row['Item ID'] || row.itemId,
-                              type: 'margin',
-                              condition: 'above',
-                              threshold: (row['Gross Margin'] || row.margin || 5),
-                            });
-                          }}
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-accent-gold/10 border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/20 hover:border-accent-gold/50 transition-all focus:ring-2 focus:ring-accent-cyan focus:outline-none"
-                          title="Set price alert"
-                          aria-label="Set price alert"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                          </svg>
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                  {expandableRowContent && isExpanded && (
+                            <svg
+                              className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </td>
+                      )}
+                      {onAddToWatchlist && (
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAddToWatchlist(row);
+                            }}
+                            disabled={isItemWatched && isItemWatched(row['Item ID'] || row.itemId)}
+                            className={`p-2 rounded-lg transition-all focus:ring-2 focus:ring-accent-cyan focus:outline-none ${isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
+                              ? 'bg-accent-purple/20 text-accent-purple/50 cursor-not-allowed'
+                              : 'bg-accent-purple/10 border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/20 hover:border-accent-purple/50'
+                              }`}
+                            title={
+                              isItemWatched && isItemWatched(row['Item ID'] || row.itemId)
+                                ? 'Already in watchlist'
+                                : 'Add to watchlist'
+                            }
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              {isItemWatched && isItemWatched(row['Item ID'] || row.itemId) ? (
+                                <>
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </>
+                              ) : (
+                                <>
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </>
+                              )}
+                            </svg>
+                          </button>
+                        </td>
+                      )}
+                      {orderedColumns.filter(c => c.visible !== false).map(col => (
+                        <td key={col.key} className={`px-2 sm:px-4 py-2.5 sm:py-3 text-text-primary text-xs sm:text-sm ${col.className || ''}`}>
+                          {renderCell(row, col)}
+                        </td>
+                      ))}
+                      {onCreateAlert && (
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onCreateAlert({
+                                itemName: row['Item'] || row.item,
+                                itemId: row['Item ID'] || row.itemId,
+                                type: 'margin',
+                                condition: 'above',
+                                threshold: (row['Gross Margin'] || row.margin || 5),
+                              });
+                            }}
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-accent-gold/10 border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/20 hover:border-accent-gold/50 transition-all focus:ring-2 focus:ring-accent-cyan focus:outline-none"
+                            title="Set price alert"
+                            aria-label="Set price alert"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                    {expandableRowContent && isExpanded && (
                     <tr key={`${rowId}-expanded`} className="bg-space-dark/20">
-                      <td colSpan={columns.filter(c => c.visible !== false).length + (expandableRowContent ? 1 : 0) + (onAddToWatchlist ? 1 : 0) + (onCreateAlert ? 1 : 0)} className="px-4 py-3">
+                      <td colSpan={orderedColumns.filter(c => c.visible !== false).length + (expandableRowContent ? 1 : 0) + (onAddToWatchlist ? 1 : 0) + (onCreateAlert ? 1 : 0)} className="px-4 py-3">
                         {expandableRowContent(row, idx)}
                       </td>
                     </tr>
                   )}
-                </>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Bottom Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center p-3 gap-3 bg-space-mid/30 border-t border-accent-cyan/10 text-xs text-text-secondary">
-        {/* Entry count - hidden on very small screens, abbreviated on mobile */}
-        <div className="hidden xs:block text-center sm:text-left">
-          <span className="hidden sm:inline">Showing </span>
-          <span className="text-text-primary font-medium">{sortedData.length > 0 ? currentPage * itemsPerPage + 1 : 0}</span>
-          <span className="hidden sm:inline"> to </span>
-          <span className="sm:hidden">-</span>
-          <span className="text-text-primary font-medium">{Math.min((currentPage + 1) * itemsPerPage, sortedData.length)}</span>
-          <span className="hidden sm:inline"> of </span>
-          <span className="sm:hidden">/</span>
-          <span className="text-text-primary font-medium">{sortedData.length}</span>
-          <span className="hidden sm:inline"> entries</span>
-          {searchTerm && <span className="hidden md:inline"> (filtered from {data.length} total)</span>}
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
+          <DragOverlay>
+            {activeColumn ? (
+               <DraggableHeaderCell
+                style={activeColumnStyle}
+                column={activeColumn}
+                sortConfig={sortConfig}
+              >
+                <span className="truncate">{activeColumn.label}</span>
+              </DraggableHeaderCell>
+            ) : null}
+          </DragOverlay>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-center w-full sm:w-auto">
-          <label className="hidden sm:flex items-center gap-2">
-            Show
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(0);
-              }}
-              className="px-2 py-1.5 rounded bg-space-black/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan cursor-pointer min-h-[36px]"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </label>
-          <div className="flex items-center gap-0.5 sm:gap-1">
+
+        {/* Bottom Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-center p-3 gap-3 bg-space-mid/30 border-t border-accent-cyan/10 text-xs text-text-secondary">
+          {/* Entry count */}
+          <div className="hidden xs:block text-center sm:text-left">
+            <span className="hidden sm:inline">Showing </span>
+            <span className="text-text-primary font-medium">{sortedData.length > 0 ? currentPage * itemsPerPage + 1 : 0}</span>
+            <span className="hidden sm:inline"> to </span>
+            <span className="sm:hidden">-</span>
+            <span className="text-text-primary font-medium">{Math.min((currentPage + 1) * itemsPerPage, sortedData.length)}</span>
+            <span className="hidden sm:inline"> of </span>
+            <span className="sm:hidden">/</span>
+            <span className="text-text-primary font-medium">{sortedData.length}</span>
+            <span className="hidden sm:inline"> entries</span>
+            {searchTerm && <span className="hidden md:inline"> (filtered from {data.length} total)</span>}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-center w-full sm:w-auto">
+            <label className="hidden sm:flex items-center gap-2">
+              Show
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(0);
+                }}
+                className="px-2 py-1.5 rounded bg-space-black/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan cursor-pointer min-h-[36px]"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </label>
+            <div className="flex items-center gap-0.5 sm:gap-1">
             <button
               type="button"
               onClick={() => goToPage(0)}
@@ -847,10 +950,11 @@ export function TradingTable({
             >
               »
             </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </DndContext>
   );
 }
 

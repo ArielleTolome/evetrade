@@ -847,6 +847,7 @@ Jumps: ${jumps}`;
 
                 {/* Full Results Table */}
                 <TradingTable
+                  tableId="region-hauling-table"
                   data={filteredData}
                   columns={tableColumns}
                   onRowClick={handleRowClick}

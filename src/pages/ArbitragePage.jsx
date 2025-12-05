@@ -507,6 +507,7 @@ Risk Score: ${item['Risk Score']}/10`;
                 </div>
 
                 <TradingTable
+                  tableId="arbitrage-table"
                   data={data}
                   columns={tableColumns}
                   onRowClick={handleRowClick}
