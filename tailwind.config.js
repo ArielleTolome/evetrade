@@ -8,6 +8,13 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Deep Sea Palette (New)
+        'deep-sea-900': 'var(--deep-sea-900)',
+        'deep-sea-800': 'var(--deep-sea-800)',
+        'deep-sea-700': 'var(--deep-sea-700)',
+        'deep-sea-600': 'var(--deep-sea-600)',
+        'deep-sea-100': 'var(--deep-sea-100)',
+
         // Space theme colors (dark mode) - Deep, rich space tones
         'space-black': '#050508', // Darker black
         'space-dark': '#0f1016',  // Deep blue-black
@@ -45,6 +52,18 @@ export default {
         'sec-02': '#f04800',   // 0.2
         'sec-01': '#d73000',   // 0.1
         'sec-00': '#f00000',   // 0.0 and below
+      },
+      backgroundColor: {
+        'primary': 'var(--deep-sea-900)',
+        'secondary': 'var(--deep-sea-800)',
+        'interactive': 'var(--deep-sea-700)',
+      },
+      textColor: {
+        'primary': 'var(--deep-sea-100)',
+        'secondary': 'var(--deep-sea-600)',
+      },
+      borderColor: {
+        'default': 'var(--deep-sea-700)',
       },
       fontFamily: {
         'display': ['Orbitron', 'sans-serif'],

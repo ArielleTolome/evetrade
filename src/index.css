@@ -5,6 +5,13 @@
 
 /* Custom Theme Variables */
 @theme {
+  /* Deep Sea Palette (New) */
+  --deep-sea-900: #0D1B2A;
+  --deep-sea-800: #1B263B;
+  --deep-sea-700: #415A77;
+  --deep-sea-600: #778DA9;
+  --deep-sea-100: #E0E1DD;
+
   /* Space theme colors (dark mode) */
   --color-space-black: #050508;
   --color-space-dark: #0f1016;
