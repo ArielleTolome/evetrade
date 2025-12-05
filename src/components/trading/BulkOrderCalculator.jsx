@@ -15,8 +15,8 @@ export function BulkOrderCalculator({
   defaultBrokerFee = DEFAULT_BROKER_FEE,
   defaultSalesTax = DEFAULT_SALES_TAX,
 }) {
-  // eslint-disable-next-line react-hooks/purity -- unique id for initial state
   const [items, setItems] = useState([{
+    // eslint-disable-next-line react-hooks/purity -- unique id for initial state
     id: Date.now(),
     itemName: '',
     quantity: 1,

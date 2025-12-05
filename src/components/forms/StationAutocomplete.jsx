@@ -278,7 +278,6 @@ export function StationAutocomplete({
       // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state
       setFiltered(searchStations(inputValue, maxResults));
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state
       setFiltered([]);
     }
   }, [inputValue, stationList, searchStations, maxResults]);

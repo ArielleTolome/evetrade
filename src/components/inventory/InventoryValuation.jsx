@@ -52,7 +52,7 @@ const PieChart = ({ data, size = 300, totalValue }) => {
             'Z',
           ].join(' ');
 
-          // eslint-disable-next-line react-hooks/purity -- accumulator pattern
+          // eslint-disable-next-line react-hooks/immutability -- accumulator pattern for pie chart rendering
           currentAngle = endAngle;
 
           return (

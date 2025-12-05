@@ -463,10 +463,8 @@ export function PresenceTransition({
     if (show) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state
       setShouldRender(true);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state
       setAnimationClass(enter);
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state
       setAnimationClass(exit);
       const timer = setTimeout(() => {
         setShouldRender(false);
