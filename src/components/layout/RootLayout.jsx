@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, useNavigationType, ScrollRestoration } from 'react-router-dom';
+import PageTransition from '../common/PageTransition';
 import { SectionErrorBoundary } from '../common/ErrorBoundary';
 import { Sidebar, MobileNav } from '../common/Sidebar';
 import { AnimatedBackground } from './AnimatedBackground';
@@ -13,6 +14,7 @@ import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../../hooks/useKeyb
 export function RootLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const navigationType = useNavigationType();
   const { showHelp, setShowHelp } = useKeyboardShortcuts(undefined, undefined, {
     navigate,
     pathname: location.pathname,
@@ -21,14 +23,27 @@ export function RootLayout() {
     const stored = localStorage.getItem('evetrade_sidebar_collapsed');
     return stored ? JSON.parse(stored) : false;
   });
+  const [transitionType, setTransitionType] = useState('fade');
 
   // Persist sidebar state
   useEffect(() => {
     localStorage.setItem('evetrade_sidebar_collapsed', JSON.stringify(sidebarCollapsed));
   }, [sidebarCollapsed]);
 
+  // Determine transition type based on navigation action
+  useEffect(() => {
+    if (navigationType === 'PUSH') {
+      setTransitionType('slide-left');
+    } else if (navigationType === 'POP') {
+      setTransitionType('slide-right');
+    } else {
+      setTransitionType('fade');
+    }
+  }, [location, navigationType]);
+
   return (
     <div className="min-h-screen bg-space-black">
+      <ScrollRestoration />
       <AnimatedBackground />
 
       {/* Desktop Sidebar */}
@@ -54,7 +69,9 @@ export function RootLayout() {
           `}
         >
           <SectionErrorBoundary name="MainContent">
-            <Outlet />
+            <PageTransition location={location} type={transitionType}>
+              <Outlet />
+            </PageTransition>
           </SectionErrorBoundary>
         </main>
       </div>

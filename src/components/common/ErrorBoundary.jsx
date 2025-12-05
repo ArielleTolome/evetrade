@@ -325,7 +325,7 @@ function SectionErrorFallback({ error }) {
       <div className="text-center text-red-400">
         <p className="text-sm font-semibold">Error Loading Section</p>
         {process.env.NODE_ENV === 'development' && (
-          <p className="text-xs mt-1 truncate max-w-xs">{error.message}</p>
+          <p className="text-xs mt-1 truncate max-w-xs">{error.message || 'An unknown error occurred'}</p>
         )}
       </div>
     </div>
