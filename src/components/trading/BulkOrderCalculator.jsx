@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
-import { formatISK, formatNumber, formatPercent } from '../../utils/formatters';
+import { formatISK, formatNumber } from '../../utils/formatters';
 
 // Default EVE Online trading fees
 const DEFAULT_BROKER_FEE = 0.03; // 3% (can be reduced with skills/standings)
