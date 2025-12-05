@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SearchX } from 'lucide-react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { EmptyState } from '../components/common/EmptyState';
@@ -123,6 +123,7 @@ const ITEM_CATEGORIES = {
  */
 export function StationTradingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { universeList, loading: resourcesLoading, loadInvTypes, invTypes } = useResources();
   const { data, loading, error, lastUpdated, execute } = useApiCall(fetchStationTrading);
   const { saveRoute } = usePortfolio();
@@ -758,7 +759,10 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
   }), [form.station, data, handleSubmit, showSaveModal, showOrders, sortedData, selectedRowIndex, showFavoritesOnly, highQualityOnly, showDashboard, copyRowToClipboard, copyMultibuyFormat, handleRowClick, toggleFavorite, isFavorite, quickFilterIds]);
 
   // Initialize keyboard shortcuts
-  const { showHelp, setShowHelp } = useKeyboardShortcuts(keyboardHandlers);
+  const { showHelp, setShowHelp } = useKeyboardShortcuts(keyboardHandlers, undefined, {
+    navigate,
+    pathname: location.pathname,
+  });
 
   // Define custom shortcuts for help modal
   const customShortcuts = useMemo(() => [

@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect, useId } from 'react';
 import { useResources } from '../../hooks/useResources';
-import AutocompleteSkeleton from './AutocompleteSkeleton';
+
+const SkeletonItem = () => (
+  <li className="flex items-center justify-between px-4 py-2.5 animate-pulse">
+    <div className="h-5 bg-space-light rounded w-3/4"></div>
+    <div className="h-4 bg-space-light rounded w-1/6"></div>
+  </li>
+);
 
 /**
  * Item Autocomplete Component
@@ -182,11 +188,6 @@ export function ItemAutocomplete({
     };
   }, []);
 
-  // Show skeleton when data is loading for the first time
-  if (isDataLoading && itemsList.length === 0) {
-    return <AutocompleteSkeleton label={label} />;
-  }
-
   const isInputDisabled = disabled || loading || isDataLoading;
   const showSpinner = loading || isDataLoading;
 
@@ -272,7 +273,7 @@ export function ItemAutocomplete({
       </div>
 
       {/* Dropdown */}
-      {isOpen && filtered.length > 0 && (
+      {(isOpen && (filtered.length > 0 || isDataLoading)) && (
         <ul
           id={listboxId}
           role="listbox"
@@ -285,31 +286,33 @@ export function ItemAutocomplete({
             max-h-60 overflow-auto
           "
         >
-          {filtered.map((item, index) => (
-            <li
-              key={item.typeId}
-              id={getOptionId(index)}
-              role="option"
-              aria-selected={index === highlightedIndex}
-              onClick={() => handleSelect(item)}
-              className={`
-                flex items-center justify-between
-                px-4 py-2.5 cursor-pointer
-                transition-colors
-                ${index === highlightedIndex
-                  ? 'bg-accent-cyan/20'
-                  : 'hover:bg-accent-cyan/10'
-                }
-              `}
-            >
-              <span className="truncate text-text-primary" title={item.name}>
-                {item.name}
-              </span>
-              <span className="text-xs text-text-secondary ml-2">
-                #{item.typeId}
-              </span>
-            </li>
-          ))}
+          {isDataLoading
+            ? Array.from({ length: 5 }).map((_, i) => <SkeletonItem key={i} />)
+            : filtered.map((item, index) => (
+                <li
+                  key={item.typeId}
+                  id={getOptionId(index)}
+                  role="option"
+                  aria-selected={index === highlightedIndex}
+                  onClick={() => handleSelect(item)}
+                  className={`
+                    flex items-center justify-between
+                    px-4 py-2.5 cursor-pointer
+                    transition-colors
+                    ${index === highlightedIndex
+                      ? 'bg-accent-cyan/20'
+                      : 'hover:bg-accent-cyan/10'
+                    }
+                  `}
+                >
+                  <span className="truncate text-text-primary" title={item.name}>
+                    {item.name}
+                  </span>
+                  <span className="text-xs text-text-secondary ml-2">
+                    #{item.typeId}
+                  </span>
+                </li>
+              ))}
         </ul>
       )}
 

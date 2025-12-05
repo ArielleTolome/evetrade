@@ -4,7 +4,16 @@ import { useResources, useLocationLookup } from '../../hooks/useResources';
 import { SecurityBadge } from '../common/SecurityBadge';
 import { isCitadel } from '../../utils/security';
 import { TRADE_HUBS } from '../../utils/constants';
-import AutocompleteSkeleton from './AutocompleteSkeleton';
+
+const StationSkeletonItem = ({ isMobile = false }) => (
+  <div className={`flex items-center justify-between px-4 py-3 animate-pulse ${isMobile ? 'py-4' : ''}`}>
+    <div className="flex flex-col overflow-hidden mr-3 flex-1 min-w-0">
+      <div className="h-5 bg-space-light rounded w-3/4"></div>
+    </div>
+    <div className="h-5 bg-space-light rounded w-8"></div>
+  </div>
+);
+
 
 /**
  * Hook to detect if we're on a mobile device
@@ -45,6 +54,7 @@ function MobileSearchModal({
   showTradeHubs,
   value,
   onTradeHubSelect,
+  isDataLoading,
 }) {
   const inputRef = useRef(null);
 
@@ -155,52 +165,53 @@ function MobileSearchModal({
         )}
 
         {/* Search Results */}
-        {inputValue && (
+        {(inputValue || isDataLoading) && (
           <div className="divide-y divide-accent-cyan/5">
-            {filtered.length > 0 ? (
-              filtered.map((station) => {
-                const security = getSecurityLevel(station);
-                const citadel = isCitadel(station);
-
-                return (
-                  <button
-                    key={station}
-                    type="button"
-                    onClick={() => {
-                      onSelect(station);
-                      onClose();
-                    }}
-                    className="w-full flex items-center justify-between px-4 py-4 text-left active:bg-accent-cyan/10 transition-colors"
-                  >
-                    <div className="flex flex-col overflow-hidden mr-3 flex-1 min-w-0">
-                      <span
-                        className={`truncate font-medium text-base ${citadel ? 'text-accent-gold' : 'text-text-primary'}`}
-                      >
-                        {station}
-                      </span>
-                      {citadel && (
-                        <span className="text-xs text-accent-gold/80 uppercase tracking-wider mt-0.5">
-                          Player Structure
+            {isDataLoading
+              ? Array.from({ length: 10 }).map((_, i) => <StationSkeletonItem key={i} isMobile />)
+              : filtered.length > 0
+              ? filtered.map((station) => {
+                  const security = getSecurityLevel(station);
+                  const citadel = isCitadel(station);
+                  return (
+                    <button
+                      key={station}
+                      type="button"
+                      onClick={() => {
+                        onSelect(station);
+                        onClose();
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-4 text-left active:bg-accent-cyan/10 transition-colors"
+                    >
+                      <div className="flex flex-col overflow-hidden mr-3 flex-1 min-w-0">
+                        <span
+                          className={`truncate font-medium text-base ${citadel ? 'text-accent-gold' : 'text-text-primary'}`}
+                        >
+                          {station}
                         </span>
-                      )}
-                    </div>
-                    <SecurityBadge
-                      security={security}
-                      isCitadel={citadel}
-                      size="sm"
-                    />
-                  </button>
-                );
-              })
-            ) : (
-              <div className="px-4 py-12 text-text-secondary text-center">
-                <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <p className="font-medium">No stations found</p>
-                <p className="text-sm mt-1 opacity-70">Try a different search term</p>
-              </div>
-            )}
+                        {citadel && (
+                          <span className="text-xs text-accent-gold/80 uppercase tracking-wider mt-0.5">
+                            Player Structure
+                          </span>
+                        )}
+                      </div>
+                      <SecurityBadge
+                        security={security}
+                        isCitadel={citadel}
+                        size="sm"
+                      />
+                    </button>
+                  );
+                })
+              : (
+                <div className="px-4 py-12 text-text-secondary text-center">
+                  <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <p className="font-medium">No stations found</p>
+                  <p className="text-sm mt-1 opacity-70">Try a different search term</p>
+                </div>
+              )}
           </div>
         )}
 
@@ -413,11 +424,6 @@ export function StationAutocomplete({
     setInputValue(newValue);
   }, []);
 
-  // Show skeleton while loading data
-  if (isDataLoading && !stationList) {
-    return <AutocompleteSkeleton label={label} showTradeHubs={showTradeHubs} />;
-  }
-
   const isInputDisabled = disabled || loading || isDataLoading;
   const showSpinner = loading || isDataLoading;
 
@@ -517,6 +523,7 @@ export function StationAutocomplete({
             showTradeHubs={showTradeHubs}
             value={value}
             onTradeHubSelect={handleTradeHubSelect}
+            isDataLoading={isDataLoading}
           />
         </>
       ) : (
@@ -591,7 +598,7 @@ export function StationAutocomplete({
       )}
 
       {/* Desktop Dropdown */}
-      {!isMobile && isOpen && (
+      {!isMobile && isOpen && (filtered.length > 0 || (inputValue && isDataLoading)) && (
         <div
            className="
             absolute z-50 w-full mt-1
@@ -601,62 +608,64 @@ export function StationAutocomplete({
             max-h-60 overflow-hidden flex flex-col
           "
         >
-          {filtered.length > 0 ? (
-            <ul
-              id={listboxId}
-              role="listbox"
-              ref={listRef}
-              className="overflow-auto max-h-60"
-            >
-              {filtered.map((station, index) => {
-                const security = getSecurityLevel(station);
-                const citadel = isCitadel(station);
+          {isDataLoading
+            ? Array.from({ length: 5 }).map((_, i) => <StationSkeletonItem key={i} />)
+            : filtered.length > 0 ? (
+              <ul
+                id={listboxId}
+                role="listbox"
+                ref={listRef}
+                className="overflow-auto max-h-60"
+              >
+                {filtered.map((station, index) => {
+                  const security = getSecurityLevel(station);
+                  const citadel = isCitadel(station);
 
-                return (
-                  <li
-                    key={station}
-                    id={getOptionId(index)}
-                    role="option"
-                    aria-selected={index === highlightedIndex}
-                    onClick={() => handleSelect(station)}
-                    className={`
-                      flex items-center justify-between
-                      px-4 py-3 cursor-pointer border-b border-white/5 last:border-0
-                      transition-colors
-                      ${index === highlightedIndex
-                        ? 'bg-accent-cyan/20'
-                        : 'hover:bg-accent-cyan/10'
-                      }
-                    `}
-                  >
-                    <div className="flex flex-col overflow-hidden mr-2">
-                       <span
-                        className={`truncate font-medium ${citadel ? 'text-accent-gold' : 'text-text-primary'}`}
-                        title={station}
-                      >
-                        {station}
-                      </span>
-                      {citadel && (
-                        <span className="text-[10px] text-accent-gold/80 uppercase tracking-wider">
-                          Player Structure
+                  return (
+                    <li
+                      key={station}
+                      id={getOptionId(index)}
+                      role="option"
+                      aria-selected={index === highlightedIndex}
+                      onClick={() => handleSelect(station)}
+                      className={`
+                        flex items-center justify-between
+                        px-4 py-3 cursor-pointer border-b border-white/5 last:border-0
+                        transition-colors
+                        ${index === highlightedIndex
+                          ? 'bg-accent-cyan/20'
+                          : 'hover:bg-accent-cyan/10'
+                        }
+                      `}
+                    >
+                      <div className="flex flex-col overflow-hidden mr-2">
+                         <span
+                          className={`truncate font-medium ${citadel ? 'text-accent-gold' : 'text-text-primary'}`}
+                          title={station}
+                        >
+                          {station}
                         </span>
-                      )}
-                    </div>
+                        {citadel && (
+                          <span className="text-[10px] text-accent-gold/80 uppercase tracking-wider">
+                            Player Structure
+                          </span>
+                        )}
+                      </div>
 
-                    <SecurityBadge
-                      security={security}
-                      isCitadel={citadel}
-                      size="xs"
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <div className="px-4 py-3 text-text-secondary text-sm text-center italic">
-              No stations found
-            </div>
-          )}
+                      <SecurityBadge
+                        security={security}
+                        isCitadel={citadel}
+                        size="xs"
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="px-4 py-3 text-text-secondary text-sm text-center italic">
+                No stations found
+              </div>
+            )}
         </div>
       )}
 
