@@ -80,10 +80,12 @@ describe('StationAutocomplete', () => {
       expect(screen.getByText('Station is required')).toBeInTheDocument();
     });
 
-    it('shows skeleton when resources are loading', () => {
+    it('shows loading state when resources are loading', () => {
       useResources.mockReturnValue({ stationList: null, universeList: null, loading: true });
       render(<StationAutocomplete value="" onChange={vi.fn()} />);
-      expect(screen.getByTestId('autocomplete-skeleton')).toBeInTheDocument();
+      const input = screen.getByRole('combobox');
+      expect(input).toBeDisabled();
+      expect(input).toHaveAttribute('placeholder', 'Loading stations...');
     });
 
     it('shows loading spinner when loading prop is true', () => {
