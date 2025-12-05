@@ -714,6 +714,13 @@ body {
   border-radius: 0 0.5rem 0.5rem 0;
 }
 
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
 /* Global focus styles for links */
 a:focus-visible {
   outline: 2px solid var(--color-accent-cyan);
