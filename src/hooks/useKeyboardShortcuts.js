@@ -1,12 +1,23 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-export const useKeyboardShortcuts = (toggleShortcutsModal, toggleSearchModal) => {
+export const useKeyboardShortcuts = (toggleShortcutsModal, toggleSearchModal, navigateFn) => {
   const keySequence = useRef('');
-  const navigate = useNavigate();
   const sequenceTimeout = useRef(null);
 
   useEffect(() => {
+    const navigate = (path) => {
+      if (typeof navigateFn === 'function') {
+        navigateFn(path);
+        return;
+      }
+
+      if (typeof window !== 'undefined') {
+        if (window.location.pathname !== path) {
+          window.location.assign(path);
+        }
+      }
+    };
+
     const handleKeyDown = (event) => {
       if (event.metaKey || event.ctrlKey) {
         switch (event.key) {
@@ -56,5 +67,5 @@ export const useKeyboardShortcuts = (toggleShortcutsModal, toggleSearchModal) =>
       window.removeEventListener('keydown', handleKeyDown);
       clearTimeout(sequenceTimeout.current);
     };
-  }, [navigate, toggleShortcutsModal, toggleSearchModal]);
+  }, [navigateFn, toggleShortcutsModal, toggleSearchModal]);
 };
