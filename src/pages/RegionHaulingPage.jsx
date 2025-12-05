@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
@@ -29,7 +28,6 @@ import { getRegionData } from '../utils/stations';
  * Region Hauling Page Component
  */
 export function RegionHaulingPage() {
-  const navigate = useNavigate();
   const { universeList, nearbyRegions, loading: resourcesLoading } = useResources();
   const { data, loading, error, lastUpdated, execute } = useApiCall(fetchRegionHauling);
   const { saveRoute } = usePortfolio();
@@ -132,9 +130,9 @@ Jumps: ${jumps}`;
     if (isAuthenticated && character?.id) {
       loadAssetsAndWallet();
     }
-  }, [isAuthenticated, character?.id]);
+  }, [isAuthenticated, character?.id, loadAssetsAndWallet]);
 
-  const loadAssetsAndWallet = async () => {
+  const loadAssetsAndWallet = useCallback(async () => {
     setAssetsLoading(true);
     setAssetsError(null);
     try {
@@ -232,7 +230,7 @@ Jumps: ${jumps}`;
     } finally {
       setAssetsLoading(false);
     }
-  };
+  }, [character?.id, getAccessToken, toast, universeList]);
 
   // Get region ID from name
   const getRegionId = useCallback(
@@ -783,6 +781,9 @@ Jumps: ${jumps}`;
                 <div className="w-4 h-4 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
                 <span>Loading assets...</span>
               </div>
+            )}
+            {assetsError && (
+              <div className="mt-3 text-red-400 text-sm">{assetsError}</div>
             )}
           </GlassmorphicCard>
         )}
