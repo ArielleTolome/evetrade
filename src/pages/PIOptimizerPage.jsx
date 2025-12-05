@@ -634,6 +634,7 @@ export function PIOptimizerPage() {
 
                 {/* Full Results Table */}
                 <TradingTable
+                  tableId="pi-optimizer-table"
                   data={filteredData}
                   columns={tableColumns}
                   onRowClick={handleRowClick}

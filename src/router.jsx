@@ -324,6 +324,7 @@ export const router = createBrowserRouter([
           </LazyPage>
         ),
       },
+      {
     ],
   },
 ]);

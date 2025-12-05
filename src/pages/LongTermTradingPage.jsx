@@ -1411,6 +1411,7 @@ Confidence: ${pred.confidence}%`;
 
             {/* Full Table */}
             <TradingTable
+              tableId="long-term-trading-table"
               data={filteredPredictions}
               columns={tableColumns}
               onRowClick={handleRowClick}

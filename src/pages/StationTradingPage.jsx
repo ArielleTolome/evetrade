@@ -1962,6 +1962,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
 
               {/* Full Results Table */}
               <TradingTable
+                tableId="station-trading-table"
                 data={trades}
                 columns={tableColumns}
                 onRowClick={handleRowClick}
