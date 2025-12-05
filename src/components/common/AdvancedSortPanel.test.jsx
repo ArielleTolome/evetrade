@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { AdvancedSortPanel, applySorts, SORT_PRESETS, SORTABLE_COLUMNS } from './AdvancedSortPanel';
+import { AdvancedSortPanel } from './AdvancedSortPanel';
+import { applySorts, SORT_PRESETS, SORTABLE_COLUMNS } from './AdvancedSortPanel.utils.js';
 
 describe('AdvancedSortPanel', () => {
   describe('Component Rendering', () => {

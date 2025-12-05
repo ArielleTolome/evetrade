@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { AdvancedSortPanel, applySorts } from './AdvancedSortPanel';
+import { AdvancedSortPanel } from './AdvancedSortPanel';
+import { applySorts } from './AdvancedSortPanel.utils.js';
 import { TradingTable } from '../tables/TradingTable';
 
 /**
