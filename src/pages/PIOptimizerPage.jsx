@@ -12,7 +12,7 @@ import { useToast } from '../components/common/ToastProvider';
 import { usePIOptimizer } from '../hooks/usePIOptimizer';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { useResources } from '../hooks/useResources';
-import { formatISK, formatNumber, formatPercent, formatCompact } from '../utils/formatters';
+import { formatNumber, formatPercent, formatCompact } from '../utils/formatters';
 import { getCharacterPlanets } from '../api/esi';
 
 /**
@@ -86,8 +86,8 @@ export function PIOptimizerPage() {
   // Active tier filter for tabs
   const [activeTier, setActiveTier] = useState('all');
 
-  // Toast state
-  const [toastMessage, setToastMessage] = useState(null);
+  // Toast hook
+  const toast = useToast();
 
   // Form error state
   const [formError, setFormError] = useState(null);
@@ -110,14 +110,7 @@ export function PIOptimizerPage() {
     [universeList]
   );
 
-  // Load character planets when authenticated
-  useEffect(() => {
-    if (isAuthenticated && character?.id) {
-      loadCharacterPlanets();
-    }
-  }, [isAuthenticated, character?.id]);
-
-  const loadCharacterPlanets = async () => {
+  const loadCharacterPlanets = useCallback(async () => {
     setPlanetsLoading(true);
     try {
       const accessToken = await getAccessToken();
@@ -131,7 +124,14 @@ export function PIOptimizerPage() {
     } finally {
       setPlanetsLoading(false);
     }
-  };
+  }, [getAccessToken, character?.id]);
+
+  // Load character planets when authenticated
+  useEffect(() => {
+    if (isAuthenticated && character?.id) {
+      loadCharacterPlanets();
+    }
+  }, [isAuthenticated, character?.id, loadCharacterPlanets]);
 
   // Handle form submission
   const handleSubmit = useCallback(
@@ -164,15 +164,18 @@ export function PIOptimizerPage() {
   );
 
   // Copy to clipboard helper
-  const copyToClipboard = useCallback(async (text, message = 'Copied!') => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setToastMessage(message);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-      setToastMessage('Failed to copy');
-    }
-  }, []);
+  const copyToClipboard = useCallback(
+    async (text, message = 'Copied!') => {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast.success(message);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        toast.error('Failed to copy');
+      }
+    },
+    [toast]
+  );
 
   // Copy item name
   const copyItemName = useCallback(
@@ -347,9 +350,6 @@ export function PIOptimizerPage() {
   return (
     <PageLayout title="PI Optimizer" subtitle="Analyze Planetary Interaction opportunities">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Toast for copy feedback */}
-        {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} type="success" />}
-
         {/* Form */}
         <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
