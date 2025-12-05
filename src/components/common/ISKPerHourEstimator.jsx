@@ -17,7 +17,6 @@ export function ISKPerHourEstimator({
   const metrics = useMemo(() => {
     const now = new Date();
     const sessionStart = activeSession?.startTime ? new Date(activeSession.startTime) : now;
-    const sessionHours = Math.max(0.1, (now - sessionStart) / (1000 * 60 * 60));
 
     // Filter transactions by timeframe
     const getTimeframeStart = () => {
