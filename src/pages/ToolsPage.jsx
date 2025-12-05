@@ -38,7 +38,7 @@ import { MarketShareEstimator } from '../components/analytics/MarketShareEstimat
 // Productivity Components
 import { QuickCopyButtons } from '../components/common/QuickCopyButtons';
 import { TradeSessionTimer } from '../components/common/TradeSessionTimer';
-import { EnhancedExport } from '../components/common/EnhancedExport';
+import DataExport from '../components/common/DataExport';
 
 // New Advanced Features
 import { DiscordWebhookPanel } from '../components/common/DiscordWebhookPanel';
@@ -404,7 +404,7 @@ function ProductivityTools({ activeTool, setActiveTool }) {
         {activeTool === 'export' && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-text-primary">Export Data</h3>
-            <EnhancedExport data={sampleExportData} filename="trading-data" />
+            <DataExport data={sampleExportData} filename="trading-data" />
           </div>
         )}
       </GlassmorphicCard>

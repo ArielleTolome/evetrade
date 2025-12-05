@@ -863,6 +863,7 @@ ROI: ${formatPercent(roi / 100, 1)}`;
 
                 {/* Full Results Table */}
                 <TradingTable
+                  tableId="station-hauling-table"
                   data={filteredData}
                   columns={tableColumns}
                   onRowClick={handleRowClick}
