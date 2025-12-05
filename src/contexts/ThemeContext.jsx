@@ -9,6 +9,7 @@ const HIGH_CONTRAST_KEY = 'evetrade-high-contrast';
  * Theme Provider Component
  */
 export function ThemeProvider({ children }) {
+  // 1. State declarations
   const [theme, setTheme] = useState(() => {
     const storedTheme = localStorage.getItem(THEME_KEY);
     if (storedTheme) return storedTheme;
@@ -23,6 +24,19 @@ export function ThemeProvider({ children }) {
     return storedContrast === 'true';
   });
 
+  // 2. Callback declarations (must come before useEffects that reference them)
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  }, []);
+
+  const toggleHighContrast = useCallback(() => {
+    setHighContrast((prev) => !prev);
+  }, []);
+
+  const setDarkTheme = useCallback(() => setTheme('dark'), []);
+  const setLightTheme = useCallback(() => setTheme('light'), []);
+
+  // 3. Effects
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') {
@@ -64,17 +78,6 @@ export function ThemeProvider({ children }) {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [toggleHighContrast]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  }, []);
-
-  const toggleHighContrast = useCallback(() => {
-    setHighContrast((prev) => !prev);
-  }, []);
-
-  const setDarkTheme = useCallback(() => setTheme('dark'), []);
-  const setLightTheme = useCallback(() => setTheme('light'), []);
 
   const value = {
     theme,
