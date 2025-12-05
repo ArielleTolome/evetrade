@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 
 /**
  * Major EVE Online Trade Hubs

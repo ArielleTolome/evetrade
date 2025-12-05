@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
 import { formatISK, formatPercent, formatRelativeTime } from '../../utils/formatters';
 

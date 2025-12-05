@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useContracts } from '../../hooks/useContracts';
 import { useResources } from '../../hooks/useResources';
 

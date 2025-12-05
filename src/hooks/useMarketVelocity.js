@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { getMarketHistory, getMarketOrders, analyzeMarketOrders } from '../api/esi';
 import * as Sentry from '@sentry/react';
 

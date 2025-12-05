@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 
 const ESI_BASE_URL = 'https://esi.evetech.net/latest';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
