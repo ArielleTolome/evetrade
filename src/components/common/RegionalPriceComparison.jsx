@@ -37,7 +37,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { formatISK, formatPercent, formatNumber } from '../../utils/formatters';
+import { formatISK, formatPercent } from '../../utils/formatters';
 
 const TRADE_HUBS = [
   { id: 60003760, name: 'Jita', region: 'The Forge', shortName: 'Jita' },

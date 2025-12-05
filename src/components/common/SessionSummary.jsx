@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatISK, formatDuration } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 import { GlassmorphicCard } from './GlassmorphicCard';
 
 /**
