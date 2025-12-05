@@ -46,7 +46,11 @@ const shortcutCategories = [
 
 const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [platform, setPlatform] = useState('windows');
+  const [platform] = useState(() => {
+    if (typeof window === 'undefined') return 'windows';
+    const isMac = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
+    return isMac ? 'mac' : 'windows';
+  });
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -65,10 +69,8 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
   }, [isOpen, onClose]);
 
   useEffect(() => {
-    const isMac = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
-    setPlatform(isMac ? 'mac' : 'windows');
-    document.body.setAttribute('data-platform', isMac ? 'mac' : 'windows');
-  }, []);
+    document.body.setAttribute('data-platform', platform);
+  }, [platform]);
 
   const filteredShortcuts = useMemo(() => {
     if (!searchTerm) {
