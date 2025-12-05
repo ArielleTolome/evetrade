@@ -227,7 +227,7 @@ export function InventoryValueTracker({
             </div>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {inventoryStats.categories.map((cat, idx) => (
+              {inventoryStats.categories.map((cat, _idx) => (
                 <div
                   key={cat.name}
                   className="p-3 rounded-lg bg-white/5"
