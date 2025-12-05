@@ -53,7 +53,17 @@ function convertESIHistoryToChartData(esiHistory) {
  * Calculate SVG path and area from price points
  */
 function calculateChartPath(data, width, height, padding = 40) {
-  if (!data || data.length < 2) return { linePath: '', areaPath: '' };
+  const fallbackPrice = data?.[0]?.price ?? 0;
+
+  if (!data || data.length < 2) {
+    return {
+      linePath: '',
+      areaPath: '',
+      points: [],
+      min: fallbackPrice,
+      max: fallbackPrice,
+    };
+  }
 
   const prices = data.map(d => d.price);
   const min = Math.min(...prices);
@@ -152,6 +162,8 @@ export function PriceHistoryChart({
   const gradientId = `price-history-gradient-${price}`;
 
   const handleMouseMove = (e) => {
+    if (!points || points.length === 0) return;
+
     const svg = e.currentTarget;
     const rect = svg.getBoundingClientRect();
     const x = e.clientX - rect.left;
