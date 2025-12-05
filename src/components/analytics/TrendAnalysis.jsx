@@ -126,7 +126,7 @@ export function TrendAnalysis({
   // Calculate volume analysis
   const volumeAnalysis = useMemo(() => {
     if (!volumeData || !volumeData.recentAvg || !volumeData.historicalAvg) {
-      return { change: 0, label: 'Unknown', color: 'text-gray-400' };
+      return { change: 0, label: 'Unknown', color: 'text-text-secondary' };
     }
 
     const change = volumeData.historicalAvg > 0
@@ -199,7 +199,7 @@ export function TrendAnalysis({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`text-lg ${trend7d.color}`}>{trend7d.arrow}</span>
-            <span className="text-xs text-gray-400">7-Day Trend</span>
+            <span className="text-xs text-text-secondary">7-Day Trend</span>
           </div>
           <div className="flex items-center gap-2">
             <span className={`text-sm font-mono font-bold ${trend7d.color}`}>
@@ -218,7 +218,7 @@ export function TrendAnalysis({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`text-lg ${trend30d.color}`}>{trend30d.arrow}</span>
-            <span className="text-xs text-gray-400">30-Day Trend</span>
+            <span className="text-xs text-text-secondary">30-Day Trend</span>
           </div>
           <div className="flex items-center gap-2">
             <span className={`text-sm font-mono font-bold ${trend30d.color}`}>
@@ -237,7 +237,7 @@ export function TrendAnalysis({
       <div className="border-t border-gray-700 pt-4 space-y-3">
         {/* Volume Analysis */}
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-400">Volume Trend</span>
+          <span className="text-xs text-text-secondary">Volume Trend</span>
           <span className={`text-sm font-medium ${volumeAnalysis.color}`}>
             {volumeAnalysis.label}
             {volumeAnalysis.change !== 0 && (
@@ -251,7 +251,7 @@ export function TrendAnalysis({
         {/* Buy/Sell Pressure */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-400">Order Pressure</span>
+            <span className="text-xs text-text-secondary">Order Pressure</span>
             <span className={`text-sm font-medium ${pressure.color}`}>
               {pressure.label}
             </span>
@@ -263,7 +263,7 @@ export function TrendAnalysis({
                 style={{ width: `${pressure.ratio}%` }}
               />
             </div>
-            <span className="text-xs text-gray-400 font-mono w-12 text-right">
+            <span className="text-xs text-text-secondary font-mono w-12 text-right">
               {pressure.ratio.toFixed(0)}%
             </span>
           </div>
@@ -280,14 +280,14 @@ export function TrendAnalysis({
           <div className="flex items-center gap-2">
             <span className={`text-xl ${predictionStyle.color}`}>{predictionStyle.arrow}</span>
             <div>
-              <div className="text-xs text-gray-400">Predicted Direction</div>
+              <div className="text-xs text-text-secondary">Predicted Direction</div>
               <div className={`text-sm font-bold ${predictionStyle.color}`}>
                 {predictionStyle.label}
               </div>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-gray-400">Confidence</div>
+            <div className="text-xs text-text-secondary">Confidence</div>
             <div className="text-lg font-mono font-bold text-accent-cyan">
               {confidence}%
             </div>

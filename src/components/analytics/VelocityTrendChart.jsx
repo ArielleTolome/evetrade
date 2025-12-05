@@ -19,7 +19,7 @@ function TrendArrow({ trend, className = '' }) {
   };
 
   return (
-    <span className={`${colors[trend] || 'text-gray-400'} ${className}`}>
+    <span className={`${colors[trend] || 'text-text-secondary'} ${className}`}>
       {arrows[trend] || '→'}
     </span>
   );
