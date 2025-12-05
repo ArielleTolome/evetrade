@@ -713,10 +713,10 @@ function MobileMenu({ menuRef, isMobileMenuOpen, location, handleMenuClose }) {
                   <img
                     src={getPortraitUrl(character.id, 64)}
                     alt={character.name}
-                    className="w-10 h-10 rounded-full border border-accent-cyan/30"
+                    className="w-12 h-12 rounded-full border border-accent-cyan/30"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center">
                     <svg className="w-5 h-5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
