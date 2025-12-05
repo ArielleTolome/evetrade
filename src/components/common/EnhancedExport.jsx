@@ -396,7 +396,7 @@ export function EnhancedExport({
           />
 
           {/* Panel */}
-          <div className="fixed inset-y-0 right-0 w-full max-w-2xl bg-space-dark border-l border-accent-cyan/20 shadow-2xl z-50 overflow-y-auto">
+          <div className="fixed inset-y-0 right-0 w-full md:max-w-2xl bg-space-dark border-l border-accent-cyan/20 shadow-2xl z-50 overflow-y-auto">
             <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
@@ -419,7 +419,7 @@ export function EnhancedExport({
               {/* Format Selection */}
               <div className="mb-6">
                 <label className="text-sm font-medium text-text-primary mb-3 block">Export Format</label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
                   {EXPORT_FORMATS.map(format => (
                     <button
                       key={format.id}
@@ -445,7 +445,7 @@ export function EnhancedExport({
               {showTemplates && (
                 <div className="mb-6">
                   <label className="text-sm font-medium text-text-primary mb-3 block">Templates</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {Object.entries(EXPORT_TEMPLATES).map(([key, template]) => (
                       <button
                         key={key}
@@ -477,7 +477,7 @@ export function EnhancedExport({
               {showDateRange && (
                 <div className="mb-6 p-4 bg-space-black/50 border border-accent-cyan/10 rounded-lg">
                   <label className="text-sm font-medium text-text-primary mb-3 block">Date Range</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-text-secondary mb-1 block">Start Date</label>
                       <input
@@ -522,7 +522,7 @@ export function EnhancedExport({
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto p-3 bg-space-black/50 border border-accent-cyan/10 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto p-3 bg-space-black/50 border border-accent-cyan/10 rounded-lg">
                   {customColumns.map(col => (
                     <label
                       key={col.key}

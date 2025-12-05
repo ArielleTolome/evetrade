@@ -50,7 +50,7 @@ export function RootLayout() {
         <main
           className={`
             min-h-screen
-            pb-20 lg:pb-0
+            pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0
           `}
         >
           <SectionErrorBoundary name="MainContent">
