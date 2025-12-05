@@ -157,18 +157,18 @@ export function HomePage() {
       {/* Hero Section - Above the Fold */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-3 sm:px-4 py-12 sm:py-20 overflow-hidden">
         {/* Animated Background Elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] sm:w-[600px] md:w-[1000px] h-[80vw] sm:h-[600px] md:h-[1000px] bg-accent-cyan/5 rounded-full blur-[100px] sm:blur-[150px] pointer-events-none animate-pulse"></div>
-        <div className="absolute top-0 left-1/4 w-[50vw] sm:w-[350px] md:w-[500px] h-[50vw] sm:h-[350px] md:h-[500px] bg-accent-purple/10 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none animate-float"></div>
-        <div className="absolute bottom-0 right-1/4 w-[60vw] sm:w-[450px] md:w-[600px] h-[60vw] sm:h-[450px] md:h-[600px] bg-accent-gold/5 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] sm:w-[600px] md:w-[1000px] h-[80vw] sm:h-[600px] md:h-[1000px] bg-accent-cyan/5 rounded-full blur-[100px] sm:blur-[150px] pointer-events-none animate-pulse motion-reduce:animate-none"></div>
+        <div className="absolute top-0 left-1/4 w-[50vw] sm:w-[350px] md:w-[500px] h-[50vw] sm:h-[350px] md:h-[500px] bg-accent-purple/10 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none animate-float motion-reduce:animate-none"></div>
+        <div className="absolute bottom-0 right-1/4 w-[60vw] sm:w-[450px] md:w-[600px] h-[60vw] sm:h-[450px] md:h-[600px] bg-accent-gold/5 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none animate-float motion-reduce:animate-none" style={{ animationDelay: '2s' }}></div>
 
         {/* Hero Content */}
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up relative z-10 max-w-5xl mx-auto">
-          <div className="inline-block mb-4 sm:mb-6 px-4 sm:px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs sm:text-sm text-accent-cyan font-medium animate-fade-in shadow-lg shadow-accent-cyan/5">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up motion-reduce:animate-none relative z-10 max-w-5xl mx-auto">
+          <div className="inline-block mb-4 sm:mb-6 px-4 sm:px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs sm:text-sm text-accent-cyan font-medium animate-fade-in motion-reduce:animate-none shadow-lg shadow-accent-cyan/5">
             ✨ The Modern EVE Online Trading Tool
           </div>
 
           <h1 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black mb-6 sm:mb-8 px-2 tracking-tight leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-cyan via-white to-accent-purple animate-shimmer bg-[length:200%_100%]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-cyan via-white to-accent-purple animate-shimmer motion-reduce:animate-none bg-[length:200%_100%]">
               EVE
             </span>
             <span className="text-text-primary">Trade</span>
@@ -201,14 +201,14 @@ export function HomePage() {
           </div>
 
           {/* Animated ISK Counter */}
-          <div className="flex justify-center animate-fade-in" style={{ animationDelay: '300ms' }}>
+          <div className="flex justify-center animate-fade-in motion-reduce:animate-none" style={{ animationDelay: '300ms' }}>
             <AnimatedISKCounter />
           </div>
 
           {/* Loading indicator */}
           {loading && (
             <div className="mt-8 flex items-center justify-center gap-3 text-text-secondary bg-space-dark/50 px-5 py-3 rounded-full inline-flex backdrop-blur-sm border border-white/5">
-              <div className="w-4 h-4 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin motion-reduce:animate-none" />
               <span className="text-sm font-medium">
                 Loading resources ({loadingProgress.current}/{loadingProgress.total})...
               </span>
@@ -219,7 +219,7 @@ export function HomePage() {
 
       {/* Trading Mode Cards - Quick Start */}
       <section className="relative px-3 sm:px-4 py-16 sm:py-24 max-w-7xl mx-auto">
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up motion-reduce:animate-none">
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-text-primary">
             Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-cyan to-accent-purple">Trading Strategy</span>
           </h2>
@@ -234,7 +234,7 @@ export function HomePage() {
               key={mode.path}
               to={mode.path}
               style={{ animationDelay: mode.delay }}
-              className="animate-fade-in-up block h-full transform transition-all duration-300 hover:-translate-y-3 active:scale-[0.98]"
+              className="animate-fade-in-up motion-reduce:animate-none block h-full transform transition-all duration-300 hover:-translate-y-3 active:scale-[0.98]"
             >
               <GlassmorphicCard hover className="h-full group flex flex-col border-white/5 bg-space-dark/40 p-5 sm:p-7 relative overflow-visible">
                 {/* Badge */}
@@ -289,7 +289,7 @@ export function HomePage() {
 
       {/* Features Section */}
       <section className="relative px-3 sm:px-4 py-16 sm:py-24 max-w-7xl mx-auto">
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up motion-reduce:animate-none">
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-text-primary">
             Powerful <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-gold to-accent-green">Trading Features</span>
           </h2>
@@ -302,7 +302,7 @@ export function HomePage() {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="animate-fade-in-up group"
+              className="animate-fade-in-up motion-reduce:animate-none group"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <GlassmorphicCard className="h-full p-6 sm:p-8 border-white/5 bg-space-dark/30 hover:bg-space-dark/50 transition-all duration-300">
@@ -323,7 +323,7 @@ export function HomePage() {
 
       {/* Getting Started Guide */}
       <section className="relative px-3 sm:px-4 py-16 sm:py-24 max-w-6xl mx-auto">
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up motion-reduce:animate-none">
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-text-primary">
             Start Trading in <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-pink">Four Simple Steps</span>
           </h2>
@@ -339,7 +339,7 @@ export function HomePage() {
           {steps.map((step, index) => (
             <div
               key={step.number}
-              className="animate-fade-in-up relative"
+              className="animate-fade-in-up motion-reduce:animate-none relative"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="relative">
@@ -367,7 +367,7 @@ export function HomePage() {
 
       {/* Quick Stats */}
       <section className="relative px-3 sm:px-4 py-16 sm:py-24 max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 animate-fade-in">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 animate-fade-in motion-reduce:animate-none">
           <div className="group cursor-default p-5 sm:p-6 rounded-2xl bg-space-dark/40 border border-white/5 hover:bg-space-dark/60 hover:border-accent-cyan/30 transition-all duration-300 backdrop-blur-sm">
             <div className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-accent-cyan mb-2 group-hover:scale-110 transition-transform duration-300">100+</div>
             <div className="text-text-secondary text-xs sm:text-sm font-semibold uppercase tracking-wider">Regions</div>

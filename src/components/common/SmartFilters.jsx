@@ -199,7 +199,7 @@ export function SmartFilters({ onChange, initialFilters = {}, data = [] }) {
             e.stopPropagation();
             resetFilters();
           }}
-          className="px-3 py-1.5 text-sm rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan hover:bg-accent-cyan/20 hover:border-accent-cyan/50 transition-all focus:outline-none focus:ring-2 focus:ring-accent-cyan/50"
+          className="px-3 py-1.5 text-sm rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan hover:bg-accent-cyan/20 hover:border-accent-cyan/50 transition-all focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan/50"
         >
           Reset All
         </button>
@@ -210,7 +210,7 @@ export function SmartFilters({ onChange, initialFilters = {}, data = [] }) {
         <button
           type="button"
           onClick={() => toggleFilter('hideScams')}
-          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 ${
+          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan/50 ${
             filters.hideScams
               ? 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan'
               : 'bg-space-dark/50 border-accent-cyan/20 text-text-secondary hover:bg-space-dark/70 hover:border-accent-cyan/30'
@@ -225,7 +225,7 @@ export function SmartFilters({ onChange, initialFilters = {}, data = [] }) {
         <button
           type="button"
           onClick={() => toggleFilter('hideLowVolume')}
-          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 ${
+          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan/50 ${
             filters.hideLowVolume
               ? 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan'
               : 'bg-space-dark/50 border-accent-cyan/20 text-text-secondary hover:bg-space-dark/70 hover:border-accent-cyan/30'
@@ -240,7 +240,7 @@ export function SmartFilters({ onChange, initialFilters = {}, data = [] }) {
         <button
           type="button"
           onClick={() => toggleFilter('highQualityOnly')}
-          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 ${
+          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan/50 ${
             filters.highQualityOnly
               ? 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan'
               : 'bg-space-dark/50 border-accent-cyan/20 text-text-secondary hover:bg-space-dark/70 hover:border-accent-cyan/30'
@@ -255,7 +255,7 @@ export function SmartFilters({ onChange, initialFilters = {}, data = [] }) {
         <button
           type="button"
           onClick={() => toggleFilter('verifiedOnly')}
-          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 ${
+          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan/50 ${
             filters.verifiedOnly
               ? 'bg-accent-cyan/20 border-accent-cyan/50 text-accent-cyan'
               : 'bg-space-dark/50 border-accent-cyan/20 text-text-secondary hover:bg-space-dark/70 hover:border-accent-cyan/30'
@@ -278,28 +278,28 @@ export function SmartFilters({ onChange, initialFilters = {}, data = [] }) {
               <button
                 type="button"
                 onClick={() => applyPreset('safe')}
-                className="px-3 py-2 rounded-lg text-sm font-medium bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 hover:border-green-500/50 transition-all focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                className="px-3 py-2 rounded-lg text-sm font-medium bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 hover:border-green-500/50 transition-all focus:outline-none focus-visible:ring-2 focus:ring-green-500/50"
               >
                 Safe Trades
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('highProfit')}
-                className="px-3 py-2 rounded-lg text-sm font-medium bg-accent-gold/10 border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/20 hover:border-accent-gold/50 transition-all focus:outline-none focus:ring-2 focus:ring-accent-gold/50"
+                className="px-3 py-2 rounded-lg text-sm font-medium bg-accent-gold/10 border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/20 hover:border-accent-gold/50 transition-all focus:outline-none focus-visible:ring-2 focus:ring-accent-gold/50"
               >
                 High Profit
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('quickFlips')}
-                className="px-3 py-2 rounded-lg text-sm font-medium bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                className="px-3 py-2 rounded-lg text-sm font-medium bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50 transition-all focus:outline-none focus-visible:ring-2 focus:ring-blue-500/50"
               >
                 Quick Flips
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('hiddenGems')}
-                className="px-3 py-2 rounded-lg text-sm font-medium bg-purple-500/10 border border-purple-500/30 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                className="px-3 py-2 rounded-lg text-sm font-medium bg-purple-500/10 border border-purple-500/30 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all focus:outline-none focus-visible:ring-2 focus:ring-purple-500/50"
               >
                 Hidden Gems
               </button>
