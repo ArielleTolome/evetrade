@@ -3,56 +3,74 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 const ThemeContext = createContext(null);
 
 const THEME_KEY = 'evetrade-theme';
+const HIGH_CONTRAST_KEY = 'evetrade-high-contrast';
 
 /**
  * Theme Provider Component
  */
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    // Check localStorage first
-    const stored = localStorage.getItem(THEME_KEY);
-    if (stored) return stored;
-
-    // Check system preference
+    const storedTheme = localStorage.getItem(THEME_KEY);
+    if (storedTheme) return storedTheme;
     if (window.matchMedia('(prefers-color-scheme: light)').matches) {
       return 'light';
     }
-
-    // Default to dark (space theme)
     return 'dark';
   });
 
-  // Apply theme to document
+  const [highContrast, setHighContrast] = useState(() => {
+    const storedContrast = localStorage.getItem(HIGH_CONTRAST_KEY);
+    return storedContrast === 'true';
+  });
+
   useEffect(() => {
     const root = document.documentElement;
-
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-
-    // Save to localStorage
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
-  // Listen for system preference changes
+  useEffect(() => {
+    const root = document.documentElement;
+    if (highContrast) {
+      root.classList.add('high-contrast');
+    } else {
+      root.classList.remove('high-contrast');
+    }
+    localStorage.setItem(HIGH_CONTRAST_KEY, highContrast);
+  }, [highContrast]);
+
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
     const handleChange = (e) => {
-      // Only auto-switch if user hasn't set a preference
       if (!localStorage.getItem(THEME_KEY)) {
         setTheme(e.matches ? 'dark' : 'light');
       }
     };
-
     mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key === 'h') {
+        toggleHighContrast();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [toggleHighContrast]);
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  }, []);
+
+  const toggleHighContrast = useCallback(() => {
+    setHighContrast((prev) => !prev);
   }, []);
 
   const setDarkTheme = useCallback(() => setTheme('dark'), []);
@@ -62,7 +80,9 @@ export function ThemeProvider({ children }) {
     theme,
     isDark: theme === 'dark',
     isLight: theme === 'light',
+    highContrast,
     toggleTheme,
+    toggleHighContrast,
     setDarkTheme,
     setLightTheme,
   };
