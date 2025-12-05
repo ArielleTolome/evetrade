@@ -37,7 +37,7 @@ const ContractFinderPage = lazy(() => import('./pages/ContractFinderPage'));
 const CorpOrdersPage = lazy(() => import('./pages/CorpOrdersPage'));
 const SmartRouteOptimizerPage = lazy(() => import('./pages/SmartRouteOptimizerPage'));
 const ItemDetailPage = lazy(() => import('./pages/ItemDetailPage'));
-const PriceAlertPanelExampleWrapper = lazy(() => import('./components/common/PriceAlertPanelExampleWrapper'));
+const PriceAlertPanelExample = lazy(() => import('./components/common/PriceAlertPanel.example'));
 
 /**
  * Application Router Configuration
