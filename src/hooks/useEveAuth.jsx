@@ -48,7 +48,7 @@ function parseJwt(token) {
         .join('')
     );
     return JSON.parse(jsonPayload);
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to parse JWT token:', error);
     return null;
   }
@@ -84,7 +84,7 @@ function migrateOldAuth() {
         localStorage.removeItem(OLD_AUTH_STORAGE_KEY);
         return migrated;
       }
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to migrate old auth:', e);
     }
   }
@@ -212,7 +212,7 @@ export function EveAuthProvider({ children }) {
           await exchangeCodeForToken(code, codeVerifier);
           // Clean up URL
           window.history.replaceState({}, document.title, window.location.pathname);
-        } catch (err) {
+        } catch (_err) {
           setError(err.message);
         } finally {
           sessionStorage.removeItem('eve_oauth_state');
@@ -390,7 +390,7 @@ export function EveAuthProvider({ children }) {
       });
 
       return authData.accessToken;
-    } catch (error) {
+    } catch (_error) {
       console.error('Token refresh failed:', error);
       logout();
       return null;

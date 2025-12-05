@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatISK, formatPercent, formatNumber } from '../../utils/formatters';
+import { formatPercent, formatNumber } from '../../utils/formatters';
 
 /**
  * Calculate market health metrics from trades data
@@ -103,7 +103,7 @@ function getHealthLevel(score) {
 }
 
 export function MarketHealthDashboard({ trades = [], compact = false }) {
-  const [isExpanded, setIsExpanded] = useState(!compact);
+  const [, setIsExpanded] = useState(!compact);
 
   const health = useMemo(() => calculateMarketHealth(trades), [trades]);
   const healthLevel = getHealthLevel(health.healthScore);

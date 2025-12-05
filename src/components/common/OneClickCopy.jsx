@@ -23,7 +23,7 @@ export function OneClickCopy({
   onCopy,
 }) {
   const { copy } = useClipboard();
-  const [isHovered, setIsHovered] = useState(false);
+  const [, setIsHovered] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
 
   const handleCopy = useCallback(async (e) => {

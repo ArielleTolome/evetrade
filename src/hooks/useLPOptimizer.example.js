@@ -22,7 +22,7 @@ function BasicLPOptimizerExample() {
 
       console.log('Top 10 conversions:', lpOptimizer.getTopConversions(10));
       console.log('Profit potential:', lpOptimizer.calculateProfitPotential());
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to fetch LP conversions:', error);
     }
   };
@@ -82,7 +82,7 @@ function AuthenticatedLPOptimizerExample({ accessToken, characterId }) {
       // Calculate potential profit from affordable items
       const profitStats = lpOptimizer.calculateProfitPotential(affordable);
       console.log('Potential profit from LP:', profitStats);
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to fetch LP conversions:', error);
     }
   };
@@ -143,7 +143,7 @@ function AdvancedLPOptimizerExample() {
         corporationId: 1000125, // Federation Navy
         regionId: 10000032, // Sinq Laison (Dodixie)
       });
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to fetch LP conversions:', error);
     }
   };

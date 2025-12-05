@@ -42,7 +42,7 @@ export function useIndustry() {
       });
 
       return indices;
-    } catch (err) {
+    } catch (_err) {
       console.warn('Failed to fetch system indices:', err);
       return defaultSystemIndices;
     }

@@ -25,7 +25,7 @@ export const useCopyToClipboard = ({ onSuccess, onError } = {}) => {
       if (onSuccess) onSuccess();
 
       setTimeout(() => setCopied(false), successDuration);
-    } catch (err) {
+    } catch (_err) {
       setCopied(false);
       setError(err.message);
       if (onError) onError(err);

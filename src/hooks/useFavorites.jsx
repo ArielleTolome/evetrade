@@ -18,7 +18,7 @@ export function useFavorites() {
         const parsed = JSON.parse(stored);
         setFavorites(Array.isArray(parsed) ? parsed : []);
       }
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to load favorites:', err);
     }
     setIsLoaded(true);
@@ -29,7 +29,7 @@ export function useFavorites() {
     if (isLoaded) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
-      } catch (err) {
+      } catch (_err) {
         console.error('Failed to save favorites:', err);
       }
     }

@@ -34,7 +34,7 @@ export function useProfitTracking() {
           setIsTracking(true);
         }
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to load profit tracking data:', error);
     }
   }, []);
@@ -47,7 +47,7 @@ export function useProfitTracking() {
         currentSession: isTracking ? currentSession : null,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to save profit tracking data:', error);
     }
   }, [sessions, currentSession, isTracking]);

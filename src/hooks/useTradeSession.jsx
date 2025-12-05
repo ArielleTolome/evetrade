@@ -12,7 +12,7 @@ export function useTradeSession() {
     if (stored) {
       try {
         return JSON.parse(stored);
-      } catch (e) {
+      } catch (_e) {
         console.error('Failed to parse session data:', e);
       }
     }

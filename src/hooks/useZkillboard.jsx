@@ -54,7 +54,7 @@ export function useZkillboard() {
       }));
 
       return limitedKills;
-    } catch (err) {
+    } catch (_err) {
       console.warn(`Failed to fetch kills for system ${systemId}:`, err);
       return [];
     }
@@ -99,7 +99,7 @@ export function useZkillboard() {
       }));
 
       return limitedKills;
-    } catch (err) {
+    } catch (_err) {
       console.warn(`Failed to fetch kills for region ${regionId}:`, err);
       return [];
     }
@@ -244,7 +244,7 @@ export function useZkillboard() {
         dangerousSystems: dangerousSystems.length,
         totalKills: systemAnalyses.reduce((sum, s) => sum + s.killCount, 0),
       };
-    } catch (err) {
+    } catch (_err) {
       setError(err.message);
       return { systems: [], overallDanger: 'unknown', overallScore: 0 };
     } finally {

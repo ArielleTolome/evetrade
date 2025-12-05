@@ -12,7 +12,7 @@ export function useDiscordWebhook() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to load webhooks from localStorage:', e);
       return [];
     }
@@ -32,7 +32,7 @@ export function useDiscordWebhook() {
         cooldownMinutes: 5,
         embedColor: 0x00ff00, // Green
       };
-    } catch (e) {
+    } catch (_e) {
       return {
         enabled: true,
         sendPriceAlerts: true,
@@ -54,7 +54,7 @@ export function useDiscordWebhook() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(webhooks));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save webhooks to localStorage:', e);
     }
   }, [webhooks]);
@@ -63,7 +63,7 @@ export function useDiscordWebhook() {
   useEffect(() => {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save settings to localStorage:', e);
     }
   }, [settings]);
@@ -157,7 +157,7 @@ export function useDiscordWebhook() {
           }
 
           return { webhookId: webhook.id, success: true };
-        } catch (error) {
+        } catch (_error) {
           return { webhookId: webhook.id, success: false, error: error.message };
         }
       })
@@ -493,7 +493,7 @@ export function useDiscordWebhook() {
       });
 
       return { success: response.ok, status: response.status };
-    } catch (error) {
+    } catch (_error) {
       return { success: false, error: error.message };
     }
   }, []);

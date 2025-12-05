@@ -167,7 +167,7 @@ export function usePIOptimizer(options = {}) {
         }
 
         return null;
-      } catch (err) {
+      } catch (_err) {
         // Don't set error state for intentional aborts
         if (err.name === 'AbortError' || err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
           console.log('PI optimizer request cancelled');

@@ -86,7 +86,7 @@ export function MultiCharacterProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(characters));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save characters:', e);
     }
   }, [characters]);
@@ -99,7 +99,7 @@ export function MultiCharacterProvider({ children }) {
       } else {
         localStorage.removeItem(ACTIVE_CHARACTER_KEY);
       }
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save active character:', e);
     }
   }, [activeCharacterId]);
@@ -164,7 +164,7 @@ export function MultiCharacterProvider({ children }) {
       }
 
       return characterId;
-    } catch (err) {
+    } catch (_err) {
       setError(err.message);
       throw err;
     } finally {
@@ -254,7 +254,7 @@ export function MultiCharacterProvider({ children }) {
       }));
 
       return data;
-    } catch (err) {
+    } catch (_err) {
       setError(err.message);
       throw err;
     } finally {

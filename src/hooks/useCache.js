@@ -49,7 +49,7 @@ async function openDB() {
 
     try {
       request = indexedDB.open(dbName, 1);
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to open IndexedDB:', error);
       reject(error);
       return;
@@ -78,7 +78,7 @@ async function openDB() {
         };
 
         resolve(db);
-      } catch (error) {
+      } catch (_error) {
         console.error('Error handling IndexedDB success:', error);
         reject(error);
       }
@@ -100,7 +100,7 @@ async function openDB() {
         if (!db.objectStoreNames.contains(storeName)) {
           db.createObjectStore(storeName, { keyPath: 'key' });
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error during IndexedDB upgrade:', error);
         reject(error);
       }
@@ -121,7 +121,7 @@ function closeDB(db) {
     if (db && typeof db.close === 'function') {
       db.close();
     }
-  } catch (error) {
+  } catch (_error) {
     console.warn('Error closing IndexedDB connection:', error);
   }
 }
@@ -179,7 +179,7 @@ async function executeTransaction(mode, callback) {
     });
 
     return result;
-  } catch (error) {
+  } catch (_error) {
     console.error('Transaction execution error:', error);
     throw error;
   } finally {
@@ -204,7 +204,7 @@ export async function getCached(key) {
         if (Date.now() - timestamp < duration) {
           try {
             return JSON.parse(localData);
-          } catch (error) {
+          } catch (_error) {
             console.warn('Invalid JSON in localStorage for key:', key, error);
             // Invalid JSON, clear it
             localStorage.removeItem(key);
@@ -240,14 +240,14 @@ export async function getCached(key) {
             } else {
               resolve(null);
             }
-          } catch (error) {
+          } catch (_error) {
             console.warn('Error processing IndexedDB result:', error);
             reject(error);
           }
         };
       });
     });
-  } catch (error) {
+  } catch (_error) {
     console.warn('Cache read error for key:', key, error);
     return null;
   }
@@ -265,7 +265,7 @@ export async function setCached(key, data) {
   if (existingPromise) {
     try {
       await existingPromise;
-    } catch (error) {
+    } catch (_error) {
       // Ignore errors from previous write, continue with this one
       console.warn('Previous write failed for key:', key, error);
     }
@@ -287,7 +287,7 @@ export async function setCached(key, data) {
           localStorage.setItem(key, serialized);
           localStorage.setItem(`${key}_timestamp`, timestamp.toString());
           return;
-        } catch (e) {
+        } catch (_e) {
           // localStorage full or quota exceeded, fall through to IndexedDB
           console.warn('localStorage full, using IndexedDB:', e);
         }
@@ -313,7 +313,7 @@ export async function setCached(key, data) {
           };
         });
       });
-    } catch (error) {
+    } catch (_error) {
       console.warn('Cache write error for key:', key, error);
       throw error;
     }
@@ -359,7 +359,7 @@ export async function clearCached(key) {
         });
       });
     }
-  } catch (error) {
+  } catch (_error) {
     console.warn('Cache clear error for key:', key, error);
   }
 }
@@ -383,7 +383,7 @@ export async function clearAllCache() {
       keysToRemove.forEach((key) => {
         try {
           localStorage.removeItem(key);
-        } catch (error) {
+        } catch (_error) {
           console.warn('Error removing localStorage key:', key, error);
         }
       });
@@ -408,7 +408,7 @@ export async function clearAllCache() {
       });
       result.indexedDB = true;
     }
-  } catch (error) {
+  } catch (_error) {
     console.warn('Cache clear all error:', error);
   }
 
@@ -457,7 +457,7 @@ export async function getCacheStats() {
         });
       });
     }
-  } catch (error) {
+  } catch (_error) {
     console.warn('Cache stats error:', error);
   }
 

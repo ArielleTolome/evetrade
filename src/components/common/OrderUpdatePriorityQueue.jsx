@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
-import { formatISK, formatNumber } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 
 /**
  * OrderUpdatePriorityQueue - Prioritizes which orders to update first

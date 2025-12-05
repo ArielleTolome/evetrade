@@ -217,7 +217,7 @@ Data Age: ${Math.round(dataAge)} minutes ago`;
       await navigator.clipboard.writeText(details);
       setCopyFeedback('Copied!');
       setTimeout(() => setCopyFeedback(''), 2000);
-    } catch (err) {
+    } catch (_err) {
       setCopyFeedback('Failed to copy');
       setTimeout(() => setCopyFeedback(''), 2000);
     }

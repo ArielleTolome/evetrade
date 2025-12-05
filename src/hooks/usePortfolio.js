@@ -44,7 +44,7 @@ function safeGetItem(key) {
       return null;
     }
     return localStorage.getItem(key);
-  } catch (error) {
+  } catch (_error) {
     console.error('Error reading from localStorage:', error);
     return null;
   }
@@ -64,7 +64,7 @@ function safeSetItem(key, value) {
     }
     localStorage.setItem(key, value);
     return true;
-  } catch (error) {
+  } catch (_error) {
     if (error.name === 'QuotaExceededError') {
       console.error('localStorage quota exceeded. Attempting to clear old data...');
       try {
@@ -121,7 +121,7 @@ export function usePortfolio() {
           setPortfolio(DEFAULT_PORTFOLIO);
         }
       }
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to load portfolio:', err);
       // Use default portfolio as fallback
       setPortfolio(DEFAULT_PORTFOLIO);
@@ -139,7 +139,7 @@ export function usePortfolio() {
           console.warn('Portfolio data could not be saved to localStorage');
           // Optionally notify user that data isn't being saved
         }
-      } catch (err) {
+      } catch (_err) {
         console.error('Failed to serialize portfolio:', err);
       }
     }
@@ -315,7 +315,7 @@ export function usePortfolio() {
       if (isLocalStorageAvailable()) {
         localStorage.removeItem(STORAGE_KEY);
       }
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to clear portfolio from localStorage:', err);
     }
   }, []);
@@ -335,7 +335,7 @@ export function usePortfolio() {
       const data = JSON.parse(jsonString);
       setPortfolio({ ...DEFAULT_PORTFOLIO, ...data });
       return true;
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to import data:', err);
       return false;
     }

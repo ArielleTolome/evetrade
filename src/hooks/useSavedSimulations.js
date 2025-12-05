@@ -7,7 +7,7 @@ export function useSavedSimulations() {
     try {
       const item = window.localStorage.getItem(CACHE_KEY);
       return item ? JSON.parse(item) : {};
-    } catch (error) {
+    } catch (_error) {
       console.error(error);
       return {};
     }

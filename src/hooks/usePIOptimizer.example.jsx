@@ -40,7 +40,7 @@ export function PIOptimizerExample() {
         minProfit: filters.minProfit,
         minVolume: filters.minVolume,
       });
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to fetch PI opportunities:', err);
     }
   };

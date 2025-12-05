@@ -49,7 +49,7 @@ describe('Breadcrumb', () => {
         <Breadcrumb items={items} homeIcon={null} separator=">" />
       </MemoryRouter>
     );
-    const firstItem = screen.getByText('First');
+    const _firstItem = screen.getByText('First');
     const separator = container.querySelector('.text-sea-separator');
     expect(separator).not.toBeInTheDocument();
   });

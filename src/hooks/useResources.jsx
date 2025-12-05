@@ -124,7 +124,7 @@ export function ResourceProvider({ children }) {
 
       setResources(loaded);
       setLoading(false);
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to load resources:', err);
       setError(err);
       setLoading(false);
@@ -170,7 +170,7 @@ export function ResourceProvider({ children }) {
 
         setResources((prev) => ({ ...prev, invTypes: data }));
         return data;
-      } catch (err) {
+      } catch (_err) {
         console.error('Failed to load invTypes:', err);
         throw err;
       } finally {

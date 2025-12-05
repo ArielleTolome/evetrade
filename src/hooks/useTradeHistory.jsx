@@ -66,7 +66,7 @@ export function useTradeHistory() {
         });
         setTypeNames(nameMap);
       }
-    } catch (err) {
+    } catch (_err) {
       setError(err.message || 'Failed to load transactions');
     } finally {
       setLoading(false);

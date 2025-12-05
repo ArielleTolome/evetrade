@@ -89,7 +89,7 @@ export function useSmartAlerts() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to load smart alerts from localStorage:', e);
       return [];
     }
@@ -99,7 +99,7 @@ export function useSmartAlerts() {
     try {
       const stored = localStorage.getItem(TRIGGERED_HISTORY_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to load triggered history from localStorage:', e);
       return [];
     }
@@ -116,7 +116,7 @@ export function useSmartAlerts() {
         autoAcknowledge: false,
         showOnlyHighPriority: false,
       };
-    } catch (e) {
+    } catch (_e) {
       return {
         browserNotifications: false,
         soundEnabled: true,
@@ -146,7 +146,7 @@ export function useSmartAlerts() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save smart alerts to localStorage:', e);
     }
   }, [alerts]);
@@ -154,7 +154,7 @@ export function useSmartAlerts() {
   useEffect(() => {
     try {
       localStorage.setItem(TRIGGERED_HISTORY_KEY, JSON.stringify(triggeredHistory));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save triggered history to localStorage:', e);
     }
   }, [triggeredHistory]);
@@ -162,7 +162,7 @@ export function useSmartAlerts() {
   useEffect(() => {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save smart alert settings to localStorage:', e);
     }
   }, [settings]);
@@ -219,7 +219,7 @@ export function useSmartAlerts() {
       };
 
       playNext();
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to play notification sound:', e);
     }
   }, [settings.soundEnabled, settings.soundVolume]);
@@ -251,7 +251,7 @@ export function useSmartAlerts() {
       if (alert.priority !== PRIORITY_LEVELS.CRITICAL) {
         setTimeout(() => notification.close(), 10000);
       }
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to show notification:', e);
     }
   }, [settings.browserNotifications, notificationPermission]);
@@ -511,7 +511,7 @@ export function useSmartAlerts() {
         setSettings(prev => ({ ...prev, ...importData.settings }));
       }
       return true;
-    } catch (e) {
+    } catch (_e) {
       console.error('Failed to import alerts:', e);
       return false;
     }

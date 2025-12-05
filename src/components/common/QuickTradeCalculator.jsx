@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { GlassmorphicCard } from './GlassmorphicCard';
-import { formatISK, formatPercent, formatNumber } from '../../utils/formatters';
+import { formatISK, formatPercent } from '../../utils/formatters';
 
 /**
  * QuickTradeCalculator Component

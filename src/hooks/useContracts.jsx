@@ -44,7 +44,7 @@ export function useContracts() {
       }));
 
       return { contracts, totalPages };
-    } catch (err) {
+    } catch (_err) {
       console.warn(`Failed to fetch contracts for region ${regionId}:`, err);
       return { contracts: [], totalPages: 0 };
     }
@@ -73,7 +73,7 @@ export function useContracts() {
       }
 
       return allContracts;
-    } catch (err) {
+    } catch (_err) {
       setError(err.message);
       return [];
     } finally {
@@ -112,7 +112,7 @@ export function useContracts() {
       }));
 
       return items;
-    } catch (err) {
+    } catch (_err) {
       return [];
     }
   }, [cache]);
@@ -228,7 +228,7 @@ export function useContracts() {
           profitPercent,
           itemCount: items.length,
         });
-      } catch (err) {
+      } catch (_err) {
         // Skip contracts that fail to fetch
       }
 

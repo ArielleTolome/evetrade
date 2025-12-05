@@ -50,7 +50,7 @@ export function useMarketTrends(typeId, regionId) {
 
           setMarketHistory(validHistory);
         }
-      } catch (err) {
+      } catch (_err) {
         if (isMounted) {
           console.error('Failed to fetch market history:', err);
 

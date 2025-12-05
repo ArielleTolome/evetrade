@@ -78,7 +78,7 @@ function MiniLineChart({ data, width = 200, height = 60, color = '#00d4ff', clas
 export function PriceHistoryCard({
   itemName,
   typeId,
-  regionId,
+  regionId: _regionId,
   historyData = [],
   currentBuyPrice,
   currentSellPrice,
@@ -272,7 +272,7 @@ function CopyPriceButton({ label, price, color, onCopy }) {
  */
 export function BoughtItemsSummary({
   items = [],
-  onCopyPrice,
+  onCopyPrice: _onCopyPrice,
   className = ''
 }) {
   if (!items || items.length === 0) {

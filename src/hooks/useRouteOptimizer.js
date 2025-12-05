@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useApiCall } from './useApiCall';
 import { getCached, setCached } from './useCache';
 

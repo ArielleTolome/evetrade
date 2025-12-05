@@ -141,7 +141,7 @@ export function useTradeForm(initialFormState, options = {}) {
         try {
           await onSubmit(dataToSubmit);
           return true;
-        } catch (err) {
+        } catch (_err) {
           console.error('Form submission failed:', err);
           return false;
         }

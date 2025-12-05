@@ -38,7 +38,7 @@ export function ArbitrageScannerExample() {
   const handleScan = async () => {
     try {
       await scan(scanParams);
-    } catch (err) {
+    } catch (_err) {
       console.error('Scan failed:', err);
     }
   };
@@ -329,7 +329,7 @@ export async function directApiExample() {
 
     console.log('Found opportunities:', opportunities);
     return opportunities;
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to fetch arbitrage data:', error);
   }
 }

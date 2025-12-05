@@ -97,7 +97,7 @@ export function useCorpOrders(corporationId, options = {}) {
       const result = await response.json();
       setData(result);
       setLastUpdated(new Date());
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to fetch corporation orders:', err);
       setError({
         message: err.message || 'Failed to fetch corporation orders',

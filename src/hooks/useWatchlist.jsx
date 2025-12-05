@@ -14,7 +14,7 @@ export function useWatchlist() {
       return stored ? JSON.parse(stored) : {
         default: { name: 'Default', items: [], createdAt: Date.now() },
       };
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to load watchlists from localStorage:', e);
       return { default: { name: 'Default', items: [], createdAt: Date.now() } };
     }
@@ -26,7 +26,7 @@ export function useWatchlist() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlists));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save watchlists to localStorage:', e);
     }
   }, [watchlists]);

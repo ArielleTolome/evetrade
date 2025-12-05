@@ -10,7 +10,7 @@ export function OrderUpdateReminder({
   typeNames = {},
   marketData = [],
   staleThresholdHours = 4,
-  onUpdateOrder,
+  onUpdateOrder: _onUpdateOrder,
   onCopyPrice,
   className = '',
 }) {
@@ -222,7 +222,7 @@ export function OrderUpdateReminder({
 /**
  * Individual order row component
  */
-function OrderRow({ order, onUpdateOrder, onCopyPrice }) {
+function OrderRow({ order, onUpdateOrder: _onUpdateOrder, onCopyPrice }) {
   const urgencyColors = {
     critical: 'border-red-500/30 bg-red-500/5',
     high: 'border-accent-gold/30 bg-accent-gold/5',

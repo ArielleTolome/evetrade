@@ -91,8 +91,8 @@ function DropdownMenu({ category, isOpen, onClose }) {
   const dropdownRef = useRef(null);
   const [focusedIndex, setFocusedIndex] = useState(-1);
 
-  // Check if any item in this category is active
-  const isActiveCategory = category.items?.some(item => location.pathname === item.path);
+  // Check if any item in this category is active (used for styling)
+  const _isActiveCategory = category.items?.some(item => location.pathname === item.path);
 
   // Keyboard navigation
   useEffect(() => {

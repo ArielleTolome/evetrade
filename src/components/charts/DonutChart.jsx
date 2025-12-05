@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useResizeObserver } from '../../hooks/useResizeObserver';
 
 const deepSeaPalette = ['#415A77', '#778DA9', '#E0E1DD', '#0D1B2A'];

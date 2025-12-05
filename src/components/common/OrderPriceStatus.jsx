@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { formatISK, formatNumber } from '../../utils/formatters';
 
 /**
@@ -25,35 +25,35 @@ export function PriceStatusBadge({ orderPrice, marketPrice, isBuyOrder, classNam
 
   // For buy orders: higher price = better (you're offering more)
   // For sell orders: lower price = better (you're offering less)
-  let status, statusClass, statusText;
+  let _status, statusClass, statusText;
 
   if (isBuyOrder) {
     // Buy order logic
     if (priceDiff >= 0) {
-      status = 'best';
+      _status = 'best';
       statusClass = 'bg-green-500/20 text-green-400 border-green-500/30';
       statusText = priceDiff === 0 ? 'Best' : 'Best';
     } else if (priceDiffPercent >= -1) {
-      status = 'competitive';
+      _status = 'competitive';
       statusClass = 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
       statusText = 'Close';
     } else {
-      status = 'undercut';
+      _status = 'undercut';
       statusClass = 'bg-red-500/20 text-red-400 border-red-500/30';
       statusText = 'Undercut';
     }
   } else {
     // Sell order logic
     if (priceDiff <= 0) {
-      status = 'best';
+      _status = 'best';
       statusClass = 'bg-green-500/20 text-green-400 border-green-500/30';
       statusText = priceDiff === 0 ? 'Best' : 'Best';
     } else if (priceDiffPercent <= 1) {
-      status = 'competitive';
+      _status = 'competitive';
       statusClass = 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
       statusText = 'Close';
     } else {
-      status = 'undercut';
+      _status = 'undercut';
       statusClass = 'bg-red-500/20 text-red-400 border-red-500/30';
       statusText = 'Undercut';
     }
@@ -154,7 +154,7 @@ export function EnhancedOrderRow({
   itemName,
   marketPrice,
   onCopy,
-  onRefresh,
+  onRefresh: _onRefresh,
 }) {
   const [copied, setCopied] = useState(null);
 

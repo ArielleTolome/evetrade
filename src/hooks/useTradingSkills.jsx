@@ -142,7 +142,7 @@ export function useTradingSkills() {
 
       setSkills(skillsData);
       setStandings(standingsData);
-    } catch (err) {
+    } catch (_err) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -217,7 +217,7 @@ export function useTradingSkills() {
     const maxOrders = BASE_RATES.maxOrders + tradeOrders + retailOrders + wholesaleOrders + tycoonOrders;
 
     // Calculate total fees for a round trip (buy + sell)
-    const totalFees = salesTax + brokerFee * 2;
+    const _totalFees = salesTax + brokerFee * 2;
 
     return {
       salesTax,

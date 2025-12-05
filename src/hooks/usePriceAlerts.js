@@ -20,7 +20,7 @@ export function usePriceAlerts() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to load alerts from localStorage:', e);
       return [];
     }
@@ -30,7 +30,7 @@ export function usePriceAlerts() {
     try {
       const stored = localStorage.getItem(HISTORY_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to load alert history from localStorage:', e);
       return [];
     }
@@ -41,7 +41,7 @@ export function usePriceAlerts() {
     try {
       const stored = localStorage.getItem('evetrade_triggered_alerts');
       return stored ? JSON.parse(stored) : [];
-    } catch (e) {
+    } catch (_e) {
       return [];
     }
   });
@@ -55,7 +55,7 @@ export function usePriceAlerts() {
         soundVolume: 0.5,
         checkInterval: 60000, // Check every minute
       };
-    } catch (e) {
+    } catch (_e) {
       return {
         browserNotifications: false,
         soundEnabled: true,
@@ -85,7 +85,7 @@ export function usePriceAlerts() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save alerts to localStorage:', e);
     }
   }, [alerts]);
@@ -96,7 +96,7 @@ export function usePriceAlerts() {
       // Keep only last 100 history items
       const recentHistory = alertHistory.slice(-100);
       localStorage.setItem(HISTORY_KEY, JSON.stringify(recentHistory));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save alert history to localStorage:', e);
     }
   }, [alertHistory]);
@@ -105,7 +105,7 @@ export function usePriceAlerts() {
   useEffect(() => {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save alert settings to localStorage:', e);
     }
   }, [settings]);
@@ -114,7 +114,7 @@ export function usePriceAlerts() {
   useEffect(() => {
     try {
       localStorage.setItem('evetrade_triggered_alerts', JSON.stringify(triggeredAlerts));
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to save triggered alerts to localStorage:', e);
     }
   }, [triggeredAlerts]);
@@ -169,7 +169,7 @@ export function usePriceAlerts() {
       };
 
       setTimeout(() => notification.close(), 10000);
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to show notification:', e);
     }
   }, [settings.browserNotifications, notificationPermission]);
@@ -186,7 +186,7 @@ export function usePriceAlerts() {
       audioRef.current.play().catch(e => {
         console.warn('Failed to play notification sound:', e);
       });
-    } catch (e) {
+    } catch (_e) {
       console.warn('Failed to play notification sound:', e);
     }
   }, [settings.soundEnabled, settings.soundVolume]);
@@ -343,7 +343,7 @@ export function usePriceAlerts() {
       }
 
       return false;
-    } catch (error) {
+    } catch (_error) {
       console.error(`Error checking alert ${alert.id}:`, error);
       return false;
     }
@@ -370,7 +370,7 @@ export function usePriceAlerts() {
       if (triggeredCount > 0) {
         console.log(`${triggeredCount} alert(s) triggered`);
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Error checking alerts:', error);
     } finally {
       setIsChecking(false);

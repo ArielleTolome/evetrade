@@ -206,7 +206,7 @@ export function useMarketVelocity(regionId, options = {}) {
         bestSellPrice: Math.round(bestSellPrice * 100) / 100,
         lastUpdated: new Date(),
       };
-    } catch (err) {
+    } catch (_err) {
       console.error(`Failed to analyze velocity for type ${typeId}:`, err);
 
       Sentry.withScope((scope) => {
@@ -254,7 +254,7 @@ export function useMarketVelocity(regionId, options = {}) {
 
       setVelocityData(validResults);
       setLastUpdated(new Date());
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to fetch velocity data:', err);
 
       Sentry.withScope((scope) => {

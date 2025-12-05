@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { formatISK, formatNumber, formatRelativeTime } from '../../utils/formatters';
+import { formatISK, formatNumber } from '../../utils/formatters';
 import { GlassmorphicCard } from './GlassmorphicCard';
 
 /**
@@ -337,7 +337,7 @@ export function MarketHistoryChart({
             )}
 
             {/* X-axis date labels */}
-            {data.filter((_, i) => i % Math.ceil(data.length / 6) === 0 || i === data.length - 1).map((d, i, arr) => {
+            {data.filter((_, i) => i % Math.ceil(data.length / 6) === 0 || i === data.length - 1).map((d, i, _arr) => {
               const actualIndex = data.indexOf(d);
               const date = new Date(d.date);
               return (
