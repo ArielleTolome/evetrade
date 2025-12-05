@@ -21,6 +21,14 @@ export default {
         'space-mid': '#1a1b26',   // Lighter blue-black
         'space-light': '#2a2b3d', // Highlight
 
+        // Global Search Palette
+        'search-bg': '#1B263B',
+        'search-border': '#415A77',
+        'search-text': '#E0E1DD',
+        'search-dropdown-bg': '#0D1B2A',
+        'search-highlight': '#415A77',
+        'search-category': '#778DA9',
+
         // Accents - Neon/Cyberpunk inspired
         'accent-cyan': '#00f0ff', // Cyberpunk cyan
         'accent-cyan-dim': 'rgba(0, 240, 255, 0.1)',
