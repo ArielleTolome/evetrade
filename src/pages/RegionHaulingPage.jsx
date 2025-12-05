@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
+import PullToRefresh from '../components/common/PullToRefresh';
 import { ProfitDistribution } from '../components/common/ProfitDistribution';
 import { FormInput, FormSelect, RegionAutocomplete } from '../components/forms';
 import { TradingTable } from '../components/tables';
@@ -564,6 +565,13 @@ Jumps: ${jumps}`;
     [copyTradeDetails]
   );
 
+  const handleRefresh = useCallback(async () => {
+    if (form.fromRegion && (form.toRegion || form.useNearby)) {
+      await handleSubmit(new Event('submit'));
+      toast.info('Data refreshed!');
+    }
+  }, [form, handleSubmit, toast]);
+
   // Handle save route
   const handleSaveRoute = useCallback(() => {
     const toName = form.useNearby ? 'Nearby Regions' : form.toRegion;
@@ -583,9 +591,10 @@ Jumps: ${jumps}`;
       title="Region Hauling"
       subtitle="Find the best trades across entire regions"
     >
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Form */}
-        <GlassmorphicCard className="mb-8">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Form */}
+          <GlassmorphicCard className="mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Form Error Display */}
             {formError && (
@@ -857,7 +866,8 @@ Jumps: ${jumps}`;
             )}
           </>
         )}
-      </div>
+        </div>
+      </PullToRefresh>
 
       {/* Save Route Modal */}
       {showSaveModal && (
