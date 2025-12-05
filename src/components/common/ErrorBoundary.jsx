@@ -1,6 +1,6 @@
 import { Component, cloneElement, isValidElement } from 'react';
 import * as Sentry from '@sentry/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { GlassmorphicCard } from './GlassmorphicCard';
 
 /**
@@ -252,14 +252,15 @@ export function ResourceErrorFallback({ error, resetError, loadingProgress }) {
 }
 
 export function PageErrorFallback({ error, resetError }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const handleGoBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (window.history?.length > 1) {
+      window.history.back();
     } else {
-      navigate('/');
+      window.location.assign('/');
     }
   };
 
