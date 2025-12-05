@@ -117,8 +117,7 @@ export function EveLinksDropdown({
   regionId = 10000002,
   stationId = null,
   fromStationId = null,
-  toStationId = null,
-  itemName = 'item'
+  toStationId = null
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
