@@ -20,7 +20,7 @@ function App() {
           <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-space-black via-space-dark to-space-black">
             <div className="text-center text-white">
               <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
-              <p className="mb-4 text-gray-400">{error?.message || 'An unexpected error occurred'}</p>
+              <p className="mb-4 text-text-secondary">{error?.message || 'An unexpected error occurred'}</p>
               <button
                 onClick={resetError}
                 className="px-6 py-3 bg-accent-cyan hover:bg-accent-cyan/80 text-space-black font-semibold rounded-lg"
