@@ -32,9 +32,15 @@ export const FormInput = forwardRef(function FormInput(
   const helperId = `${inputId}-helper`;
 
   const handleChange = (e) => {
-    const newValue = type === 'number'
-      ? (e.target.value === '' ? '' : Number(e.target.value))
-      : e.target.value;
+    let newValue = e.target.value;
+    if (type === 'number') {
+      if (newValue === '') {
+        newValue = '';
+      } else {
+        const num = Number(newValue);
+        newValue = isNaN(num) ? '' : num;
+      }
+    }
     onChange?.(newValue);
   };
 
