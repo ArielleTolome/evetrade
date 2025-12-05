@@ -41,7 +41,7 @@ export function usePriceAlerts() {
     try {
       const stored = localStorage.getItem('evetrade_triggered_alerts');
       return stored ? JSON.parse(stored) : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   });
@@ -55,7 +55,7 @@ export function usePriceAlerts() {
         soundVolume: 0.5,
         checkInterval: 60000, // Check every minute
       };
-    } catch (e) {
+    } catch {
       return {
         browserNotifications: false,
         soundEnabled: true,
@@ -288,7 +288,7 @@ export function usePriceAlerts() {
       const buyOrders = orders.filter(o => o.is_buy_order).sort((a, b) => b.price - a.price);
 
       const bestSellPrice = sellOrders[0]?.price || 0;
-      const bestBuyPrice = buyOrders[0]?.price || 0;
+      const _bestBuyPrice = buyOrders[0]?.price || 0;
 
       // Initialize currentPrice with a default value to prevent undefined comparisons
       let currentPrice = 0;

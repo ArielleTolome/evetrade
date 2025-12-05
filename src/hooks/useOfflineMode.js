@@ -163,18 +163,14 @@ export function useOfflineMode() {
 
     // If online, try one more time to fetch
     if (isOnline) {
-      try {
-        const freshData = await fetchFn();
-        if (settings.enabled) {
-          await setCached(key, {
-            data: freshData,
-            fetchedAt: Date.now(),
-          });
-        }
-        return { data: freshData, fromCache: false, stale: false };
-      } catch (error) {
-        throw error;
+      const freshData = await fetchFn();
+      if (settings.enabled) {
+        await setCached(key, {
+          data: freshData,
+          fetchedAt: Date.now(),
+        });
       }
+      return { data: freshData, fromCache: false, stale: false };
     }
 
     // No data available

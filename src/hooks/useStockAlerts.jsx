@@ -72,6 +72,28 @@ export function useStockAlerts() {
   }, []);
 
   /**
+   * Send browser notification for low stock
+   */
+  const sendNotification = useCallback((item, alert) => {
+    if (notificationPermission !== 'granted') return;
+
+    try {
+      const notification = new Notification('Low Stock Alert - EVETrade', {
+        body: `${item.itemName} is low (${item.quantity}/${alert.threshold})`,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: `stock-alert-${item.itemId}`, // Prevents duplicate notifications
+        requireInteraction: false,
+      });
+
+      // Auto-close notification after 5 seconds
+      setTimeout(() => notification.close(), 5000);
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
+  }, [notificationPermission]);
+
+  /**
    * Check stock levels and trigger alerts if needed
    * @param {Array} inventory - Array of inventory items with { itemId, itemName, quantity }
    * @returns {Array} Items that are below threshold
@@ -111,29 +133,7 @@ export function useStockAlerts() {
     });
 
     return lowStockItems;
-  }, [alerts]);
-
-  /**
-   * Send browser notification for low stock
-   */
-  const sendNotification = (item, alert) => {
-    if (notificationPermission !== 'granted') return;
-
-    try {
-      const notification = new Notification('Low Stock Alert - EVETrade', {
-        body: `${item.itemName} is low (${item.quantity}/${alert.threshold})`,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        tag: `stock-alert-${item.itemId}`, // Prevents duplicate notifications
-        requireInteraction: false,
-      });
-
-      // Auto-close notification after 5 seconds
-      setTimeout(() => notification.close(), 5000);
-    } catch (error) {
-      console.error('Failed to send notification:', error);
-    }
-  };
+  }, [alerts, sendNotification]);
 
   /**
    * Get all configured alerts

@@ -10,7 +10,7 @@ import { formatISK, formatNumber, formatPercent } from '../../utils/formatters';
  */
 export function CopyComponentsIntegrationExample() {
   const [selectedTrades, setSelectedTrades] = useState([]);
-  const [activeTab, setActiveTab] = useState('profitable');
+  const [_activeTab, _setActiveTab] = useState('profitable');
 
   // Sample trade opportunities
   const tradeOpportunities = [

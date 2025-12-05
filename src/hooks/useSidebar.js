@@ -13,7 +13,7 @@ export default function useSidebar() {
     try {
       const storedValue = localStorage.getItem(STORAGE_KEY);
       return storedValue ? JSON.parse(storedValue) : false;
-    } catch (error) {
+    } catch {
       return false;
     }
   });

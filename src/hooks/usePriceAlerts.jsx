@@ -28,7 +28,7 @@ export function usePriceAlerts() {
         soundEnabled: true,
         soundVolume: 0.5,
       };
-    } catch (e) {
+    } catch {
       return {
         browserNotifications: false,
         soundEnabled: true,

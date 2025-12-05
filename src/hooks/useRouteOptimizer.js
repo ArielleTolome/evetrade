@@ -268,7 +268,7 @@ export function useRouteOptimizer() {
  * Generate recommendation reason based on route comparison
  */
 function generateRecommendationReason(sortedRoutes) {
-  const [bestPref, bestRoute] = sortedRoutes[0];
+  const [_bestPref, bestRoute] = sortedRoutes[0];
   const stats = bestRoute.statistics;
 
   if (!stats) return 'Best overall route';

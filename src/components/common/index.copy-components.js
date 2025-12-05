@@ -15,12 +15,5 @@ export { OneClickCopy, OneClickCopyInline } from './OneClickCopy';
 export { BulkCopyPanel, BulkCopyList } from './BulkCopyPanel';
 export { TradeClipboard } from './TradeClipboard';
 
-// Re-export for convenience
-export default {
-  useClipboard,
-  OneClickCopy,
-  OneClickCopyInline,
-  BulkCopyPanel,
-  BulkCopyList,
-  TradeClipboard,
-};
+// Named exports above provide the public API
+// Usage: import { OneClickCopy, useClipboard } from './components/common/index.copy-components';

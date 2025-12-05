@@ -315,7 +315,7 @@ export const router = createBrowserRouter([
         path: 'price-alert-panel-example',
         element: (
           <LazyPage>
-            <PriceAlertPanelExampleWrapper />
+            <PriceAlertPanelExample />
           </LazyPage>
         ),
       },

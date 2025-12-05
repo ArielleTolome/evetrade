@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 
 /**
  * Custom hook for calculating profit metrics and efficiency ratings for trades
@@ -51,7 +51,7 @@ export function useProfitMetrics() {
     const volume = trade['Volume'] || trade.volume || 0;
     const profitPerUnit = trade['Profit per Unit'] || trade.profitPerUnit || 0;
     const buyPrice = trade['Buy Price'] || trade.buyPrice || 0;
-    const netProfit = trade['Net Profit'] || trade.netProfit || 0;
+    const _netProfit = trade['Net Profit'] || trade.netProfit || 0;
 
     // Calculate estimated sales per hour
     // Formula: (daily volume / 24 hours) * market capture rate

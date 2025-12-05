@@ -116,7 +116,7 @@ export function useSmartAlerts() {
         autoAcknowledge: false,
         showOnlyHighPriority: false,
       };
-    } catch (e) {
+    } catch {
       return {
         browserNotifications: false,
         soundEnabled: true,
@@ -225,7 +225,7 @@ export function useSmartAlerts() {
   }, [settings.soundEnabled, settings.soundVolume]);
 
   // Show browser notification
-  const showNotification = useCallback((alert, currentValue, trade) => {
+  const showNotification = useCallback((alert, currentValue, _trade) => {
     if (!settings.browserNotifications || notificationPermission !== 'granted') {
       return;
     }
@@ -407,30 +407,34 @@ export function useSmartAlerts() {
           isTriggered = checkCondition(currentValue, alert.condition, alert.threshold);
           break;
 
-        case ALERT_TYPES.VOLUME_SPIKE:
+        case ALERT_TYPES.VOLUME_SPIKE: {
           currentValue = trade['Volume'] || 0;
           const baselineVolume = alert.baselineVolume || alert.threshold;
           isTriggered = currentValue >= baselineVolume * (alert.threshold || 2);
           break;
+        }
 
-        case ALERT_TYPES.PRICE_DROP:
+        case ALERT_TYPES.PRICE_DROP: {
           currentValue = trade['Buy Price'] || 0;
           const originalPrice = alert.baselinePrice || (alert.threshold * 2); // Estimate
           isTriggered = currentValue <= originalPrice * alert.threshold;
           break;
+        }
 
-        case ALERT_TYPES.PRICE_RISE:
+        case ALERT_TYPES.PRICE_RISE: {
           currentValue = trade['Sell Price'] || 0;
           const basePrice = alert.baselinePrice || (alert.threshold / 2); // Estimate
           isTriggered = currentValue >= basePrice * alert.threshold;
           break;
+        }
 
-        case ALERT_TYPES.COMPETITION_UNDERCUT:
+        case ALERT_TYPES.COMPETITION_UNDERCUT: {
           // Check if margin dropped significantly
           currentValue = trade['Gross Margin'] || 0;
           const expectedMargin = alert.baselineMargin || 10;
           isTriggered = currentValue < expectedMargin * 0.7; // 30% drop in margin
           break;
+        }
 
         default:
           break;
