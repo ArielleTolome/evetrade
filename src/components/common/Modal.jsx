@@ -248,7 +248,7 @@ export function Modal({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-space-black/80 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-space-black/80 backdrop-blur-sm animate-fade-in motion-reduce:animate-none"
         aria-hidden="true"
       />
 
@@ -260,7 +260,7 @@ export function Modal({
           bg-space-dark/95 backdrop-blur-xl
           rounded-t-2xl sm:rounded-2xl shadow-2xl
           border border-accent-cyan/20 border-b-0 sm:border-b
-          animate-fade-in-up
+          animate-fade-in-up motion-reduce:animate-none
           overflow-hidden
           max-h-[90vh] sm:max-h-[85vh]
           ${size === 'full' ? 'flex flex-col' : ''}

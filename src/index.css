@@ -93,6 +93,13 @@
 /* Base styles */
 html {
   scroll-behavior: smooth;
+  --font-size-multiplier: 1;
+  --line-height-multiplier: 1.5;
+  --letter-spacing: normal;
+
+  font-size: calc(16px * var(--font-size-multiplier));
+  line-height: var(--line-height-multiplier);
+  letter-spacing: var(--letter-spacing);
 }
 
 body {
