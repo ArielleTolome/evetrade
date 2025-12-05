@@ -1,5 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
+import { Database } from 'lucide-react';
 import { Button } from '../common/Button';
+import { EmptyState } from '../common/EmptyState';
 
 /**
  * Get quality tier based on row data stats
@@ -330,6 +332,7 @@ export function TradingTable({
   isItemWatched = null,
   selectedRowIndex = -1,
   enableMobileCards = true, // New prop to enable/disable mobile card view
+  onClearFilters = null,
 }) {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -527,12 +530,14 @@ export function TradingTable({
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-space-dark/40 backdrop-blur-md rounded-xl border border-white/5 overflow-hidden shadow-lg">
-        <div className="text-center py-16 text-text-secondary">
-          <div className="text-4xl mb-4 opacity-20">📊</div>
-          <p className="text-lg">{emptyMessage}</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={<Database className="w-10 h-10" />}
+        title="No Results"
+        description={emptyMessage}
+        variant="empty-list"
+        action={onClearFilters ? { text: 'Clear Filters', onClick: onClearFilters } : null}
+        className="border-none"
+      />
     );
   }
 
