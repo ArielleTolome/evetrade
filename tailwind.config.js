@@ -8,6 +8,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Deep Sea theme for Breadcrumb
+        'sea-text': '#778DA9',
+        'sea-active': '#E0E1DD',
+        'sea-separator': '#415A77',
+        'sea-background': '#1B263B',
+
         // Space theme colors (dark mode) - Deep, rich space tones
         'space-black': '#050508', // Darker black
         'space-dark': '#0f1016',  // Deep blue-black
