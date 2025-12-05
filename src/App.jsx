@@ -7,6 +7,7 @@ import { MultiCharacterProvider } from './hooks/useMultiCharacter';
 import { ToastProvider } from './components/common/ToastProvider';
 import { router } from './router';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { AlertBannerProvider } from './contexts/AlertBannerContext';
 
 /**
  * Main App Component
@@ -36,15 +37,17 @@ function App() {
       }}
     >
       <ThemeProvider>
-        <ToastProvider>
-          <EveAuthProvider>
-            <MultiCharacterProvider>
-              <ResourceProvider>
-                <RouterProvider router={router} />
-              </ResourceProvider>
-            </MultiCharacterProvider>
-          </EveAuthProvider>
-        </ToastProvider>
+        <AlertBannerProvider>
+          <ToastProvider>
+            <EveAuthProvider>
+              <MultiCharacterProvider>
+                <ResourceProvider>
+                  <RouterProvider router={router} />
+                </ResourceProvider>
+              </MultiCharacterProvider>
+            </EveAuthProvider>
+          </ToastProvider>
+        </AlertBannerProvider>
       </ThemeProvider>
     </Sentry.ErrorBoundary>
   );

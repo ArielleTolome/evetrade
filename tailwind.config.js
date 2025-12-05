@@ -84,8 +84,13 @@ export default {
         'scale-in': 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'fade-in-down': 'fadeInDown 0.4s ease-out forwards',
         'slide-in-up': 'slideInUp 0.4s ease-out forwards',
+        'slide-down-and-fade-in': 'slideDownAndFadeIn 0.5s ease-out forwards',
       },
       keyframes: {
+        slideDownAndFadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(-100%)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
         twinkle: {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.3', transform: 'scale(0.8)' },
