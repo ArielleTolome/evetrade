@@ -54,6 +54,10 @@ export async function fetchFromSupabase(filename) {
     throw new Error(`Supabase storage error: ${error.message}`);
   }
 
+  if (!data) {
+    throw new Error('No data returned from Supabase');
+  }
+
   const text = await data.text();
   try {
     return JSON.parse(text);

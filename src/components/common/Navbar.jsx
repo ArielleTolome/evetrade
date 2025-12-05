@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from '../../store/ThemeContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useEveAuth } from '../../hooks/useEveAuth';
+import { AccessibilitySettings } from './AccessibilitySettings';
+import { useModal } from './Modal';
 
 // Navigation structure with dropdown categories
 const navigationCategories = [
@@ -244,14 +246,15 @@ function NavItem({ category }) {
         <Link
           to={category.path}
           className={`
-            flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+            relative group flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
             transition-all duration-200
             ${isActive
               ? 'bg-accent-cyan/10 text-accent-cyan shadow-[0_0_10px_rgba(0,240,255,0.1)]'
-              : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+              : 'text-text-secondary hover:text-text-primary'
             }
           `}
         >
+          <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-cyan scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
           {category.icon}
           <span>{category.label}</span>
         </Link>
@@ -447,7 +450,7 @@ function ThemeToggle() {
 /**
  * User Menu Component - Login/Logout and Character Switcher
  */
-function UserMenu() {
+function UserMenu({ onOpenAccessibility }) {
   const { isAuthenticated, character, login, logout, loading, error } = useEveAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -519,7 +522,7 @@ function UserMenu() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-space-dark border border-accent-cyan/20 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1rem)] bg-space-dark border border-accent-cyan/20 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
           {/* Character Info */}
           <div className="p-4 border-b border-accent-cyan/10">
             <div className="flex items-center gap-3">
@@ -563,6 +566,17 @@ function UserMenu() {
               Portfolio & Wallet
             </Link>
 
+            <button
+              onClick={() => {
+                onOpenAccessibility();
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm text-text-secondary hover:text-text-primary hover:bg-accent-cyan/10 rounded-lg transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v12"></path><path d="M6 12h12"></path></svg>
+              Accessibility
+            </button>
+
             <div className="my-2 border-t border-accent-cyan/10" />
 
             <button
@@ -602,7 +616,7 @@ function MobileAccordion({ category, isOpen, onToggle, location, handleMenuClose
           to={category.path}
           onClick={handleMenuClose}
           className={`
-            flex items-center gap-3 px-4 py-3.5 text-base font-medium min-h-[48px]
+            flex items-center gap-3 px-4 py-4 text-base font-medium min-h-[52px]
             ${location.pathname === category.path
               ? 'bg-accent-cyan/10 text-accent-cyan'
               : 'text-text-secondary active:bg-white/10'
@@ -619,7 +633,7 @@ function MobileAccordion({ category, isOpen, onToggle, location, handleMenuClose
           <button
             onClick={onToggle}
             className={`
-              w-full flex items-center gap-3 px-4 py-3.5 text-base font-medium min-h-[48px]
+              w-full flex items-center gap-3 px-4 py-4 text-base font-medium min-h-[52px]
               transition-colors
               ${isOpen || category.items?.some(item => location.pathname === item.path)
                 ? 'bg-accent-cyan/5 text-text-primary'
@@ -713,10 +727,10 @@ function MobileMenu({ menuRef, isMobileMenuOpen, location, handleMenuClose }) {
                   <img
                     src={getPortraitUrl(character.id, 64)}
                     alt={character.name}
-                    className="w-10 h-10 rounded-full border border-accent-cyan/30"
+                    className="w-12 h-12 rounded-full border border-accent-cyan/30"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center">
                     <svg className="w-5 h-5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -831,12 +845,23 @@ export function Navbar() {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const {
+    isOpen: isAccessibilityOpen,
+    open: openAccessibility,
+    close: closeAccessibility
+  } = useModal();
   const menuButtonRef = useRef(null);
   const menuRef = useRef(null);
 
-  // Close menu on Escape key
+  // Close menu on Escape key / Open with shortcut
   useEffect(() => {
-    const handleEscape = (event) => {
+    const handleKeyDown = (event) => {
+      // Accessibility Shortcut
+      if (event.ctrlKey && event.shiftKey && event.key === 'A') {
+        event.preventDefault();
+        openAccessibility();
+      }
+
       if (event.key === 'Escape') {
         if (isMobileMenuOpen) {
           setIsMobileMenuOpen(false);
@@ -845,12 +870,15 @@ export function Navbar() {
         if (isSearchOpen) {
           setIsSearchOpen(false);
         }
+        if (isAccessibilityOpen) {
+          closeAccessibility();
+        }
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isMobileMenuOpen, isSearchOpen]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen, isSearchOpen, isAccessibilityOpen, openAccessibility, closeAccessibility]);
 
   // Focus trap implementation for mobile menu
   useEffect(() => {
@@ -938,7 +966,7 @@ export function Navbar() {
               <NotificationBell />
             </div>
 
-            <UserMenu />
+            <UserMenu onOpenAccessibility={openAccessibility} />
             <ThemeToggle />
             <MobileMenuButton
               isOpen={isMobileMenuOpen}
@@ -956,6 +984,8 @@ export function Navbar() {
         location={location}
         handleMenuClose={handleMenuClose}
       />
+
+      <AccessibilitySettings isOpen={isAccessibilityOpen} onClose={closeAccessibility} />
     </nav>
   );
 }

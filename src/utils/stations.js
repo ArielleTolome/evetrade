@@ -246,6 +246,10 @@ export function parseLocationString(locationStr) {
 
   const [regionId, stationId] = rest.split(':').map(Number);
 
+  if (isNaN(regionId) || isNaN(stationId)) {
+    return null;
+  }
+
   return {
     preference,
     regionId,
@@ -322,6 +326,10 @@ export function isEntireSystemSelected(selectedStations, systemName, universeLis
  * // ]
  */
 export function collapseToSystems(locations, universeList, stationList) {
+  if (!locations || !Array.isArray(locations)) {
+    return [];
+  }
+
   // Group by system
   const systemGroups = {};
 
