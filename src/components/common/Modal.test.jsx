@@ -1,8 +1,17 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Modal, useModal } from './Modal';
 import { Button } from './Button';
+
+// Mock IntersectionObserver for JSDOM environment
+const mockIntersectionObserver = vi.fn();
+mockIntersectionObserver.mockReturnValue({
+  observe: () => null,
+  unobserve: () => null,
+  disconnect: () => null,
+});
+vi.stubGlobal('IntersectionObserver', mockIntersectionObserver);
 
 // Test component using useModal hook
 function TestModalComponent({ onClose, ...modalProps }) {
@@ -32,19 +41,14 @@ function TestModalComponent({ onClose, ...modalProps }) {
 }
 
 describe('Modal Component', () => {
+
   beforeEach(() => {
-    // Create portal root if it doesn't exist
-    if (!document.getElementById('modal-root')) {
-      const modalRoot = document.createElement('div');
-      modalRoot.setAttribute('id', 'modal-root');
-      document.body.appendChild(modalRoot);
-    }
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    // Clean up
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
   describe('Basic Rendering', () => {
@@ -54,7 +58,6 @@ describe('Modal Component', () => {
           Content
         </Modal>
       );
-
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
@@ -64,7 +67,6 @@ describe('Modal Component', () => {
           Content
         </Modal>
       );
-
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
@@ -74,7 +76,6 @@ describe('Modal Component', () => {
           Content
         </Modal>
       );
-
       expect(screen.getByText('Test Modal')).toBeInTheDocument();
     });
 
@@ -84,25 +85,69 @@ describe('Modal Component', () => {
           <div data-testid="test-content">Test Content</div>
         </Modal>
       );
-
       expect(screen.getByTestId('test-content')).toBeInTheDocument();
     });
   });
 
   describe('Modal Sizes', () => {
-    const sizes = ['sm', 'md', 'lg', 'xl', 'full'];
+    const sizeMap = {
+      sm: 'max-w-md',
+      md: 'max-w-lg',
+      lg: 'max-w-2xl',
+      xl: 'max-w-4xl',
+      full: 'max-w-[95vw]',
+    };
 
-    sizes.forEach((size) => {
+    Object.entries(sizeMap).forEach(([size, className]) => {
       it(`should apply ${size} size classes`, () => {
-        const { container } = render(
+        render(
           <Modal isOpen={true} onClose={vi.fn()} size={size}>
             Content
           </Modal>
         );
-
-        const modal = container.querySelector('[role="dialog"]');
-        expect(modal).toBeInTheDocument();
+        expect(screen.getByTestId('modal-container')).toHaveClass(className);
       });
+    });
+  });
+
+  describe('Animation Prop', () => {
+    const animations = ['fade', 'slide-up', 'slide-down', 'slide-right', 'scale'];
+    const animationMap = {
+      fade: 'animate-modal-fade-in',
+      'slide-up': 'animate-modal-slide-up-in',
+      'slide-down': 'animate-modal-slide-down-in',
+      'slide-right': 'animate-modal-slide-right-in',
+      scale: 'animate-modal-scale-in',
+    };
+    animations.forEach((animation) => {
+      it(`should apply correct enter animation for '${animation}'`, () => {
+        render(<Modal isOpen={true} onClose={() => {}} animation={animation}>Content</Modal>);
+        expect(screen.getByTestId('modal-container')).toHaveClass(animationMap[animation]);
+      });
+    });
+  });
+
+  describe('Fullscreen Prop', () => {
+    it('should apply fullscreen classes when fullscreen is true', () => {
+      render(<Modal isOpen={true} onClose={() => {}} fullscreen={true}>Content</Modal>);
+      expect(screen.getByTestId('modal-container')).toHaveClass('h-full', 'w-full', 'max-w-full');
+    });
+  });
+
+  describe('Exit Animations', () => {
+    it('should apply exit animation and unmount after delay', () => {
+      const { rerender } = render(<Modal isOpen={true} onClose={() => {}} animation="fade">Content</Modal>);
+      expect(screen.getByTestId('modal-container')).toHaveClass('animate-modal-fade-in');
+
+      rerender(<Modal isOpen={false} onClose={() => {}} animation="fade">Content</Modal>);
+
+      expect(screen.getByTestId('modal-container')).toHaveClass('animate-modal-fade-out');
+
+      act(() => {
+        vi.advanceTimersByTime(150);
+      });
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
@@ -114,162 +159,81 @@ describe('Modal Component', () => {
           Content
         </Modal>
       );
-
-      const closeButton = screen.getByLabelText('Close modal');
-      fireEvent.click(closeButton);
-
+      fireEvent.click(screen.getByLabelText('Close modal'));
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it('should call onClose when backdrop is clicked', () => {
       const onClose = vi.fn();
-      render(
-        <Modal isOpen={true} onClose={onClose}>
-          Content
-        </Modal>
-      );
-
-      const backdrop = screen.getByRole('dialog');
-      fireEvent.click(backdrop);
-
+      render(<Modal isOpen={true} onClose={onClose}>Content</Modal>);
+      fireEvent.click(screen.getByRole('dialog'));
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it('should not close on backdrop click when closeOnBackdrop is false', () => {
       const onClose = vi.fn();
-      render(
-        <Modal isOpen={true} onClose={onClose} closeOnBackdrop={false}>
-          Content
-        </Modal>
-      );
-
-      const backdrop = screen.getByRole('dialog');
-      fireEvent.click(backdrop);
-
+      render(<Modal isOpen={true} onClose={onClose} closeOnBackdrop={false}>Content</Modal>);
+      fireEvent.click(screen.getByRole('dialog'));
       expect(onClose).not.toHaveBeenCalled();
     });
 
     it('should call onClose when Escape key is pressed', () => {
       const onClose = vi.fn();
-      render(
-        <Modal isOpen={true} onClose={onClose}>
-          Content
-        </Modal>
-      );
-
+      render(<Modal isOpen={true} onClose={onClose}>Content</Modal>);
       fireEvent.keyDown(document, { key: 'Escape' });
-
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
     it('should not close on Escape when closeOnEscape is false', () => {
       const onClose = vi.fn();
-      render(
-        <Modal isOpen={true} onClose={onClose} closeOnEscape={false}>
-          Content
-        </Modal>
-      );
-
+      render(<Modal isOpen={true} onClose={onClose} closeOnEscape={false}>Content</Modal>);
       fireEvent.keyDown(document, { key: 'Escape' });
-
       expect(onClose).not.toHaveBeenCalled();
     });
 
     it('should hide close button when showCloseButton is false', () => {
-      render(
-        <Modal isOpen={true} onClose={vi.fn()} showCloseButton={false}>
-          Content
-        </Modal>
-      );
-
+      render(<Modal isOpen={true} onClose={vi.fn()} showCloseButton={false}>Content</Modal>);
       expect(screen.queryByLabelText('Close modal')).not.toBeInTheDocument();
     });
   });
 
   describe('Sub-components', () => {
     it('should render Modal.Header', () => {
-      render(
-        <Modal isOpen={true} onClose={vi.fn()}>
-          <Modal.Header>
-            <div data-testid="header-content">Header</div>
-          </Modal.Header>
-        </Modal>
-      );
-
+      render(<Modal isOpen={true} onClose={vi.fn()}><Modal.Header><div data-testid="header-content">Header</div></Modal.Header></Modal>);
       expect(screen.getByTestId('header-content')).toBeInTheDocument();
     });
 
     it('should render Modal.Title', () => {
-      render(
-        <Modal isOpen={true} onClose={vi.fn()}>
-          <Modal.Header>
-            <Modal.Title>Test Title</Modal.Title>
-          </Modal.Header>
-        </Modal>
-      );
-
+      render(<Modal isOpen={true} onClose={vi.fn()}><Modal.Header><Modal.Title>Test Title</Modal.Title></Modal.Header></Modal>);
       expect(screen.getByText('Test Title')).toBeInTheDocument();
     });
 
     it('should render Modal.Body', () => {
-      render(
-        <Modal isOpen={true} onClose={vi.fn()}>
-          <Modal.Body>
-            <div data-testid="body-content">Body Content</div>
-          </Modal.Body>
-        </Modal>
-      );
-
+      render(<Modal isOpen={true} onClose={vi.fn()}><Modal.Body><div data-testid="body-content">Body Content</div></Modal.Body></Modal>);
       expect(screen.getByTestId('body-content')).toBeInTheDocument();
     });
 
     it('should render Modal.Footer', () => {
-      render(
-        <Modal isOpen={true} onClose={vi.fn()}>
-          <Modal.Footer>
-            <div data-testid="footer-content">Footer</div>
-          </Modal.Footer>
-        </Modal>
-      );
-
+      render(<Modal isOpen={true} onClose={vi.fn()}><Modal.Footer><div data-testid="footer-content">Footer</div></Modal.Footer></Modal>);
       expect(screen.getByTestId('footer-content')).toBeInTheDocument();
     });
   });
 
   describe('Body Scroll Lock', () => {
     it('should lock body scroll when modal opens', () => {
-      const { rerender } = render(
-        <Modal isOpen={false} onClose={vi.fn()}>
-          Content
-        </Modal>
-      );
-
+      const { rerender } = render(<Modal isOpen={false} onClose={vi.fn()}>Content</Modal>);
       expect(document.body.style.overflow).toBe('');
-
-      rerender(
-        <Modal isOpen={true} onClose={vi.fn()}>
-          Content
-        </Modal>
-      );
-
+      rerender(<Modal isOpen={true} onClose={vi.fn()}>Content</Modal>);
       expect(document.body.style.overflow).toBe('hidden');
     });
 
     it('should unlock body scroll when modal closes', () => {
-      const { rerender } = render(
-        <Modal isOpen={true} onClose={vi.fn()}>
-          Content
-        </Modal>
-      );
-
+      const { rerender } = render(<Modal isOpen={true} onClose={vi.fn()}>Content</Modal>);
       expect(document.body.style.overflow).toBe('hidden');
-
-      rerender(
-        <Modal isOpen={false} onClose={vi.fn()}>
-          Content
-        </Modal>
-      );
-
+      rerender(<Modal isOpen={false} onClose={vi.fn()}>Content</Modal>);
+      act(() => {
+        vi.advanceTimersByTime(150);
+      });
       expect(document.body.style.overflow).toBe('');
     });
   });
@@ -282,50 +246,48 @@ describe('Modal Component', () => {
 
     it('should open modal when open is called', () => {
       render(<TestModalComponent />);
-
-      const openButton = screen.getByTestId('open-button');
-      fireEvent.click(openButton);
-
+      act(() => {
+        fireEvent.click(screen.getByTestId('open-button'));
+      });
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
     it('should close modal when close is called', () => {
       render(<TestModalComponent />);
-
-      const openButton = screen.getByTestId('open-button');
-      fireEvent.click(openButton);
+      act(() => {
+        fireEvent.click(screen.getByTestId('open-button'));
+      });
       expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-      const closeButton = screen.getByTestId('close-button');
-      fireEvent.click(closeButton);
-
+      act(() => {
+        fireEvent.click(screen.getByTestId('close-button'));
+      });
+      act(() => {
+        vi.advanceTimersByTime(150);
+      });
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('should toggle modal state', () => {
       render(<TestModalComponent />);
-
       const toggleButton = screen.getByTestId('toggle-button');
-
-      // Toggle open
-      fireEvent.click(toggleButton);
+      act(() => {
+        fireEvent.click(toggleButton);
+      });
       expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-      // Toggle closed
-      fireEvent.click(toggleButton);
+      act(() => {
+        fireEvent.click(toggleButton);
+      });
+      act(() => {
+        vi.advanceTimersByTime(150);
+      });
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('should accept initial state', () => {
-      function TestWithInitialState() {
+      const TestWithInitialState = () => {
         const { isOpen, close } = useModal(true);
-        return (
-          <Modal isOpen={isOpen} onClose={close}>
-            Content
-          </Modal>
-        );
-      }
-
+        return <Modal isOpen={isOpen} onClose={close}>Content</Modal>;
+      };
       render(<TestWithInitialState />);
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
@@ -333,54 +295,38 @@ describe('Modal Component', () => {
 
   describe('Accessibility', () => {
     it('should have proper ARIA attributes', () => {
-      render(
-        <Modal isOpen={true} onClose={vi.fn()} title="Test Modal">
-          Content
-        </Modal>
-      );
-
+      render(<Modal isOpen={true} onClose={vi.fn()} title="Test Modal">Content</Modal>);
       const dialog = screen.getByRole('dialog');
       expect(dialog).toHaveAttribute('aria-modal', 'true');
       expect(dialog).toHaveAttribute('aria-labelledby', 'modal-title');
     });
 
     it('should trap focus within modal', async () => {
-      render(
-        <Modal isOpen={true} onClose={vi.fn()} title="Test Modal">
-          <Modal.Body>
-            <button data-testid="button-1">Button 1</button>
-            <button data-testid="button-2">Button 2</button>
-          </Modal.Body>
-        </Modal>
-      );
-
-      await waitFor(() => {
-        expect(document.activeElement).toBeInTheDocument();
-      });
+        vi.useRealTimers();
+        render(
+            <Modal isOpen={true} onClose={vi.fn()} title="Test Modal">
+            <Modal.Body>
+                <button>Button 1</button>
+                <input />
+            </Modal.Body>
+            </Modal>
+        );
+        await waitFor(() => {
+            expect(screen.getByRole('dialog')).toContainElement(document.activeElement);
+        });
+        vi.useFakeTimers();
     });
   });
 
   describe('Custom Styling', () => {
     it('should apply custom className', () => {
-      const { container } = render(
-        <Modal isOpen={true} onClose={vi.fn()} className="custom-class">
-          Content
-        </Modal>
-      );
-
-      const modal = container.querySelector('.custom-class');
-      expect(modal).toBeInTheDocument();
+      render(<Modal isOpen={true} onClose={vi.fn()} className="custom-class">Content</Modal>);
+      expect(screen.getByTestId('modal-container')).toHaveClass('custom-class');
     });
 
     it('should apply custom backdropClassName', () => {
-      const { container } = render(
-        <Modal isOpen={true} onClose={vi.fn()} backdropClassName="custom-backdrop">
-          Content
-        </Modal>
-      );
-
-      const backdrop = container.querySelector('.custom-backdrop');
-      expect(backdrop).toBeInTheDocument();
+      render(<Modal isOpen={true} onClose={vi.fn()} backdropClassName="custom-backdrop">Content</Modal>);
+      expect(screen.getByRole('dialog')).toHaveClass('custom-backdrop');
     });
   });
 
@@ -390,41 +336,29 @@ describe('Modal Component', () => {
       render(
         <Modal isOpen={true} onClose={vi.fn()}>
           <form onSubmit={onSubmit}>
-            <input type="text" data-testid="input" />
-            <button type="submit" data-testid="submit">
-              Submit
-            </button>
+            <input type="text" />
+            <button type="submit">Submit</button>
           </form>
         </Modal>
       );
-
-      const submitButton = screen.getByTestId('submit');
-      fireEvent.click(submitButton);
-
+      fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
       expect(onSubmit).toHaveBeenCalled();
     });
 
     it('should handle multiple buttons in footer', () => {
       const onCancel = vi.fn();
       const onConfirm = vi.fn();
-
       render(
         <Modal isOpen={true} onClose={vi.fn()}>
           <Modal.Footer>
-            <button onClick={onCancel} data-testid="cancel">
-              Cancel
-            </button>
-            <button onClick={onConfirm} data-testid="confirm">
-              Confirm
-            </button>
+            <button onClick={onCancel}>Cancel</button>
+            <button onClick={onConfirm}>Confirm</button>
           </Modal.Footer>
         </Modal>
       );
-
-      fireEvent.click(screen.getByTestId('cancel'));
+      fireEvent.click(screen.getByText('Cancel'));
       expect(onCancel).toHaveBeenCalled();
-
-      fireEvent.click(screen.getByTestId('confirm'));
+      fireEvent.click(screen.getByText('Confirm'));
       expect(onConfirm).toHaveBeenCalled();
     });
   });
