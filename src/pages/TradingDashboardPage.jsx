@@ -421,9 +421,14 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
               ) : (
                 <div className="space-y-2 max-h-72 overflow-y-auto">
                   {currentList.items.map((item) => {
-                    const priceChange = item.currentPrice?.sell
-                      ? ((item.currentPrice.sell - item.initialPrice.sell) / item.initialPrice.sell) * 100
-                      : 0;
+                    const initialSell = item.initialPrice?.sell;
+                    const currentSell = item.currentPrice?.sell;
+                    const priceChange =
+                      typeof currentSell === 'number' &&
+                      typeof initialSell === 'number' &&
+                      initialSell !== 0
+                        ? ((currentSell - initialSell) / initialSell) * 100
+                        : null;
 
                     return (
                       <div
@@ -441,10 +446,19 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className={`text-sm font-bold ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
+                            <div
+                              className={`text-sm font-bold ${priceChange === null
+                                ? 'text-text-secondary'
+                                : priceChange >= 0
+                                  ? 'text-green-400'
+                                  : 'text-red-400'
+                                }`}
+                            >
+                              {priceChange === null
+                                ? '—'
+                                : `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%`}
                             </div>
-                            {priceChange !== 0 && (
+                            {priceChange !== null && priceChange !== 0 && (
                               <div className="text-xs text-text-secondary">
                                 {priceChange >= 0 ? '↑' : '↓'} from initial
                               </div>
