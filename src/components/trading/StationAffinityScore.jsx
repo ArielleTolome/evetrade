@@ -2,6 +2,39 @@ import { useMemo } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
 import { formatISK, formatNumber, formatPercent } from '../../utils/formatters';
 
+// Get score color based on value
+const getScoreColor = (score) => {
+  if (score >= 80) return 'text-green-400';
+  if (score >= 60) return 'text-yellow-400';
+  if (score >= 40) return 'text-orange-400';
+  return 'text-red-400';
+};
+
+// Score factor display component
+const ScoreFactor = ({ label, score, description }) => (
+  <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-b-0">
+    <div>
+      <div className="text-sm text-text-primary">{label}</div>
+      <div className="text-xs text-text-secondary">{description}</div>
+    </div>
+    <div className="flex items-center gap-2">
+      <div className="w-24 h-2 bg-space-dark rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${
+            score >= 80 ? 'bg-green-500' :
+            score >= 60 ? 'bg-yellow-500' :
+            score >= 40 ? 'bg-orange-500' : 'bg-red-500'
+          }`}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+      <span className={`text-sm font-mono font-bold ${getScoreColor(score)}`}>
+        {score}
+      </span>
+    </div>
+  </div>
+);
+
 /**
  * Station Affinity Score Component
  * @description Evaluates and scores stations for trading based on various factors
@@ -104,14 +137,6 @@ export function StationAffinityScore({
     };
   }, [orderCount, dailyVolume, uniqueItems, avgSpread, taxRate, brokerFee, competition, isPlayerStructure]);
 
-  // Get score color
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    if (score >= 40) return 'text-orange-400';
-    return 'text-red-400';
-  };
-
   // Get score label
   const getScoreLabel = (score) => {
     if (score >= 90) return 'Excellent';
@@ -153,31 +178,6 @@ export function StationAffinityScore({
   };
 
   const recommendation = getRecommendation();
-
-  // Score factor component
-  const ScoreFactor = ({ label, score, description }) => (
-    <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-b-0">
-      <div>
-        <div className="text-sm text-text-primary">{label}</div>
-        <div className="text-xs text-text-secondary">{description}</div>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="w-24 h-2 bg-space-dark rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              score >= 80 ? 'bg-green-500' :
-              score >= 60 ? 'bg-yellow-500' :
-              score >= 40 ? 'bg-orange-500' : 'bg-red-500'
-            }`}
-            style={{ width: `${score}%` }}
-          />
-        </div>
-        <span className={`text-sm font-mono font-bold ${getScoreColor(score)}`}>
-          {score}
-        </span>
-      </div>
-    </div>
-  );
 
   return (
     <GlassmorphicCard className={className}>
