@@ -128,7 +128,7 @@ export function ModalExamples() {
             </label>
             <input
               type="text"
-              className="w-full px-4 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+              className="w-full px-4 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan"
               placeholder="Enter item name"
             />
           </div>
@@ -138,7 +138,7 @@ export function ModalExamples() {
             </label>
             <input
               type="number"
-              className="w-full px-4 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+              className="w-full px-4 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan"
               placeholder="Enter quantity"
             />
           </div>
@@ -149,7 +149,7 @@ export function ModalExamples() {
             <input
               type="number"
               step="0.01"
-              className="w-full px-4 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+              className="w-full px-4 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan"
               placeholder="Enter price"
             />
           </div>
