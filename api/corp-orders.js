@@ -209,7 +209,8 @@ async function getLocationNames(locationIds, accessToken) {
         const data = await response.json();
         names[structureId] = data.name;
       }
-    } catch (_error) {
+    } catch {
+      // Ignore errors, we'll just use a placeholder name
       names[structureId] = `Structure #${structureId}`;
     }
   }
