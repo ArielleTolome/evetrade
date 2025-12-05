@@ -164,6 +164,7 @@ export function BulkOrderCalculator({
       'Profit/Unit': item.calc.profitPerUnit,
     }));
 
+    if (data.length === 0) return;
     const csv = [
       Object.keys(data[0]).join(','),
       ...data.map(row => Object.values(row).join(','))

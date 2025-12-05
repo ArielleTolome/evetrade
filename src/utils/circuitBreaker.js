@@ -176,12 +176,17 @@ export class CircuitBreaker {
     this.recordStateChange('HALF_OPEN');
 
     if (this.healthCheckFn) {
+      let isHealthCheckRunning = false;
       this.healthCheckTimer = setInterval(async () => {
+        if (isHealthCheckRunning) return;
+        isHealthCheckRunning = true;
         try {
           await this.healthCheckFn();
           this.recordSuccess();
         } catch (e) {
           this.recordFailure(e);
+        } finally {
+          isHealthCheckRunning = false;
         }
       }, this.config.healthCheckInterval);
     }

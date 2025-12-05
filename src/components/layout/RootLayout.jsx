@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { SectionErrorBoundary } from '../common/ErrorBoundary';
 import { Sidebar, MobileNav } from '../common/Sidebar';
 import { AnimatedBackground } from './AnimatedBackground';
@@ -11,7 +11,12 @@ import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../../hooks/useKeyb
  * Uses sidebar navigation for desktop and bottom nav for mobile
  */
 export function RootLayout() {
-  const { showHelp, setShowHelp } = useKeyboardShortcuts();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { showHelp, setShowHelp } = useKeyboardShortcuts(undefined, undefined, {
+    navigate,
+    pathname: location.pathname,
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const stored = localStorage.getItem('evetrade_sidebar_collapsed');
     return stored ? JSON.parse(stored) : false;
@@ -45,7 +50,7 @@ export function RootLayout() {
         <main
           className={`
             min-h-screen
-            pb-20 lg:pb-0
+            pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0
           `}
         >
           <SectionErrorBoundary name="MainContent">
