@@ -56,18 +56,6 @@ class LRUCache {
 const typeInfoCache = new LRUCache(TYPE_CACHE_MAX_SIZE);
 
 /**
- * Validate and parse an integer parameter
- */
-function validateInt(value, _paramName, min = 0, max = Number.MAX_SAFE_INTEGER) {
-  if (value === undefined || value === null || value === '') return null;
-  const num = parseInt(value, 10);
-  if (isNaN(num) || num < min || num > max) {
-    return null;
-  }
-  return num;
-}
-
-/**
  * Validate and parse a float parameter
  */
 function validateFloat(value, paramName, min = 0, max = Infinity, defaultValue = null) {
@@ -214,34 +202,6 @@ async function fetchRegionOrders(regionId) {
     orders: [...buyResult.orders, ...sellResult.orders],
     errors: allErrors
   };
-}
-
-/**
- * Fetch type information (volume, name) from ESI
- */
-async function getTypeInfo(typeId) {
-  const cached = typeInfoCache.get(typeId);
-  if (cached) {
-    return cached;
-  }
-
-  try {
-    const response = await fetchWithTimeout(`${ESI_BASE}/universe/types/${typeId}/?datasource=tranquility`);
-    if (!response.ok) {
-      return { volume: 0.01, name: `Item #${typeId}` };
-    }
-
-    const data = await response.json();
-    const info = {
-      volume: data.packaged_volume || data.volume || 0.01,
-      name: data.name || `Item #${typeId}`,
-    };
-
-    typeInfoCache.set(typeId, info);
-    return info;
-  } catch {
-    return { volume: 0.01, name: `Item #${typeId}` };
-  }
 }
 
 /**
