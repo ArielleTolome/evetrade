@@ -45,7 +45,7 @@ export function useWatchlist() {
   const deleteWatchlist = useCallback((listId) => {
     if (listId === 'default') return; // Can't delete default
     setWatchlists(prev => {
-      const { [listId]: removed, ...rest } = prev;
+      const { [listId]: _removed, ...rest } = prev;
       return rest;
     });
     if (activeList === listId) setActiveList('default');
