@@ -6,7 +6,7 @@ import PullToRefresh from '../components/common/PullToRefresh';
 import { Button } from '../components/common/Button';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
-import { useTradeHistory } from '../hooks/useTradeHistory';
+// import { useTradeHistory } from '../hooks/useTradeHistory';
 import { useToast } from '../components/common/ToastProvider';
 import { formatISK, formatPercent, formatRelativeTime } from '../utils/formatters';
 import { getMarketOrders, getMarketHistory } from '../api/esi';

@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { PriceHistoryChart } from '../components/common/PriceHistoryChart';
-import { useResources } from '../hooks/useResources';
+// import { useResources } from '../hooks/useResources';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useFavorites } from '../hooks/useFavorites';
@@ -22,7 +22,7 @@ function calculateTradingSignal(metrics) {
     volatility,
     spread,
     trendDirection,
-    priceStability,
+    // priceStability,
   } = metrics;
 
   let score = 50;
@@ -397,7 +397,7 @@ function TradingSignalCard({ signal, className = '' }) {
         <div className="h-3 bg-space-dark rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${signal.score >= 60 ? 'bg-green-400' :
-                signal.score >= 45 ? 'bg-yellow-400' : 'bg-red-400'
+              signal.score >= 45 ? 'bg-yellow-400' : 'bg-red-400'
               }`}
             style={{ width: `${signal.score}%` }}
           />

@@ -138,9 +138,6 @@ export function MarketVelocityPage() {
   const [minVelocityScore, setMinVelocityScore] = useState(0);
   const [competitionFilter, setCompetitionFilter] = useState('all');
 
-  useEffect(() => {
-    loadInvTypes();
-  }, [loadInvTypes]);
 
   // Get region ID from region name
   const regionId = useMemo(() => {
