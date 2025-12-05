@@ -172,7 +172,7 @@ export function MarketShareEstimator() {
     if (share >= 10) return { label: 'Significant', color: 'text-green-400' };
     if (share >= 5) return { label: 'Moderate', color: 'text-yellow-400' };
     if (share >= 1) return { label: 'Minor', color: 'text-orange-400' };
-    return { label: 'Negligible', color: 'text-gray-400' };
+    return { label: 'Negligible', color: 'text-text-secondary' };
   };
 
   // Calculate trend from history

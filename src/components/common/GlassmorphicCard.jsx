@@ -1,6 +1,3 @@
-import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { cn } from '../../lib/utils';
-
 /**
  * Glassmorphic Card Component
  * A frosted glass effect container for content
@@ -13,36 +10,33 @@ export function GlassmorphicCard({
   padding = 'p-4 sm:p-6',
   onClick,
 }) {
-  const { prefersReducedMotion } = useReducedMotion();
-
   const baseClasses = `
-    bg-white/80 dark:bg-space-dark/60
+    bg-bg-secondary
     backdrop-blur-xl
-    border border-gray-200/50 dark:border-white/5
+    border border-border-default
     rounded-xl
-    shadow-lg shadow-black/20
+    shadow-lg
     relative overflow-hidden
+    high-contrast:backdrop-blur-none high-contrast:shadow-none high-contrast:border-2
   `;
 
   const hoverClasses = hover
-    ? 'transition-all duration-300 hover:border-accent-cyan/30 hover:shadow-xl hover:shadow-accent-cyan/10 cursor-pointer group'
+    ? 'transition-all duration-300 hover:border-accent-cyan/50 hover:shadow-lg hover:shadow-accent-cyan/10 hover:-translate-y-1 cursor-pointer group'
     : '';
 
-  const motionHoverClasses = !prefersReducedMotion && hover ? 'hover:-translate-y-1' : '';
-
-  const glowClasses = glow && !prefersReducedMotion
+  const glowClasses = glow
     ? 'animate-glow border-accent-cyan/30'
     : '';
 
   return (
     <div
-      className={cn(baseClasses, hoverClasses, motionHoverClasses, glowClasses, padding, className)}
+      className={`${baseClasses} ${hoverClasses} ${glowClasses} ${padding} ${className}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
       {/* Subtle gradient overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none high-contrast:hidden" />
 
       {/* Content */}
       <div className="relative z-10">
