@@ -7,7 +7,6 @@ import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
 import { ActionableError } from '../components/common/ActionableError';
-import { useToast } from '../components/common/ToastProvider';
 import { useLPOptimizer } from '../hooks/useLPOptimizer';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { formatISK, formatNumber, formatPercent, formatCompact } from '../utils/formatters';
