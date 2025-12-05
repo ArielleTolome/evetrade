@@ -18,6 +18,7 @@ export default {
         'accent-cyan': '#00f0ff', // Cyberpunk cyan
         'accent-cyan-dim': 'rgba(0, 240, 255, 0.1)',
         'accent-gold': '#ffd700', // Gold
+        'accent-warning': '#FBBF24', // Amber/Yellow for warnings
         'accent-purple': '#bc13fe', // Neon purple
         'accent-pink': '#ff0099', // Neon pink
         'accent-green': '#00ff9d', // Neon green
@@ -79,7 +80,7 @@ export default {
         'glow-pulse': 'glowPulse 2s ease-in-out infinite',
         'slide-in-left': 'slideInLeft 0.3s ease-out forwards',
         'bounce-in': 'bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-        'shake': 'shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97)',
+        'shake': 'shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both',
         'count-up': 'countUp 0.6s ease-out forwards',
         'scale-in': 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'fade-in-down': 'fadeInDown 0.4s ease-out forwards',
