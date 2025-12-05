@@ -62,27 +62,6 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = ESI_TIMEOUT_MS) {
 }
 
 /**
- * Make authenticated ESI request
- */
-async function esiRequest(endpoint, accessToken, options = {}) {
-  const url = `${ESI_BASE}${endpoint}`;
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-    ...options.headers,
-  };
-
-  const response = await fetchWithTimeout(url, { ...options, headers });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`ESI Error (${response.status}): ${errorText}`);
-  }
-
-  return response.json();
-}
-
-/**
  * Fetch all pages of a paginated ESI endpoint
  */
 async function fetchAllPages(endpoint, accessToken, maxPages = 10) {
@@ -160,27 +139,6 @@ function getBestSellPrice(orders) {
   // Sort by price ascending and return lowest
   const sortedOrders = orders.sort((a, b) => a.price - b.price);
   return sortedOrders[0].price;
-}
-
-/**
- * Fetch type information from ESI
- */
-async function getTypeInfo(typeId) {
-  try {
-    const data = await esiRequest(`/universe/types/${typeId}/?datasource=tranquility`);
-    return {
-      type_id: typeId,
-      name: data.name || `Unknown Type #${typeId}`,
-      volume: data.packaged_volume || data.volume || 0,
-    };
-  } catch (error) {
-    console.warn(`Failed to fetch type info for ${typeId}:`, error.message);
-    return {
-      type_id: typeId,
-      name: `Unknown Type #${typeId}`,
-      volume: 0,
-    };
-  }
 }
 
 /**
