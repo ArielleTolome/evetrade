@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
@@ -137,6 +137,10 @@ export function MarketVelocityPage() {
   const [minVolume, setMinVolume] = useState(1000);
   const [minVelocityScore, setMinVelocityScore] = useState(0);
   const [competitionFilter, setCompetitionFilter] = useState('all');
+
+  useEffect(() => {
+    loadInvTypes();
+  }, [loadInvTypes]);
 
   // Get region ID from region name
   const regionId = useMemo(() => {
