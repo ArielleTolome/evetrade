@@ -268,14 +268,17 @@ export function StationAutocomplete({
 
   // Update input value when prop changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing with prop
     setInputValue(value || '');
   }, [value]);
 
   // Filter stations based on input
   useEffect(() => {
     if (inputValue && stationList) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state
       setFiltered(searchStations(inputValue, maxResults));
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state
       setFiltered([]);
     }
   }, [inputValue, stationList, searchStations, maxResults]);

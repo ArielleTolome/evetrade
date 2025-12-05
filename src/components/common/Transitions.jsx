@@ -25,6 +25,7 @@ export function FadeIn({
       const timer = setTimeout(() => setIsVisible(true), delay);
       return () => clearTimeout(timer);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing visibility with show prop
       setIsVisible(false);
     }
   }, [show, delay]);
@@ -82,6 +83,7 @@ export function SlideIn({
       const timer = setTimeout(() => setIsVisible(true), delay);
       return () => clearTimeout(timer);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing visibility with show prop
       setIsVisible(false);
     }
   }, [show, delay]);
@@ -136,6 +138,7 @@ export function ScaleIn({
       const timer = setTimeout(() => setIsVisible(true), delay);
       return () => clearTimeout(timer);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing visibility with show prop
       setIsVisible(false);
     }
   }, [show, delay]);
@@ -180,6 +183,7 @@ export function BounceIn({
       const timer = setTimeout(() => setIsVisible(true), delay);
       return () => clearTimeout(timer);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing visibility with show prop
       setIsVisible(false);
     }
   }, [show, delay]);
@@ -226,6 +230,7 @@ export function StaggeredList({
 
   useEffect(() => {
     if (!show) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing visibility with show prop
       setVisibleItems(new Set());
       return;
     }
@@ -341,6 +346,7 @@ export function Shake({
   useEffect(() => {
     // Only shake when trigger changes from false to true
     if (trigger && !prevTriggerRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state
       setIsShaking(true);
       const timer = setTimeout(() => setIsShaking(false), duration);
       return () => clearTimeout(timer);
@@ -388,6 +394,7 @@ export function CountUp({
   const frameRef = useRef(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state
     setIsAnimating(true);
     startTimeRef.current = Date.now();
 
@@ -454,9 +461,12 @@ export function PresenceTransition({
 
   useEffect(() => {
     if (show) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state
       setShouldRender(true);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state
       setAnimationClass(enter);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state
       setAnimationClass(exit);
       const timer = setTimeout(() => {
         setShouldRender(false);

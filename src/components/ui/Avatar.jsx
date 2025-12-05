@@ -18,6 +18,7 @@ const Avatar = ({
   const [imageStatus, setImageStatus] = useState('loading'); // loading, loaded, error
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on src change
     setImageStatus('loading');
   }, [src]);
 

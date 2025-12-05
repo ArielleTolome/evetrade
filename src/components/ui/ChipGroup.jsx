@@ -45,6 +45,7 @@ const ChipGroup = ({
       aria-label="Chip group"
       {...props}
     >
+      {/* eslint-disable-next-line react-hooks/refs -- callback ref pattern for managing child refs */}
       {Children.map(children, (child, index) => {
         if (!isValidElement(child)) {
           return null;

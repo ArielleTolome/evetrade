@@ -24,6 +24,7 @@ export function useProfitTracking() {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- initializing from localStorage on mount
         setSessions(data.sessions || []);
 
         // Resume active session if exists

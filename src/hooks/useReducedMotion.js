@@ -39,6 +39,7 @@ export function useReducedMotion() {
     const systemPrefersReducedMotion = mediaQuery.matches;
 
     if (motionPreference === 'system') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing with system preference
       setPrefersReducedMotion(systemPrefersReducedMotion);
     } else {
       setPrefersReducedMotion(motionPreference === 'reduce');

@@ -127,6 +127,7 @@ export function FuelCostCalculator({ className = '' }) {
   // Calculate route when stations change
   useEffect(() => {
     if (!fromStation || !toStation) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state
       setJumps([]);
       return;
     }

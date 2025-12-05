@@ -2,6 +2,7 @@
  * Example usage of the useLPOptimizer hook
  */
 
+import React from 'react';
 import { useLPOptimizer } from './useLPOptimizer';
 
 /**

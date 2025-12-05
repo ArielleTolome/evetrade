@@ -26,11 +26,12 @@ export function TradeSimulator({ prefillData = null }) {
     ...(prefillData || {}),
     id: crypto.randomUUID(),
   });
-  const { savedSimulations, saveSimulation, deleteSimulation: deleteSavedSimulation } = useSavedSimulations();
+  const { savedSimulations, saveSimulation, deleteSimulation: _deleteSavedSimulation } = useSavedSimulations();
   const [simulationName, setSimulationName] = useState('');
 
   useEffect(() => {
     if (prefillData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing with prop
       setCurrentScenario(prev => ({
         ...prev,
         ...prefillData,

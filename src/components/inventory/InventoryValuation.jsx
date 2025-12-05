@@ -52,6 +52,7 @@ const PieChart = ({ data, size = 300, totalValue }) => {
             'Z',
           ].join(' ');
 
+          // eslint-disable-next-line react-hooks/purity -- accumulator pattern
           currentAngle = endAngle;
 
           return (
@@ -187,6 +188,7 @@ export function InventoryValuation({
           },
         ];
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- history tracking
         setValuationHistory(newHistory);
         localStorage.setItem('evetrade_valuation_history', JSON.stringify(newHistory));
       }

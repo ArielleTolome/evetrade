@@ -36,6 +36,7 @@ export function SystemAutocomplete({
 
   // Update input value when prop changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing with prop
     setInputValue(value || '');
   }, [value]);
 
@@ -66,8 +67,10 @@ export function SystemAutocomplete({
         })
         .slice(0, maxResults);
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state
       setFiltered(results);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state
       setFiltered([]);
     }
   }, [inputValue, universeList, systemsList, maxResults, excludeSystems]);

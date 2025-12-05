@@ -28,6 +28,7 @@ export function StockAlertPanel({ inventory = [], className = '' }) {
   useEffect(() => {
     if (inventory.length > 0) {
       const items = checkStockLevels(inventory);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state
       setLowStockItems(items);
     }
   }, [inventory, checkStockLevels]);

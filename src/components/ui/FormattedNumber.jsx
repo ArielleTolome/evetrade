@@ -50,6 +50,7 @@ const FormattedNumber = ({
       };
       animationFrameId.current = requestAnimationFrame(step);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing display with non-animated value
       setDisplayValue(value);
       prevValueRef.current = value;
     }

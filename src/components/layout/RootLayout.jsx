@@ -34,10 +34,13 @@ export function RootLayout() {
   // Determine transition type based on navigation action
   useEffect(() => {
     if (navigationType === 'PUSH') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- UI state
       setTransitionType('slide-left');
     } else if (navigationType === 'POP') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- UI state
       setTransitionType('slide-right');
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- UI state
       setTransitionType('fade');
     }
   }, [location, navigationType]);

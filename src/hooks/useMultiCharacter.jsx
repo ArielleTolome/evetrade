@@ -63,7 +63,7 @@ export function MultiCharacterProvider({ children }) {
   // Listen for character added from EveAuth
   useEffect(() => {
     const handleCharacterAdded = (event) => {
-      const { characterId, authData } = event.detail;
+      const { characterId: _characterId, authData } = event.detail;
       addCharacter(authData).catch(console.error);
     };
 

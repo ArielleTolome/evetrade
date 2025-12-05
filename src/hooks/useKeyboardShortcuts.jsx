@@ -39,6 +39,7 @@ export function useKeyboardShortcuts(customHandlers = {}, options = {}, routerAp
   const currentPathname = routerApi.pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
   const [showHelp, setShowHelp] = useState(false);
   const handlersRef = useRef(customHandlers);
+  // eslint-disable-next-line react-hooks/refs -- keep ref in sync with latest handlers
   handlersRef.current = customHandlers;
 
   const handleKeyDown = useCallback((event) => {

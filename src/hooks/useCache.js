@@ -272,7 +272,7 @@ export async function setCached(key, data) {
   }
 
   // Create a unique ID for this write operation to prevent queue entry replacement
-  const writeId = `${key}_${Date.now()}_${Math.random()}`;
+  const _writeId = `${key}_${Date.now()}_${Math.random()}`;
 
   // Create a promise for this write operation
   const writePromise = (async () => {

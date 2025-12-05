@@ -149,6 +149,7 @@ export function TradingTable({
   // Auto-switch between table and card view
   useEffect(() => {
     if (mobileView !== 'auto') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing with prop
       setIsMobileView(mobileView === 'cards');
       return;
     }

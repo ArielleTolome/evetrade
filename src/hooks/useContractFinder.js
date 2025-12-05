@@ -294,7 +294,7 @@ export function useContractFinder() {
  * @param {number} refreshInterval - Auto-refresh interval in ms (0 to disable)
  * @returns {object} Contract finder state and methods
  */
-export function useContractFinderWithRefresh(params, refreshInterval = 0) {
+export function useContractFinderWithRefresh(params, _refreshInterval = 0) {
   const contractFinder = useContractFinder();
 
   // Auto-refresh logic (if needed in the future)

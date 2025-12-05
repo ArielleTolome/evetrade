@@ -7,9 +7,9 @@ const ESI_BASE_URL = 'https://esi.evetech.net/latest';
  * Calculates manufacturing costs, profits, and efficiency
  */
 export function useIndustry() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [blueprintCache, setBlueprintCache] = useState({});
+  const [loading, _setLoading] = useState(false);
+  const [error, _setError] = useState(null);
+  const [_blueprintCache, _setBlueprintCache] = useState({});
 
   /**
    * Default industry index values by activity

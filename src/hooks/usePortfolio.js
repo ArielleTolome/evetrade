@@ -114,6 +114,7 @@ export function usePortfolio() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- initializing from localStorage on mount
           setPortfolio({ ...DEFAULT_PORTFOLIO, ...parsed });
         } catch (parseError) {
           console.error('Failed to parse portfolio data:', parseError);
