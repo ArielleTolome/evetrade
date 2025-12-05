@@ -1,5 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
+import { Briefcase } from 'lucide-react';
 import { PageLayout } from '../components/layout/PageLayout';
+import { EmptyState } from '../components/common/EmptyState';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { CharacterProfile } from '../components/common/CharacterProfile';
@@ -501,22 +503,13 @@ export function PortfolioPage() {
               </div>
 
               {tradeHistory.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-cyan/20 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <h4 className="text-lg font-medium text-text-primary mb-2">No Trades Recorded</h4>
-                  <p className="text-text-secondary mb-4">Start tracking your trades to see performance metrics.</p>
-                  <Button
-                    onClick={() => setShowAddModal(true)}
-                    variant="primary"
-                    className="px-6 py-2"
-                  >
-                    Add Your First Trade
-                  </Button>
-                </div>
+                <EmptyState
+                  icon={<Briefcase className="w-8 h-8" />}
+                  title="No positions tracked"
+                  description="Manually add trades or import them from your EVE wallet to see your performance."
+                  action={{ text: 'Start Trading', to: '/station-trading' }}
+                  variant="empty-list"
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
