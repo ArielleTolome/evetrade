@@ -8,7 +8,20 @@ import { ErrorBoundary, ResourceErrorFallback } from '../components/common/Error
 /**
  * Resource Context
  */
-const ResourceContext = createContext(null);
+const RESOURCE_CONTEXT_KEY = '__EVETRADE_RESOURCE_CONTEXT__';
+
+function getResourceContext() {
+  if (typeof globalThis !== 'undefined') {
+    if (!globalThis[RESOURCE_CONTEXT_KEY]) {
+      globalThis[RESOURCE_CONTEXT_KEY] = createContext(null);
+    }
+    return globalThis[RESOURCE_CONTEXT_KEY];
+  }
+  // Fallback for environments without globalThis (shouldn't happen in browser, but keeps SSR/tests happy)
+  return createContext(null);
+}
+
+const ResourceContext = getResourceContext();
 
 /**
  * Build nearby regions map from universe data
