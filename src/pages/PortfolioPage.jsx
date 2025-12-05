@@ -54,7 +54,6 @@ function ProfitChart({ data }) {
   }
 
   const maxProfit = Math.max(...data.map((d) => Math.abs(d.profit)));
-  // const minProfit = Math.min(...data.map((d) => d.profit));
 
   return (
     <div className="h-48 flex items-end gap-1">
