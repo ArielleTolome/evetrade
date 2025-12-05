@@ -137,13 +137,6 @@ ROI: ${formatPercent(roi / 100, 1)}`;
     setForm((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  // Load assets and wallet when authenticated
-  useEffect(() => {
-    if (isAuthenticated && character?.id) {
-      loadAssetsAndWallet();
-    }
-  }, [isAuthenticated, character?.id, loadAssetsAndWallet]);
-
   const loadAssetsAndWallet = useCallback(async () => {
     setAssetsLoading(true);
     setAssetsError(null);
@@ -215,6 +208,13 @@ ROI: ${formatPercent(roi / 100, 1)}`;
       setAssetsLoading(false);
     }
   }, [character?.id, getAccessToken, toast]);
+
+  // Load assets and wallet when authenticated
+  useEffect(() => {
+    if (isAuthenticated && character?.id) {
+      loadAssetsAndWallet();
+    }
+  }, [isAuthenticated, character?.id, loadAssetsAndWallet]);
 
   // Build location string for API
   const buildLocationString = useCallback(
