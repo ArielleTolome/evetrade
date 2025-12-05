@@ -45,6 +45,13 @@ export default {
         'sec-02': '#f04800',   // 0.2
         'sec-01': '#d73000',   // 0.1
         'sec-00': '#f00000',   // 0.0 and below
+
+        // Theme Toggle Colors
+        'toggle-track-dark': '#1B263B',
+        'toggle-track-light': '#778DA9',
+        'toggle-knob': '#E0E1DD',
+        'toggle-sun': '#ffd700',
+        'toggle-moon': '#415A77',
       },
       fontFamily: {
         'display': ['Orbitron', 'sans-serif'],

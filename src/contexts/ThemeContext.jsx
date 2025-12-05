@@ -13,58 +13,75 @@ export function ThemeProvider({ children }) {
     const stored = localStorage.getItem(THEME_KEY);
     if (stored) return stored;
 
-    // Check system preference
-    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
-
-    // Default to dark (space theme)
-    return 'dark';
+    // Default to system
+    return 'system';
   });
 
-  // Apply theme to document
-  useEffect(() => {
+  const applyTheme = useCallback((themeToApply) => {
     const root = document.documentElement;
+    let effectiveTheme = themeToApply;
 
-    if (theme === 'dark') {
+    if (themeToApply === 'system') {
+      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    if (effectiveTheme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
+  }, []);
 
-    // Save to localStorage
-    localStorage.setItem(THEME_KEY, theme);
-  }, [theme]);
+
+  // Apply theme to document
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme, applyTheme]);
 
   // Listen for system preference changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    const handleChange = (e) => {
-      // Only auto-switch if user hasn't set a preference
-      if (!localStorage.getItem(THEME_KEY)) {
-        setTheme(e.matches ? 'dark' : 'light');
+    const handleChange = () => {
+      if (theme === 'system') {
+        applyTheme('system');
       }
     };
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  }, [theme, applyTheme]);
 
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(THEME_KEY, newTheme);
+    setTheme(newTheme);
+  }, [theme]);
+
+  const setDarkTheme = useCallback(() => {
+    localStorage.setItem(THEME_KEY, 'dark');
+    setTheme('dark');
   }, []);
 
-  const setDarkTheme = useCallback(() => setTheme('dark'), []);
-  const setLightTheme = useCallback(() => setTheme('light'), []);
+  const setLightTheme = useCallback(() => {
+    localStorage.setItem(THEME_KEY, 'light');
+    setTheme('light');
+  }, []);
+
+  const setSystemTheme = useCallback(() => {
+    localStorage.removeItem(THEME_KEY);
+    setTheme('system');
+  }, []);
 
   const value = {
     theme,
-    isDark: theme === 'dark',
-    isLight: theme === 'light',
+    isDark: theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches),
+    isLight: theme === 'light' || (theme === 'system' && !window.matchMedia('(prefers-color-scheme: dark)').matches),
+    isSystemTheme: theme === 'system',
     toggleTheme,
     setDarkTheme,
     setLightTheme,
+    setSystemTheme
   };
 
   return (
