@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { SectionErrorBoundary } from '../common/ErrorBoundary';
 import { Sidebar, MobileNav } from '../common/Sidebar';
 import { AnimatedBackground } from './AnimatedBackground';
 import Header from './Header';
 import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../../hooks/useKeyboardShortcuts.jsx';
+import useSidebar from '../../hooks/useSidebar';
 
 /**
  * Root Layout Component
@@ -17,15 +17,8 @@ export function RootLayout() {
     navigate,
     pathname: location.pathname,
   });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const stored = localStorage.getItem('evetrade_sidebar_collapsed');
-    return stored ? JSON.parse(stored) : false;
-  });
-
-  // Persist sidebar state
-  useEffect(() => {
-    localStorage.setItem('evetrade_sidebar_collapsed', JSON.stringify(sidebarCollapsed));
-  }, [sidebarCollapsed]);
+  const { isCollapsed, isHovering, setIsHovering, toggleSidebar } = useSidebar();
+  const showMiniMode = isCollapsed && !isHovering;
 
   return (
     <div className="min-h-screen bg-space-black">
@@ -34,8 +27,10 @@ export function RootLayout() {
       {/* Desktop Sidebar */}
       <SectionErrorBoundary name="Sidebar">
         <Sidebar
-          isCollapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          isCollapsed={isCollapsed}
+          isHovering={isHovering}
+          setIsHovering={setIsHovering}
+          onToggle={toggleSidebar}
         />
       </SectionErrorBoundary>
 
@@ -43,7 +38,7 @@ export function RootLayout() {
       <div
         className={`
           transition-all duration-300
-          ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
+          ${isCollapsed && !isHovering ? 'lg:pl-[60px]' : 'lg:pl-64'}
         `}
       >
         <Header />

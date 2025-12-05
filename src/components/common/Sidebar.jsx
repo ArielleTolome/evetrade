@@ -72,19 +72,21 @@ function NavIcon({ path, className = 'w-5 h-5' }) {
 /**
  * Sidebar Navigation Component
  */
-export function Sidebar({ isCollapsed, onToggle }) {
+export function Sidebar({ isCollapsed, isHovering, setIsHovering, onToggle }) {
   const location = useLocation();
+  const showMiniMode = isCollapsed && !isHovering;
 
   return (
     <aside
       className={`
         hidden lg:flex flex-col
         fixed left-0 top-0 bottom-0 z-40
-        bg-space-dark/95 backdrop-blur-xl
+        transition-all duration-200 ease-in-out
+        ${showMiniMode ? 'w-[60px] bg-[#0D1B2A]' : 'w-64 bg-space-dark/95 backdrop-blur-xl'}
         border-r border-white/5
-        transition-all duration-300 ease-in-out
-        ${isCollapsed ? 'w-20' : 'w-64'}
       `}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-white/5">
@@ -92,35 +94,25 @@ export function Sidebar({ isCollapsed, onToggle }) {
           <div className="w-10 h-10 bg-gradient-to-br from-accent-cyan to-accent-purple rounded-xl flex items-center justify-center shadow-lg shadow-accent-cyan/20">
             <span className="font-display font-bold text-space-black text-sm">ET</span>
           </div>
-          {!isCollapsed && (
+          {!showMiniMode && (
             <span className="font-display text-xl font-bold tracking-wide">
               <span className="text-accent-cyan">EVE</span>
               <span className="text-text-primary">Trade</span>
             </span>
           )}
         </Link>
-        <button
-          onClick={onToggle}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          aria-expanded={!isCollapsed}
-          className="p-2 rounded-lg text-text-secondary hover:text-accent-cyan hover:bg-white/5 transition-colors focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none"
-        >
-          <svg className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
-        </button>
       </div>
 
       {/* Character Switcher */}
-      <div className="px-3 py-4 border-b border-white/5">
-        <CharacterSwitcher compact />
+      <div className={`px-3 py-4 border-b border-white/5 ${showMiniMode ? 'opacity-0' : 'opacity-100'}`}>
+        <CharacterSwitcher compact={showMiniMode} />
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
         {navSections.map((section) => (
           <div key={section.id}>
-            {!isCollapsed && (
+            {!showMiniMode && (
               <h3 className="px-3 mb-2 text-xs font-semibold text-text-secondary tracking-wider">
                 {section.label}
               </h3>
@@ -129,27 +121,31 @@ export function Sidebar({ isCollapsed, onToggle }) {
               {section.items.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
-                  <li key={item.path}>
+                  <li key={item.path} className="relative group">
                     <Link
                       to={item.path}
-                      title={isCollapsed ? item.label : undefined}
                       aria-current={isActive ? "page" : undefined}
                       className={`
                         flex items-center gap-3 px-3 py-2.5 rounded-xl
                         transition-all duration-200
-                        ${isCollapsed ? 'justify-center' : ''}
+                        ${showMiniMode ? 'justify-center' : ''}
                         ${isActive
-                          ? 'bg-accent-cyan/15 text-accent-cyan shadow-[0_0_20px_rgba(0,212,255,0.1)]'
-                          : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                          ? 'bg-[#415A77] text-white'
+                          : 'text-[#778DA9] hover:text-[#E0E1DD] hover:bg-[#1B263B]'
                         }
                         focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none
                       `}
                     >
-                      <NavIcon path={item.icon} className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-accent-cyan' : ''}`} />
-                      {!isCollapsed && (
+                      <NavIcon path={item.icon} className={`w-5 h-5 flex-shrink-0`} />
+                      {!showMiniMode && (
                         <span className="text-sm font-medium">{item.label}</span>
                       )}
                     </Link>
+                    {showMiniMode && (
+                      <div className="absolute left-full ml-4 px-2 py-1 bg-[#1B263B] text-white text-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                        {item.label}
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -160,14 +156,16 @@ export function Sidebar({ isCollapsed, onToggle }) {
 
       {/* Footer */}
       <div className="px-3 py-4 border-t border-white/5">
-        {!isCollapsed ? (
-          <div className="text-xs text-text-secondary text-center">
-            <p>EVETrade v2.0</p>
-            <p className="mt-1 opacity-50">Market data updates every 5 min</p>
-          </div>
-        ) : (
-          <div className="text-center text-xs text-text-secondary">v2</div>
-        )}
+        <button
+          onClick={onToggle}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!isCollapsed}
+          className="w-full flex items-center justify-center p-2 rounded-lg text-text-secondary hover:text-accent-cyan hover:bg-white/5 transition-colors focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-space-dark focus:outline-none"
+        >
+          <svg className={`w-5 h-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
       </div>
     </aside>
   );
