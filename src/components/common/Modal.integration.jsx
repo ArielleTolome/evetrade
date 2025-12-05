@@ -224,7 +224,7 @@ export function FilterSettingsModal({ filters, onApply }) {
                 onChange={(e) =>
                   setLocalFilters({ ...localFilters, minProfit: parseInt(e.target.value) })
                 }
-                className="w-full px-4 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+                className="w-full px-4 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan"
               />
             </div>
 
@@ -268,7 +268,7 @@ export function FilterSettingsModal({ filters, onApply }) {
                         securityMin: parseFloat(e.target.value),
                       })
                     }
-                    className="w-full px-3 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+                    className="w-full px-3 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan"
                   />
                 </div>
                 <div>
@@ -285,7 +285,7 @@ export function FilterSettingsModal({ filters, onApply }) {
                         securityMax: parseFloat(e.target.value),
                       })
                     }
-                    className="w-full px-3 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+                    className="w-full px-3 py-2 bg-space-mid border border-white/10 rounded-lg text-text-primary focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan"
                   />
                 </div>
               </div>
