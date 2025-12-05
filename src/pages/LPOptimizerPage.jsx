@@ -7,7 +7,8 @@ import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
 import { ActionableError } from '../components/common/ActionableError';
-import { useToast } from '../components/common/ToastProvider';
+// import { useToast } from '../components/common/ToastProvider';
+import { Toast } from '../components/common/Toast';
 import { useLPOptimizer } from '../hooks/useLPOptimizer';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { formatISK, formatNumber, formatPercent, formatCompact } from '../utils/formatters';
@@ -486,7 +487,7 @@ ROI: ${formatPercent(conversion.analysis.roi / 100, 1)}`;
         {error && (
           <ActionableError
             error={error}
-            onRetry={() => handleSubmit({ preventDefault: () => {} })}
+            onRetry={() => handleSubmit({ preventDefault: () => { } })}
             className="mb-8"
           />
         )}
@@ -520,7 +521,7 @@ ROI: ${formatPercent(conversion.analysis.roi / 100, 1)}`;
                     </div>
                     <DataFreshnessIndicator
                       lastUpdated={lastUpdated}
-                      onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+                      onRefresh={() => handleSubmit({ preventDefault: () => { } })}
                       isLoading={loading}
                       compact
                     />

@@ -142,9 +142,9 @@ ROI: ${formatPercent(roi / 100, 1)}`;
     if (isAuthenticated && character?.id) {
       loadAssetsAndWallet();
     }
-  }, [isAuthenticated, character?.id]);
+  }, [isAuthenticated, character?.id, loadAssetsAndWallet]);
 
-  const loadAssetsAndWallet = async () => {
+  const loadAssetsAndWallet = useCallback(async () => {
     setAssetsLoading(true);
     setAssetsError(null);
     try {
@@ -214,7 +214,7 @@ ROI: ${formatPercent(roi / 100, 1)}`;
     } finally {
       setAssetsLoading(false);
     }
-  };
+  }, [character?.id, getAccessToken, toast]);
 
   // Build location string for API
   const buildLocationString = useCallback(
@@ -784,10 +784,13 @@ ROI: ${formatPercent(roi / 100, 1)}`;
         )}
 
         {/* Error */}
-        {error && (
+        {(error || assetsError) && (
           <ActionableError
-            error={error}
-            onRetry={() => handleSubmit({ preventDefault: () => { } })}
+            error={error || assetsError}
+            onRetry={() => {
+              if (error) handleSubmit({ preventDefault: () => { } });
+              else if (assetsError) loadAssetsAndWallet();
+            }}
             className="mb-8"
           />
         )}

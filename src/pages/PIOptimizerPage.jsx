@@ -8,11 +8,12 @@ import { TradingTable } from '../components/tables';
 import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
 import { ActionableError } from '../components/common/ActionableError';
-import { useToast } from '../components/common/ToastProvider';
+// import { useToast } from '../components/common/ToastProvider';
 import { usePIOptimizer } from '../hooks/usePIOptimizer';
 import { useEveAuth } from '../hooks/useEveAuth';
 import { useResources } from '../hooks/useResources';
-import { formatISK, formatNumber, formatPercent, formatCompact } from '../utils/formatters';
+import { formatNumber, formatPercent, formatCompact } from '../utils/formatters';
+import { Toast } from '../components/common/Toast';
 import { getCharacterPlanets } from '../api/esi';
 
 /**
@@ -115,9 +116,9 @@ export function PIOptimizerPage() {
     if (isAuthenticated && character?.id) {
       loadCharacterPlanets();
     }
-  }, [isAuthenticated, character?.id]);
+  }, [isAuthenticated, character?.id, loadCharacterPlanets]);
 
-  const loadCharacterPlanets = async () => {
+  const loadCharacterPlanets = useCallback(async () => {
     setPlanetsLoading(true);
     try {
       const accessToken = await getAccessToken();
@@ -131,7 +132,7 @@ export function PIOptimizerPage() {
     } finally {
       setPlanetsLoading(false);
     }
-  };
+  }, [character?.id, getAccessToken]);
 
   // Handle form submission
   const handleSubmit = useCallback(
@@ -273,9 +274,8 @@ export function PIOptimizerPage() {
           const spreadPercent = spread || 0;
           return (
             <span
-              className={`font-mono font-semibold ${
-                spreadPercent > 0 ? 'text-green-400' : 'text-red-400'
-              }`}
+              className={`font-mono font-semibold ${spreadPercent > 0 ? 'text-green-400' : 'text-red-400'
+                }`}
             >
               {spreadPercent > 0 ? '+' : ''}
               {formatPercent(spreadPercent / 100, 1)}
@@ -479,7 +479,7 @@ export function PIOptimizerPage() {
         {error && (
           <ActionableError
             error={error}
-            onRetry={() => handleSubmit({ preventDefault: () => {} })}
+            onRetry={() => handleSubmit({ preventDefault: () => { } })}
             className="mb-8"
           />
         )}
@@ -546,11 +546,10 @@ export function PIOptimizerPage() {
             <div className="mb-6 flex flex-wrap gap-2">
               <button
                 onClick={() => setActiveTier('all')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  activeTier === 'all'
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTier === 'all'
                     ? 'bg-accent-cyan text-space-black'
                     : 'bg-white/5 text-text-secondary hover:bg-white/10'
-                }`}
+                  }`}
               >
                 All Tiers ({data.length})
               </button>
@@ -558,11 +557,10 @@ export function PIOptimizerPage() {
                 <button
                   key={tier}
                   onClick={() => setActiveTier(tier)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeTier === tier
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTier === tier
                       ? `${getTierColor(tier).replace('/20', '/30').replace('border-', 'bg-')}`
                       : 'bg-white/5 text-text-secondary hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   {tier} ({tierGroups?.[tier]?.length || 0})
                 </button>
@@ -625,7 +623,7 @@ export function PIOptimizerPage() {
                     </div>
                     <DataFreshnessIndicator
                       lastUpdated={lastUpdated}
-                      onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+                      onRefresh={() => handleSubmit({ preventDefault: () => { } })}
                       isLoading={loading}
                       compact
                     />

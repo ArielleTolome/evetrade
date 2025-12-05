@@ -61,7 +61,7 @@ export function MarketOrdersPage() {
     if (isAuthenticated && character?.id) {
       loadOrders();
     }
-  }, [isAuthenticated, character?.id]);
+  }, [isAuthenticated, character?.id, loadOrders]);
 
   // Auto-refresh every 5 minutes if enabled
   useEffect(() => {
@@ -69,7 +69,7 @@ export function MarketOrdersPage() {
       const interval = setInterval(loadOrders, 5 * 60 * 1000);
       return () => clearInterval(interval);
     }
-  }, [autoRefresh, isAuthenticated]);
+  }, [autoRefresh, isAuthenticated, loadOrders]);
 
   const loadOrders = useCallback(async () => {
     if (!isAuthenticated || !character?.id) return;
@@ -101,7 +101,7 @@ export function MarketOrdersPage() {
       await loadLocationNames(locationIds, accessToken);
 
       // Load price status for each order
-      await loadPriceStatus(orderData, accessToken);
+      await loadPriceStatus(orderData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -131,7 +131,7 @@ export function MarketOrdersPage() {
     setLocationNames(names);
   };
 
-  const loadPriceStatus = async (orderData, accessToken) => {
+  const loadPriceStatus = async (orderData) => {
     if (!orderData || orderData.length === 0) return;
 
     setPriceLoading(true);
@@ -198,7 +198,7 @@ export function MarketOrdersPage() {
             }
           }
         }
-      } catch (err) {
+      } catch {
         // Mark as unknown if we can't fetch market data
         for (const order of group.orders) {
           status[order.order_id] = { status: 'unknown', priceDiff: 0 };
@@ -237,11 +237,11 @@ export function MarketOrdersPage() {
   }, [sellOrders, buyOrders]);
 
   // Filter orders for display
-  const displayOrders = useMemo(() => {
-    if (filter === 'sell') return sellOrders;
-    if (filter === 'buy') return buyOrders;
-    return orders;
-  }, [orders, sellOrders, buyOrders, filter]);
+  // const displayOrders = useMemo(() => {
+  //   if (filter === 'sell') return sellOrders;
+  //   if (filter === 'buy') return buyOrders;
+  //   return orders;
+  // }, [orders, sellOrders, buyOrders, filter]);
 
   if (!isAuthenticated) {
     return (

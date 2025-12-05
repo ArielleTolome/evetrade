@@ -13,7 +13,7 @@ import {
  */
 export function RouteOptimizationPage() {
   const [activeTab, setActiveTab] = useState('planner');
-  const [sampleTrades, setSampleTrades] = useState([
+  const [sampleTrades] = useState([
     // Sample trade data for cargo optimizer
     { Item: 'Tritanium', Volume: 0.01, 'Net Profit': 100, itemId: 34 },
     { Item: 'Pyerite', Volume: 0.01, 'Net Profit': 150, itemId: 35 },
@@ -44,11 +44,10 @@ export function RouteOptimizationPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 rounded-lg border transition-all duration-200 ${
-                  activeTab === tab.id
+                className={`px-6 py-3 rounded-lg border transition-all duration-200 ${activeTab === tab.id
                     ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan shadow-lg shadow-accent-cyan/20'
                     : 'bg-space-dark/50 border-accent-cyan/20 text-text-secondary hover:border-accent-cyan/40 hover:bg-space-dark/70'
-                }`}
+                  }`}
               >
                 <span className="mr-2">{tab.icon}</span>
                 <span className="font-medium">{tab.label}</span>

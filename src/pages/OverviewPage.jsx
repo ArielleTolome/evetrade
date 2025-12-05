@@ -70,11 +70,10 @@ function ProfitBarChart({ data, title, timeLabel }) {
                 className="flex-1 flex flex-col justify-center h-full relative group"
               >
                 <div
-                  className={`w-full transition-all rounded-sm ${
-                    isPositive
+                  className={`w-full transition-all rounded-sm ${isPositive
                       ? 'bg-pink-500 hover:bg-pink-400'
                       : 'bg-red-500 hover:bg-red-400'
-                  }`}
+                    }`}
                   style={{
                     height: `${Math.max(heightPercent / 2, 2)}%`,
                     marginTop: isPositive ? 'auto' : '0',
@@ -176,7 +175,7 @@ export function OverviewPage() {
     if (isAuthenticated && character?.id) {
       loadAllData();
     }
-  }, [isAuthenticated, character?.id]);
+  }, [isAuthenticated, character?.id, loadAllData]);
 
   const loadAllData = useCallback(async () => {
     if (!isAuthenticated || !character?.id) return;

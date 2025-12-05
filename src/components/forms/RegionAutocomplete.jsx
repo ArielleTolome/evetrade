@@ -247,7 +247,7 @@ export function RegionAutocomplete({
         .slice(0, maxResults);
     }
     return [];
-  }, [inputValue, regionList, searchRegions, maxResults, excludeRegionsKey, excludeRegions]);
+  }, [inputValue, regionList, searchRegions, maxResults, excludeRegionsKey]);
 
   // Update filtered state when memoized value changes
   useEffect(() => {

@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+// HMR Force Update 2
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import PullToRefresh from '../components/common/PullToRefresh';
@@ -8,17 +9,34 @@ import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { useTradeHistory } from '../hooks/useTradeHistory';
 import { useToast } from '../components/common/ToastProvider';
 import { formatISK, formatPercent, formatRelativeTime } from '../utils/formatters';
+import { getMarketOrders, getMarketHistory } from '../api/esi';
+
+// Key market indices to track (Type IDs)
+const MARKET_INDICES = [
+  { id: 44992, name: 'PLEX' },
+  { id: 40520, name: 'Skill Injector' },
+  { id: 29668, name: 'Multi-Pilot Training' },
+  { id: 40519, name: 'Skill Extractor' },
+];
+
+const REGION_THE_FORGE = 10000002;
 
 /**
  * Trading Dashboard Page
  * A comprehensive command center for EVE Online traders
- * Features quick-action panels for opportunities, alerts, watchlists, and statistics
+ * Features real-time market indices, alerts, watchlists, and statistics
  */
 export function TradingDashboardPage() {
   const { currentList, removeFromWatchlist, addToWatchlist } = useWatchlist();
   const { triggeredAlerts, dismissTriggered, settings, updateSettings } = usePriceAlerts();
   const toast = useToast();
-  const { stats } = useTradeHistory();
+  // const { stats } = useTradeHistory();
+  const mounted = useRef(true);
+
+  // Market Data State
+  const [indicesData, setIndicesData] = useState([]);
+  const [isLoadingIndices, setIsLoadingIndices] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const [sessionStats, setSessionStats] = useState(() => {
     const stored = localStorage.getItem('evetrade_current_session');
@@ -35,61 +53,70 @@ export function TradingDashboardPage() {
     sellPrice: '',
     quantity: '',
     brokerFee: 3.0,
-    salesTax: 2.5,
+    salesTax: 8.0,
   });
 
-  const [copiedItem, setCopiedItem] = useState(null);
-  const [minProfit, setMinProfit] = useState('1000000');
-  const [maxInvestment, setMaxInvestment] = useState('100000000');
+  // const [copiedItem, setCopiedItem] = useState(null);
 
-  // Mock top opportunities data (in production, this would come from API)
-  const mockStationTrades = useMemo(() => [
-    { item: 'PLEX', itemId: 44992, buyPrice: 3450000, sellPrice: 3500000, profit: 50000, margin: 1.45, volume: 15000 },
-    { item: 'Skill Injector', itemId: 40520, buyPrice: 825000000, sellPrice: 850000000, profit: 25000000, margin: 3.03, volume: 2500 },
-    { item: 'Skill Extractor', itemId: 40519, buyPrice: 310000000, sellPrice: 320000000, profit: 10000000, margin: 3.23, volume: 1800 },
-    { item: 'Expanded Cargohold II', itemId: 1317, buyPrice: 45000000, sellPrice: 48000000, profit: 3000000, margin: 6.67, volume: 850 },
-    { item: 'Large Shield Extender II', itemId: 3841, buyPrice: 3200000, sellPrice: 3400000, profit: 200000, margin: 6.25, volume: 5200 },
-  ], []);
+  // Fetch Market Indices Data
+  const fetchMarketData = useCallback(async () => {
+    if (!mounted.current) return;
+    setIsLoadingIndices(true);
 
-  const mockHaulingRoutes = useMemo(() => [
-    { item: 'Tritanium', from: 'Jita', to: 'Amarr', iskPerJump: 125000, profit: 2500000, jumps: 20, volume: 45000 },
-    { item: 'Pyerite', from: 'Jita', to: 'Dodixie', iskPerJump: 98000, profit: 1470000, jumps: 15, volume: 38000 },
-    { item: 'Mexallon', from: 'Amarr', to: 'Rens', iskPerJump: 85000, profit: 1785000, jumps: 21, volume: 29000 },
-    { item: 'Isogen', from: 'Dodixie', to: 'Jita', iskPerJump: 72000, profit: 1080000, jumps: 15, volume: 32000 },
-    { item: 'Nocxium', from: 'Hek', to: 'Jita', iskPerJump: 65000, profit: 1170000, jumps: 18, volume: 18500 },
-  ], []);
+    try {
+      const promises = MARKET_INDICES.map(async (item) => {
+        try {
+          // Fetch orders to get current best prices
+          const orders = await getMarketOrders(REGION_THE_FORGE, item.id);
+          const sellOrders = orders.filter(o => !o.is_buy_order).sort((a, b) => a.price - b.price);
+          const buyOrders = orders.filter(o => o.is_buy_order).sort((a, b) => b.price - a.price);
 
-  // Mock market pulse data
-  const marketPulse = useMemo(() => ({
-    totalVolume: 1245000000000,
-    volumeChange: 5.2,
-    activeItems: 8547,
-    topMovers: [
-      { item: 'PLEX', change: 12.5, direction: 'up' },
-      { item: 'Skill Injector', change: -3.2, direction: 'down' },
-      { item: 'Tritanium', change: 8.7, direction: 'up' },
-      { item: 'Compressed Ore', change: -5.1, direction: 'down' },
-    ],
-    mostActive: [
-      { item: 'PLEX', volume: 145000 },
-      { item: 'Tritanium', volume: 98000000 },
-      { item: 'Skill Injector', volume: 8500 },
-    ],
-  }), []);
+          const bestSell = sellOrders[0]?.price || 0;
+          const bestBuy = buyOrders[0]?.price || 0;
+          const sellVolume = sellOrders.reduce((acc, o) => acc + o.volume_remain, 0);
 
-  // Filter opportunities based on user criteria
-  const filteredStationTrades = useMemo(() => {
-    const minProfitValue = parseFloat(minProfit) || 0;
-    const maxInvestValue = parseFloat(maxInvestment) || Infinity;
-    return mockStationTrades.filter(
-      trade => trade.profit >= minProfitValue && trade.buyPrice <= maxInvestValue
-    );
-  }, [mockStationTrades, minProfit, maxInvestment]);
+          // Fetch history for 24h change (simplified: compare to yesterday's average)
+          const history = await getMarketHistory(REGION_THE_FORGE, item.id);
+          const yesterday = history[history.length - 1];
+          const averagePrice = yesterday ? yesterday.average : bestSell;
 
-  const filteredHaulingRoutes = useMemo(() => {
-    const minProfitValue = parseFloat(minProfit) || 0;
-    return mockHaulingRoutes.filter(route => route.profit >= minProfitValue);
-  }, [mockHaulingRoutes, minProfit]);
+          const change = bestSell > 0 && averagePrice > 0
+            ? ((bestSell - averagePrice) / averagePrice) * 100
+            : 0;
+
+          return {
+            ...item,
+            buyPrice: bestBuy,
+            sellPrice: bestSell,
+            volume: sellVolume,
+            change: change,
+            trend: change >= 0 ? 'up' : 'down'
+          };
+        } catch (err) {
+          console.error(`Failed to fetch data for ${item.name}`, err);
+          return { ...item, error: true };
+        }
+      });
+
+      const results = await Promise.all(promises);
+      if (mounted.current) {
+        setIndicesData(results);
+        setLastUpdated(new Date());
+      }
+    } catch (error) {
+      console.error("Error fetching market indices:", error);
+      if (mounted.current) toast.error("Failed to load market data");
+    } finally {
+      if (mounted.current) setIsLoadingIndices(false);
+    }
+  }, [toast]);
+
+  // Initial load
+  useEffect(() => {
+    mounted.current = true;
+    fetchMarketData();
+    return () => { mounted.current = false; };
+  }, [fetchMarketData]);
 
   // Calculate quick trade results
   const calcResults = useMemo(() => {
@@ -101,7 +128,7 @@ export function TradingDashboardPage() {
 
     const buyTotal = buy * qty;
     const sellTotal = sell * qty;
-    const brokerFees = buyTotal * broker + sellTotal * broker;
+    const brokerFees = (buyTotal * broker) + (sellTotal * broker);
     const salesTaxes = sellTotal * tax;
     const grossProfit = sellTotal - buyTotal;
     const netProfit = grossProfit - brokerFees - salesTaxes;
@@ -118,13 +145,11 @@ export function TradingDashboardPage() {
     };
   }, [quickCalc]);
 
-  // Session duration with live updates - use state with interval instead of useMemo
-  // to avoid Date.now() during render (React 19 purity rules)
+  // Session duration timer
   const [sessionDuration, setSessionDuration] = useState(() =>
     Math.floor((Date.now() - sessionStats.startTime) / 1000)
   );
 
-  // Update session duration every second for live timer
   useEffect(() => {
     const interval = setInterval(() => {
       setSessionDuration(Math.floor((Date.now() - sessionStats.startTime) / 1000));
@@ -137,47 +162,21 @@ export function TradingDashboardPage() {
     return hours > 0 ? sessionStats.iskEarned / hours : 0;
   }, [sessionStats.iskEarned, sessionDuration]);
 
-  // Save session to localStorage
+  // Save session
   useEffect(() => {
     localStorage.setItem('evetrade_current_session', JSON.stringify(sessionStats));
   }, [sessionStats]);
 
-  // Copy to clipboard helper
-  const copyToClipboard = useCallback(async (text, label) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedItem(label);
-      setTimeout(() => setCopiedItem(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  }, []);
+  // const copyToClipboard = useCallback(async (text, label) => {
+  //   try {
+  //     await navigator.clipboard.writeText(text);
+  //     setCopiedItem(label);
+  //     setTimeout(() => setCopiedItem(null), 2000);
+  //   } catch (err) {
+  //     console.error('Failed to copy:', err);
+  //   }
+  // }, []);
 
-  // Copy trade details formatted
-  const copyTradeDetails = useCallback((trade) => {
-    const text = `${trade.item}
-Buy: ${formatISK(trade.buyPrice)}
-Sell: ${formatISK(trade.sellPrice)}
-Profit: ${formatISK(trade.profit)}
-Margin: ${trade.margin.toFixed(2)}%
-Volume: ${trade.volume.toLocaleString()}`;
-    copyToClipboard(text, trade.item);
-  }, [copyToClipboard]);
-
-  // Copy calculator result
-  const copyCalcResult = useCallback(() => {
-    const text = `Item: ${quickCalc.itemName || 'N/A'}
-Quantity: ${quickCalc.quantity || 1}
-Buy Price: ${formatISK(calcResults.buyTotal)}
-Sell Price: ${formatISK(calcResults.sellTotal)}
-Gross Profit: ${formatISK(calcResults.grossProfit)}
-Fees & Taxes: ${formatISK(calcResults.brokerFees + calcResults.salesTaxes)}
-Net Profit: ${formatISK(calcResults.netProfit)}
-ROI: ${calcResults.roi.toFixed(2)}%`;
-    copyToClipboard(text, 'Calculator Result');
-  }, [quickCalc, calcResults, copyToClipboard]);
-
-  // Reset session
   const resetSession = useCallback(() => {
     if (window.confirm('Reset current session? This will clear all session stats.')) {
       setSessionStats({
@@ -189,12 +188,10 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
   }, []);
 
   const handleRefresh = useCallback(async () => {
-    // In a real app, you'd re-fetch data here.
-    // For this mock-data page, we'll just show a toast.
-    toast.info('Dashboard data refreshed!');
-  }, [toast]);
+    await fetchMarketData();
+    toast.info('Market data refreshed');
+  }, [fetchMarketData, toast]);
 
-  // Add ISK to session
   const addSessionISK = useCallback((amount) => {
     setSessionStats(prev => ({
       ...prev,
@@ -203,141 +200,124 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
     }));
   }, []);
 
+  // Quick action helper to populate calculator
+  const populateCalculator = (item) => {
+    setQuickCalc(prev => ({
+      ...prev,
+      itemName: item.name,
+      buyPrice: item.buyPrice,
+      sellPrice: item.sellPrice
+    }));
+  };
+
   return (
     <PageLayout
       title="Trading Dashboard"
-      subtitle="Your command center for EVE Online trading"
+      subtitle="Jita 4-4 Market Overview"
     >
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Main Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            {/* Top Opportunities Panel */}
+            {/* Market Indicators Panel (Replaces Mock Opportunities) */}
             <GlassmorphicCard className="md:col-span-2">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-display text-accent-cyan">Top Opportunities</h2>
-                <div className="flex gap-3">
-                  <input
-                    type="number"
-                    placeholder="Min Profit"
-                    value={minProfit}
-                    onChange={(e) => setMinProfit(e.target.value)}
-                    className="w-32 px-3 py-1 text-sm bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max Investment"
-                    value={maxInvestment}
-                    onChange={(e) => setMaxInvestment(e.target.value)}
-                    className="w-36 px-3 py-1 text-sm bg-space-black/50 border border-accent-cyan/30 rounded-lg text-text-primary focus:border-accent-cyan focus:outline-none"
-                  />
+                <div>
+                  <h2 className="text-xl font-display text-accent-cyan">Market Indicators</h2>
+                  <p className="text-xs text-text-secondary">
+                    Key Indices • The Forge (Jita) • {lastUpdated ? formatRelativeTime(lastUpdated.toISOString()) : 'Updating...'}
+                  </p>
                 </div>
+                <Button
+                  onClick={fetchMarketData}
+                  variant="ghost"
+                  size="sm"
+                  disabled={isLoadingIndices}
+                  className="text-accent-cyan hover:bg-accent-cyan/10"
+                >
+                  <svg className={`w-4 h-4 ${isLoadingIndices ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </Button>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Station Trading */}
-                <div>
-                  <h3 className="text-sm font-medium text-text-secondary mb-3">Station Trades (Margin Trading)</h3>
-                  <div className="space-y-2">
-                    {filteredStationTrades.slice(0, 5).map((trade, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3 bg-space-black/30 border border-accent-cyan/10 rounded-lg hover:border-accent-cyan/30 transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-text-primary">{trade.item}</div>
-                            <div className="text-xs text-text-secondary mt-1">
-                              Buy: {formatISK(trade.buyPrice)} | Sell: {formatISK(trade.sellPrice)}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-accent-gold">{formatISK(trade.profit)}</div>
-                            <div className="text-xs text-green-400">{trade.margin.toFixed(2)}% margin</div>
-                          </div>
+              {isLoadingIndices && indicesData.length === 0 ? (
+                <div className="py-12 flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-cyan"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {indicesData.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-4 bg-space-black/30 border border-accent-cyan/10 rounded-lg hover:border-accent-cyan/30 transition-all group"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="text-sm font-medium text-text-primary group-hover:text-accent-cyan transition-colors">
+                          {item.name}
                         </div>
-                        <div className="flex gap-2 mt-2">
-                          <Button
-                            onClick={() => copyToClipboard(trade.item, trade.item)}
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                          >
-                            {copiedItem === trade.item ? 'Copied!' : 'Copy Name'}
-                          </Button>
-                          <Button
-                            onClick={() => copyTradeDetails(trade)}
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                          >
-                            Copy Details
-                          </Button>
-                          <Button
-                            onClick={() => addToWatchlist({
-                              'Item ID': trade.itemId,
-                              'Item': trade.item,
-                              'Buy Price': trade.buyPrice,
-                              'Sell Price': trade.sellPrice
-                            })}
-                            variant="secondary"
-                            size="sm"
-                            className="px-2 py-1 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 border-transparent"
-                            title="Add to watchlist"
-                          >
-                            Watch
-                          </Button>
+                        <div className={`text-xs px-1.5 py-0.5 rounded ${item.trend === 'up' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                          {typeof item.change === 'number' ? (
+                            <>
+                              {item.change > 0 ? '+' : ''}{item.change.toFixed(2)}%
+                            </>
+                          ) : (
+                            <span className="text-gray-400 text-[10px]">N/A</span>
+                          )}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Hauling Routes */}
-                <div>
-                  <h3 className="text-sm font-medium text-text-secondary mb-3">Hauling Routes (ISK/Jump)</h3>
-                  <div className="space-y-2">
-                    {filteredHaulingRoutes.slice(0, 5).map((route, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3 bg-space-black/30 border border-accent-cyan/10 rounded-lg hover:border-accent-cyan/30 transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-text-primary">{route.item}</div>
-                            <div className="text-xs text-text-secondary mt-1">
-                              {route.from} → {route.to} ({route.jumps} jumps)
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-accent-gold">{formatISK(route.iskPerJump)}/jump</div>
-                            <div className="text-xs text-green-400">{formatISK(route.profit)} total</div>
-                          </div>
+                      <div className="space-y-1 mb-3">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-text-secondary">Sell:</span>
+                          <span className="text-text-primary font-mono">
+                            {item.sellPrice ? formatISK(item.sellPrice) : '-'}
+                          </span>
                         </div>
-                        <div className="flex gap-2 mt-2">
-                          <Button
-                            onClick={() => copyToClipboard(route.item, route.item)}
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                          >
-                            {copiedItem === route.item ? 'Copied!' : 'Copy Name'}
-                          </Button>
-                          <Button
-                            onClick={() => copyToClipboard(`${route.item}\n${route.from} → ${route.to}\n${route.jumps} jumps\n${formatISK(route.profit)} profit`, route.item + '_details')}
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
-                          >
-                            Copy Details
-                          </Button>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-text-secondary">Buy:</span>
+                          <span className="text-text-primary font-mono">
+                            {item.buyPrice ? formatISK(item.buyPrice) : '-'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-text-secondary">Spread:</span>
+                          <span className="text-accent-gold/80">
+                            {item.sellPrice && item.buyPrice
+                              ? formatPercent(((item.sellPrice - item.buyPrice) / item.sellPrice) * 100)
+                              : '-'}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => populateCalculator(item)}
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 py-1 text-xs bg-accent-cyan/5 hover:bg-accent-cyan/10 border-accent-cyan/20"
+                        >
+                          Calc
+                        </Button>
+                        <Button
+                          onClick={() => addToWatchlist({
+                            'Item ID': item.id,
+                            'Item': item.name,
+                            'Buy Price': item.buyPrice,
+                            'Sell Price': item.sellPrice
+                          })}
+                          variant="secondary"
+                          size="sm"
+                          className="px-2 py-1 text-xs bg-green-500/5 text-green-400 hover:bg-green-500/10 border-green-500/20"
+                          title="Add to watchlist"
+                        >
+                          Watch
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              )}
             </GlassmorphicCard>
 
             {/* Active Alerts Panel */}
@@ -352,10 +332,7 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors p-0 border-none ${settings.soundEnabled ? 'bg-accent-cyan' : 'bg-gray-600'
                       }`}
                   >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.soundEnabled ? 'translate-x-5' : 'translate-x-1'
-                        }`}
-                    />
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.soundEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
                   </Button>
                 </div>
               </div>
@@ -371,10 +348,7 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {triggeredAlerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg"
-                    >
+                    <div key={alert.id} className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="text-sm font-medium text-yellow-400">{alert.itemName}</div>
@@ -409,14 +383,12 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
             {/* Watchlist Quick View */}
             <GlassmorphicCard>
               <h2 className="text-xl font-display text-accent-cyan mb-4">Watchlist Quick View</h2>
-
               {currentList.items.length === 0 ? (
                 <div className="text-center py-8 text-text-secondary">
                   <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
                   <p className="text-sm">Watchlist is empty</p>
-                  <p className="text-xs mt-1">Add items from opportunities above</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-72 overflow-y-auto">
@@ -426,17 +398,11 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                       : 0;
 
                     return (
-                      <div
-                        key={item.id}
-                        className="p-3 bg-space-black/30 border border-accent-cyan/10 rounded-lg"
-                      >
+                      <div key={item.id} className="p-3 bg-space-black/30 border border-accent-cyan/10 rounded-lg">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <div className="text-sm font-medium text-text-primary">{item.name}</div>
                             <div className="text-xs text-text-secondary mt-1">
-                              Buy: {formatISK(item.currentPrice?.buy || item.initialPrice.buy)}
-                            </div>
-                            <div className="text-xs text-text-secondary">
                               Sell: {formatISK(item.currentPrice?.sell || item.initialPrice.sell)}
                             </div>
                           </div>
@@ -444,21 +410,20 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                             <div className={`text-sm font-bold ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                               {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
                             </div>
-                            {priceChange !== 0 && (
-                              <div className="text-xs text-text-secondary">
-                                {priceChange >= 0 ? '↑' : '↓'} from initial
-                              </div>
-                            )}
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <Button
-                            onClick={() => copyToClipboard(item.name, item.name)}
+                            onClick={() => populateCalculator({
+                              name: item.name,
+                              buyPrice: item.currentPrice?.buy,
+                              sellPrice: item.currentPrice?.sell
+                            })}
                             variant="secondary"
                             size="sm"
                             className="flex-1 px-2 py-1 text-xs bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 border-transparent"
                           >
-                            {copiedItem === item.name ? 'Copied!' : 'Copy'}
+                            Calc
                           </Button>
                           <Button
                             onClick={() => removeFromWatchlist(item.id)}
@@ -474,62 +439,6 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                   })}
                 </div>
               )}
-            </GlassmorphicCard>
-
-            {/* Market Pulse */}
-            <GlassmorphicCard>
-              <h2 className="text-xl font-display text-accent-cyan mb-4">Market Pulse</h2>
-
-              <div className="space-y-4">
-                {/* Overall Stats */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-space-black/30 rounded-lg">
-                    <div className="text-xs text-text-secondary">Total Volume</div>
-                    <div className="text-lg font-bold text-text-primary">{formatISK(marketPulse.totalVolume, false)}</div>
-                    <div className={`text-xs ${marketPulse.volumeChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {marketPulse.volumeChange >= 0 ? '↑' : '↓'} {Math.abs(marketPulse.volumeChange)}%
-                    </div>
-                  </div>
-                  <div className="p-3 bg-space-black/30 rounded-lg">
-                    <div className="text-xs text-text-secondary">Active Items</div>
-                    <div className="text-lg font-bold text-text-primary">{marketPulse.activeItems.toLocaleString()}</div>
-                    <div className="text-xs text-text-secondary">Being traded</div>
-                  </div>
-                </div>
-
-                {/* Top Movers */}
-                <div>
-                  <h3 className="text-xs font-medium text-text-secondary mb-2">Price Movers (24h)</h3>
-                  <div className="space-y-1">
-                    {marketPulse.topMovers.map((mover, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-space-black/20 rounded">
-                        <span className="text-sm text-text-primary">{mover.item}</span>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-bold ${mover.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                            {mover.direction === 'up' ? '+' : ''}{mover.change.toFixed(1)}%
-                          </span>
-                          <span className={`text-xs ${mover.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                            {mover.direction === 'up' ? '↑' : '↓'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Most Active */}
-                <div>
-                  <h3 className="text-xs font-medium text-text-secondary mb-2">Most Active</h3>
-                  <div className="space-y-1">
-                    {marketPulse.mostActive.map((active, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-space-black/20 rounded">
-                        <span className="text-sm text-text-primary">{active.item}</span>
-                        <span className="text-sm text-accent-cyan">{active.volume.toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </GlassmorphicCard>
 
             {/* Quick Trade Calculator */}
@@ -593,7 +502,6 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                   </div>
                 </div>
 
-                {/* Results */}
                 <div className="border-t border-accent-cyan/20 pt-3 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-text-secondary">Gross Profit:</span>
@@ -618,14 +526,6 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                     </span>
                   </div>
                 </div>
-
-                <Button
-                  onClick={copyCalcResult}
-                  variant="secondary"
-                  className="w-full py-2 bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 font-medium border-transparent"
-                >
-                  {copiedItem === 'Calculator Result' ? 'Copied!' : 'Copy Result'}
-                </Button>
               </div>
             </GlassmorphicCard>
 
@@ -645,7 +545,6 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
               </div>
 
               <div className="space-y-4">
-                {/* Main Stats Grid */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-4 bg-space-black/30 rounded-lg">
                     <div className="text-xs text-text-secondary mb-1">ISK Earned</div>
@@ -667,7 +566,6 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                   </div>
                 </div>
 
-                {/* Quick Add Buttons */}
                 <div>
                   <div className="text-xs text-text-secondary mb-2">Quick Add ISK:</div>
                   <div className="grid grid-cols-3 gap-2">
@@ -697,27 +595,6 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
                     </Button>
                   </div>
                 </div>
-
-                {/* Historical Stats (if available) */}
-                {stats && (
-                  <div className="border-t border-accent-cyan/20 pt-3">
-                    <div className="text-xs text-text-secondary mb-2">All-Time Stats:</div>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">Total Profit:</span>
-                        <span className="text-text-primary font-bold">{formatISK(stats.totalProfit || 0)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">Win Rate:</span>
-                        <span className="text-text-primary">{formatPercent(stats.winRate || 0)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">Total Trades:</span>
-                        <span className="text-text-primary">{stats.completedTrades || 0}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </GlassmorphicCard>
           </div>
@@ -726,11 +603,10 @@ ROI: ${calcResults.roi.toFixed(2)}%`;
           <div className="mt-6 p-4 bg-accent-cyan/5 border border-accent-cyan/20 rounded-lg">
             <h3 className="text-sm font-medium text-accent-cyan mb-2">Dashboard Quick Tips</h3>
             <ul className="text-xs text-text-secondary space-y-1">
-              <li>• Use filters to find opportunities matching your ISK budget and profit goals</li>
-              <li>• Click "Watch" to add items to your watchlist for price tracking</li>
-              <li>• Active alerts will appear when your price conditions are met</li>
-              <li>• Use the Quick Calculator to evaluate trades before executing them</li>
-              <li>• Session stats track your performance in real-time - reset when starting a new session</li>
+              <li>• Market Indicators show live prices from The Forge (Jita)</li>
+              <li>• Use the Quick Trade Calculator to profit check before buying</li>
+              <li>• Watchlist allows you to track specific items across sessions</li>
+              <li>• Set up Price Alerts to be notified of market movements</li>
             </ul>
           </div>
         </div>

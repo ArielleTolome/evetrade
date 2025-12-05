@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
@@ -7,7 +7,7 @@ import { SkeletonTable } from '../components/common/SkeletonLoader';
 import { ActionableError } from '../components/common/ActionableError';
 import { useRouteOptimizer } from '../hooks/useRouteOptimizer';
 import { useResources } from '../hooks/useResources';
-import { formatNumber } from '../utils/formatters';
+// import { formatISK, formatCompact } from '../utils/formatters'; // Unused
 import { getSecurityColors, formatSecurityStatus } from '../utils/security';
 
 /**
@@ -192,9 +192,8 @@ export function SmartRouteOptimizerPage() {
     return (
       <div
         key={`${system.system_id}-${index}`}
-        className={`flex items-center justify-between p-3 rounded-lg border ${
-          danger ? 'bg-red-500/5 border-red-500/30' : 'bg-white/5 border-white/10'
-        }`}
+        className={`flex items-center justify-between p-3 rounded-lg border ${danger ? 'bg-red-500/5 border-red-500/30' : 'bg-white/5 border-white/10'
+          }`}
       >
         <div className="flex items-center gap-3 flex-1">
           <span className="text-text-secondary text-sm font-mono w-8">{index + 1}</span>
@@ -297,7 +296,7 @@ export function SmartRouteOptimizerPage() {
     if (!comparison) return null;
 
     const routes = comparison.routes || {};
-    const validRoutes = Object.entries(routes).filter(([, route]) => !route.error);
+    // const validRoutes = routes.filter(route => route && route.jumps > 0);
 
     return (
       <div className="space-y-6">
@@ -474,7 +473,7 @@ export function SmartRouteOptimizerPage() {
         {error && (
           <ActionableError
             error={error}
-            onRetry={() => handleCalculateRoute({ preventDefault: () => {} })}
+            onRetry={() => handleCalculateRoute({ preventDefault: () => { } })}
             className="mb-8"
           />
         )}
