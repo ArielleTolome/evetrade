@@ -54,11 +54,11 @@ function ProfitChart({ data }) {
   }
 
   const maxProfit = Math.max(...data.map((d) => Math.abs(d.profit)));
-  const minProfit = Math.min(...data.map((d) => d.profit));
+  // const minProfit = Math.min(...data.map((d) => d.profit));
 
   return (
     <div className="h-48 flex items-end gap-1">
-      {data.slice(-30).map((d, i) => {
+      {data.slice(-30).map((d) => {
         const height = maxProfit > 0 ? (Math.abs(d.profit) / maxProfit) * 100 : 0;
         const isPositive = d.profit >= 0;
 
@@ -333,8 +333,8 @@ export function PortfolioPage() {
                 onClick={() => setActiveTab(tab.id)}
                 variant={activeTab === tab.id ? 'secondary' : 'ghost'}
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === tab.id
-                    ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/50'
-                    : 'bg-white/5 text-text-secondary hover:bg-white/10 border-transparent'
+                  ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/50'
+                  : 'bg-white/5 text-text-secondary hover:bg-white/10 border-transparent'
                   }`}
               >
                 <span>{tab.icon}</span>

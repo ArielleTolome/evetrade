@@ -25,7 +25,6 @@ export function OrdersPage() {
   const [toStation, setToStation] = useState('');
   const [userOrders, setUserOrders] = useState([]);
   const [userAssets, setUserAssets] = useState([]);
-  const [loadingUserData, setLoadingUserData] = useState(false);
 
   // Parse query parameters
   const itemId = searchParams.get('itemId');
@@ -47,7 +46,7 @@ export function OrdersPage() {
         } else {
           setItemName(`Item #${itemId}`);
         }
-      } catch (err) {
+      } catch {
         setItemName(`Item #${itemId}`);
       }
     }
@@ -105,7 +104,7 @@ export function OrdersPage() {
     async function fetchUserData() {
       if (!isAuthenticated || !character?.id || !itemId) return;
 
-      setLoadingUserData(true);
+      // setLoadingUserData(true);
       try {
         const accessToken = await getAccessToken();
         if (!accessToken) return;
@@ -146,7 +145,7 @@ export function OrdersPage() {
       } catch (err) {
         console.error('Error fetching user data:', err);
       } finally {
-        setLoadingUserData(false);
+        // setLoadingUserData(false);
       }
     }
 

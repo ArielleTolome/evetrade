@@ -396,10 +396,9 @@ function TradingSignalCard({ signal, className = '' }) {
       <div className="mb-4">
         <div className="h-3 bg-space-dark rounded-full overflow-hidden">
           <div
-            className={`h-full transition-all duration-500 ${
-              signal.score >= 60 ? 'bg-green-400' :
-              signal.score >= 45 ? 'bg-yellow-400' : 'bg-red-400'
-            }`}
+            className={`h-full transition-all duration-500 ${signal.score >= 60 ? 'bg-green-400' :
+                signal.score >= 45 ? 'bg-yellow-400' : 'bg-red-400'
+              }`}
             style={{ width: `${signal.score}%` }}
           />
         </div>
@@ -430,6 +429,41 @@ function TradingSignalCard({ signal, className = '' }) {
 }
 
 /**
+ * Price Row Component for Quick Copy
+ */
+const PriceRow = ({ label, sublabel, price, field, variant = 'neutral', onCopy, copiedField }) => {
+  const variants = {
+    neutral: 'bg-white/5 border-white/10 hover:bg-white/10',
+    buy: 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20',
+    sell: 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20',
+  };
+
+  return (
+    <button
+      onClick={() => onCopy(price, field)}
+      className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${variants[variant]} ${copiedField === field ? 'ring-2 ring-accent-cyan' : ''}`}
+    >
+      <div className="text-left">
+        <div className="text-sm text-text-primary">{label}</div>
+        <div className="text-xs text-text-secondary">{sublabel}</div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-mono text-text-primary">{formatISK(price, false)}</span>
+        {copiedField === field ? (
+          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        )}
+      </div>
+    </button>
+  );
+};
+
+/**
  * Quick Copy Prices Component
  */
 function QuickCopyPrices({ buyPrice, sellPrice, itemName }) {
@@ -446,37 +480,7 @@ function QuickCopyPrices({ buyPrice, sellPrice, itemName }) {
     }
   };
 
-  const PriceRow = ({ label, sublabel, price, field, variant = 'neutral' }) => {
-    const variants = {
-      neutral: 'bg-white/5 border-white/10 hover:bg-white/10',
-      buy: 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20',
-      sell: 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20',
-    };
 
-    return (
-      <button
-        onClick={() => copyToClipboard(price, field)}
-        className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${variants[variant]} ${copiedField === field ? 'ring-2 ring-accent-cyan' : ''}`}
-      >
-        <div className="text-left">
-          <div className="text-sm text-text-primary">{label}</div>
-          <div className="text-xs text-text-secondary">{sublabel}</div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-mono text-text-primary">{formatISK(price, false)}</span>
-          {copiedField === field ? (
-            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          )}
-        </div>
-      </button>
-    );
-  };
 
   return (
     <GlassmorphicCard>
@@ -504,10 +508,10 @@ function QuickCopyPrices({ buyPrice, sellPrice, itemName }) {
           <div className="text-xs font-medium text-red-400 uppercase tracking-wider mb-2">
             Place Buy Order
           </div>
-          <PriceRow label="Match Sell" sublabel="Instant buy" price={buyPrice} field="match-buy" variant="neutral" />
-          <PriceRow label="Beat Sellers" sublabel={`-${offset} ISK`} price={buyPrice - offset} field="beat-sell" variant="buy" />
-          <PriceRow label="Match Buyers" sublabel="Match top buy" price={sellPrice} field="match-buyer" variant="neutral" />
-          <PriceRow label="Beat Buyers" sublabel={`+${offset} ISK`} price={sellPrice + offset} field="beat-buy" variant="buy" />
+          <PriceRow label="Match Sell" sublabel="Instant buy" price={buyPrice} field="match-buy" variant="neutral" onCopy={copyToClipboard} copiedField={copiedField} />
+          <PriceRow label="Beat Sellers" sublabel={`-${offset} ISK`} price={buyPrice - offset} field="beat-sell" variant="buy" onCopy={copyToClipboard} copiedField={copiedField} />
+          <PriceRow label="Match Buyers" sublabel="Match top buy" price={sellPrice} field="match-buyer" variant="neutral" onCopy={copyToClipboard} copiedField={copiedField} />
+          <PriceRow label="Beat Buyers" sublabel={`+${offset} ISK`} price={sellPrice + offset} field="beat-buy" variant="buy" onCopy={copyToClipboard} copiedField={copiedField} />
         </div>
 
         {/* Sell Order Column */}
@@ -515,10 +519,10 @@ function QuickCopyPrices({ buyPrice, sellPrice, itemName }) {
           <div className="text-xs font-medium text-green-400 uppercase tracking-wider mb-2">
             Place Sell Order
           </div>
-          <PriceRow label="Match Buyers" sublabel="Instant sell" price={sellPrice} field="match-sell" variant="neutral" />
-          <PriceRow label="Beat Buyers" sublabel={`+${offset} ISK`} price={sellPrice + offset} field="overbid-sell" variant="sell" />
-          <PriceRow label="Match Sellers" sublabel="Match top sell" price={buyPrice} field="match-seller" variant="neutral" />
-          <PriceRow label="Beat Sellers" sublabel={`-${offset} ISK`} price={buyPrice - offset} field="undercut-sell" variant="sell" />
+          <PriceRow label="Match Buyers" sublabel="Instant sell" price={sellPrice} field="match-sell" variant="neutral" onCopy={copyToClipboard} copiedField={copiedField} />
+          <PriceRow label="Beat Buyers" sublabel={`+${offset} ISK`} price={sellPrice + offset} field="overbid-sell" variant="sell" onCopy={copyToClipboard} copiedField={copiedField} />
+          <PriceRow label="Match Sellers" sublabel="Match top sell" price={buyPrice} field="match-seller" variant="neutral" onCopy={copyToClipboard} copiedField={copiedField} />
+          <PriceRow label="Beat Sellers" sublabel={`-${offset} ISK`} price={buyPrice - offset} field="undercut-sell" variant="sell" onCopy={copyToClipboard} copiedField={copiedField} />
         </div>
       </div>
 
@@ -1031,29 +1035,29 @@ export default function ItemDetailPage() {
                 {/* Trading Signal */}
                 <TradingSignalCard signal={tradingSignal} />
 
-              {/* Quick Copy Prices */}
-              <QuickCopyPrices buyPrice={buyPrice} sellPrice={sellPrice} itemName={itemName} />
+                {/* Quick Copy Prices */}
+                <QuickCopyPrices buyPrice={buyPrice} sellPrice={sellPrice} itemName={itemName} />
 
-              {/* Market Competition */}
-              <MarketCompetitionCard analysis={marketAnalysis} />
-            </div>
+                {/* Market Competition */}
+                <MarketCompetitionCard analysis={marketAnalysis} />
+              </div>
 
-            {/* Right Column - Calculator & Indicators */}
-            <div className="space-y-6">
-              {/* Quick Profit Calculator */}
-              <QuickProfitCalculator buyPrice={buyPrice} sellPrice={sellPrice} />
+              {/* Right Column - Calculator & Indicators */}
+              <div className="space-y-6">
+                {/* Quick Profit Calculator */}
+                <QuickProfitCalculator buyPrice={buyPrice} sellPrice={sellPrice} />
 
-              {/* Wallet Status (if authenticated) */}
-              {isAuthenticated && (
-                <WalletFundingStatus walletBalance={walletBalance} tradeCost={buyPrice} />
-              )}
+                {/* Wallet Status (if authenticated) */}
+                {isAuthenticated && (
+                  <WalletFundingStatus walletBalance={walletBalance} tradeCost={buyPrice} />
+                )}
 
-              {/* Daily Volume Estimates */}
-              <DailyVolumeCard dailyVolume={dailyVolume} marketAnalysis={marketAnalysis} />
+                {/* Daily Volume Estimates */}
+                <DailyVolumeCard dailyVolume={dailyVolume} marketAnalysis={marketAnalysis} />
 
-              {/* Volatility & Trend */}
-              <VolatilityTrendCard volatility={volatility} trend={trend} />
-            </div>
+                {/* Volatility & Trend */}
+                <VolatilityTrendCard volatility={volatility} trend={trend} />
+              </div>
             </div>
           </>
         )}

@@ -6,7 +6,7 @@ import { FormInput, FormSelect, RegionAutocomplete, ItemAutocomplete } from '../
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useResources } from '../hooks/useResources';
 import { useMarketVelocity } from '../hooks/useMarketVelocity';
-import { formatNumber, formatPercent, formatCompact } from '../utils/formatters';
+import { formatPercent, formatCompact } from '../utils/formatters';
 
 /**
  * Competition level filter options
@@ -129,7 +129,7 @@ function CompetitionBadge({ level }) {
  * Market Velocity Analysis Page
  */
 export function MarketVelocityPage() {
-  const { regionList, invTypes, loadInvTypes } = useResources();
+  const { regionList, invTypes } = useResources();
 
   // Form state
   const [region, setRegion] = useState('');

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom'; // Unused
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
@@ -29,7 +29,7 @@ import { getRegionData } from '../utils/stations';
  * Region Hauling Page Component
  */
 export function RegionHaulingPage() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Unused
   const { universeList, nearbyRegions, loading: resourcesLoading } = useResources();
   const { data, loading, error, lastUpdated, execute } = useApiCall(fetchRegionHauling);
   const { saveRoute } = usePortfolio();
@@ -132,9 +132,9 @@ Jumps: ${jumps}`;
     if (isAuthenticated && character?.id) {
       loadAssetsAndWallet();
     }
-  }, [isAuthenticated, character?.id]);
+  }, [isAuthenticated, character?.id, loadAssetsAndWallet]);
 
-  const loadAssetsAndWallet = async () => {
+  const loadAssetsAndWallet = useCallback(async () => {
     setAssetsLoading(true);
     setAssetsError(null);
     try {
@@ -232,7 +232,7 @@ Jumps: ${jumps}`;
     } finally {
       setAssetsLoading(false);
     }
-  };
+  }, [isAuthenticated, character?.id, getAccessToken, toast, universeList]);
 
   // Get region ID from name
   const getRegionId = useCallback(
@@ -595,278 +595,281 @@ Jumps: ${jumps}`;
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Form */}
           <GlassmorphicCard className="mb-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Form Error Display */}
-            {formError && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm" role="alert">
-                {formError}
-              </div>
-            )}
-
-            {/* Region Selection */}
-            <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <div className="space-y-4">
-                <RegionAutocomplete
-                  label="Origin Region"
-                  value={form.fromRegion}
-                  onChange={(v) => updateForm('fromRegion', v)}
-                  placeholder="The Forge, Domain, Sinq Laison..."
-                  required
-                />
-                <RegionPresets
-                  selectedRegion={form.fromRegion}
-                  onRegionSelect={(region) => updateForm('fromRegion', region)}
-                  compact
-                />
-                <FormSelect
-                  label="Trade Preference"
-                  value={form.fromPreference}
-                  onChange={(v) => updateForm('fromPreference', v)}
-                  options={prefOptions}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 mb-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.useNearby}
-                      onChange={(e) => updateForm('useNearby', e.target.checked)}
-                      className="w-4 h-4 rounded border-accent-cyan/30 bg-space-dark text-accent-cyan focus:ring-accent-cyan"
-                    />
-                    <span className="text-sm text-text-secondary">Use nearby regions</span>
-                  </label>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Form Error Display */}
+              {formError && (
+                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm" role="alert">
+                  {formError}
                 </div>
+              )}
 
-                {form.useNearby ? (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-text-secondary">
-                      Nearby Regions
-                    </label>
-                    <div className="p-3 rounded-lg bg-space-dark/50 border border-accent-cyan/20">
-                      {nearbyRegionsList.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {nearbyRegionsList.map((region) => (
-                            <span
-                              key={region}
-                              className="px-2 py-1 text-xs rounded-full bg-accent-purple/20 text-accent-purple"
-                            >
-                              {region}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-text-secondary/50 text-sm">
-                          Select an origin region to see nearby regions
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ) : (
+              {/* Region Selection */}
+              <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="space-y-4">
                   <RegionAutocomplete
-                    label="Destination Region"
-                    value={form.toRegion}
-                    onChange={(v) => updateForm('toRegion', v)}
-                    placeholder="Select destination region..."
-                    excludeRegions={[form.fromRegion]}
+                    label="Origin Region"
+                    value={form.fromRegion}
+                    onChange={(v) => updateForm('fromRegion', v)}
+                    placeholder="The Forge, Domain, Sinq Laison..."
                     required
                   />
-                )}
-
-                <FormSelect
-                  label="Trade Preference"
-                  value={form.toPreference}
-                  onChange={(v) => updateForm('toPreference', v)}
-                  options={prefOptions}
-                />
-              </div>
-            </div>
-
-            {/* Other Parameters */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              <FormInput
-                label="Minimum Profit"
-                type="number"
-                value={form.minProfit}
-                onChange={(v) => updateForm('minProfit', v)}
-                suffix="ISK"
-                min={0}
-                step={100000}
-              />
-              <FormInput
-                label="Max Cargo Weight"
-                type="number"
-                value={form.maxWeight}
-                onChange={(v) => updateForm('maxWeight', v)}
-                suffix="m³"
-                min={0}
-                step={1000}
-              />
-              <FormInput
-                label="Minimum ROI"
-                type="number"
-                value={form.minROI}
-                onChange={(v) => updateForm('minROI', v)}
-                suffix="%"
-                min={0}
-                max={1000}
-                step={1}
-              />
-              <FormInput
-                label="Max Budget"
-                type="number"
-                value={form.maxBudget}
-                onChange={(v) => updateForm('maxBudget', v)}
-                suffix="ISK"
-                min={0}
-                step={10000000}
-              />
-            </div>
-
-            <div className="grid sm:grid-cols-1 gap-4 md:gap-6">
-              <FormSelect
-                label="Sales Tax Level"
-                value={form.tax}
-                onChange={(v) => updateForm('tax', parseFloat(v))}
-                options={taxOptions}
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading || resourcesLoading}
-              variant="primary"
-              size="lg"
-              className="w-full text-base md:text-lg min-h-[44px]"
-              loading={loading}
-            >
-              {loading ? 'Searching...' : 'Find Trades'}
-            </Button>
-          </form>
-        </GlassmorphicCard>
-
-        {/* EVE Auth Info Panel */}
-        {isAuthenticated && (
-          <GlassmorphicCard className="mb-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-6 text-sm">
-                <div>
-                  <div className="text-sm text-text-secondary mb-1">Character</div>
-                  <div className="text-text-primary font-medium">{character?.name}</div>
+                  <RegionPresets
+                    selectedRegion={form.fromRegion}
+                    onRegionSelect={(region) => updateForm('fromRegion', region)}
+                    compact
+                  />
+                  <FormSelect
+                    label="Trade Preference"
+                    value={form.fromPreference}
+                    onChange={(v) => updateForm('fromPreference', v)}
+                    options={prefOptions}
+                  />
                 </div>
-                {walletBalance !== null && (
-                  <div>
-                    <div className="text-sm text-text-secondary mb-1">Available ISK</div>
-                    <div className="text-accent-cyan font-medium">{formatISK(walletBalance)}</div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 mb-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.useNearby}
+                        onChange={(e) => updateForm('useNearby', e.target.checked)}
+                        className="w-4 h-4 rounded border-accent-cyan/30 bg-space-dark text-accent-cyan focus:ring-accent-cyan"
+                      />
+                      <span className="text-sm text-text-secondary">Use nearby regions</span>
+                    </label>
                   </div>
-                )}
-                {form.fromRegion && (
-                  <div>
-                    <div className="text-sm text-text-secondary mb-1">Assets in {form.fromRegion}</div>
-                    <div className="text-accent-gold font-medium">{formatNumber(assetsAtOrigin, 0)} items</div>
-                  </div>
-                )}
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showOnlyWithAssets}
-                  onChange={(e) => setShowOnlyWithAssets(e.target.checked)}
-                  className="w-4 h-4 rounded border-accent-cyan/30 bg-space-dark text-accent-cyan focus:ring-accent-cyan"
-                />
-                <span className="text-sm text-text-secondary">Show only routes with my assets</span>
-              </label>
-            </div>
-            {assetsLoading && (
-              <div className="mt-3 flex items-center gap-2 text-text-secondary text-sm">
-                <div className="w-4 h-4 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
-                <span>Loading assets...</span>
-              </div>
-            )}
-          </GlassmorphicCard>
-        )}
 
-        {/* Error */}
-        {error && (
-          <ActionableError
-            error={error}
-            onRetry={() => handleSubmit({ preventDefault: () => { } })}
-            className="mb-8"
-          />
-        )}
-
-        {/* Loading */}
-        {loading && (
-          <GlassmorphicCard>
-            <SkeletonTable rows={10} columns={8} />
-          </GlassmorphicCard>
-        )}
-
-        {/* Results */}
-        {data && !loading && (
-          <>
-            {filteredData.length === 0 ? (
-              <GlassmorphicCard className="text-center py-12">
-                <p className="text-text-secondary text-lg">
-                  {showOnlyWithAssets && isAuthenticated
-                    ? 'No trades found where you own items in the origin region.'
-                    : 'No trades found matching your criteria.'}
-                </p>
-                <p className="text-text-secondary/70 mt-2">
-                  {showOnlyWithAssets && isAuthenticated
-                    ? 'Try disabling the asset filter or adjusting your parameters.'
-                    : 'Try adjusting your parameters or selecting different regions.'}
-                </p>
-              </GlassmorphicCard>
-            ) : (
-              <>
-                {/* Action Bar */}
-                <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 md:gap-4 flex-wrap">
-                    <div className="text-text-secondary text-sm">
-                      Found <span className="text-accent-cyan font-medium">{filteredData.length}</span> profitable trades
-                      {showOnlyWithAssets && isAuthenticated && data.length !== filteredData.length && (
-                        <span className="ml-2 text-text-secondary/70">
-                          ({data.length} total)
-                        </span>
-                      )}
+                  {form.useNearby ? (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-text-secondary">
+                        Nearby Regions
+                      </label>
+                      <div className="p-3 rounded-lg bg-space-dark/50 border border-accent-cyan/20">
+                        {nearbyRegionsList.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {nearbyRegionsList.map((region) => (
+                              <span
+                                key={region}
+                                className="px-2 py-1 text-xs rounded-full bg-accent-purple/20 text-accent-purple"
+                              >
+                                {region}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-text-secondary/50 text-sm">
+                            Select an origin region to see nearby regions
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <DataFreshnessIndicator
-                      lastUpdated={lastUpdated}
-                      onRefresh={() => handleSubmit({ preventDefault: () => { } })}
-                      isLoading={loading}
-                      compact
+                  ) : (
+                    <RegionAutocomplete
+                      label="Destination Region"
+                      value={form.toRegion}
+                      onChange={(v) => updateForm('toRegion', v)}
+                      placeholder="Select destination region..."
+                      excludeRegions={[form.fromRegion]}
+                      required
                     />
-                  </div>
-                  <button
-                    onClick={() => setShowSaveModal(true)}
-                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                    <span className="hidden sm:inline">Save Route</span>
-                    <span className="sm:hidden">Save</span>
-                  </button>
+                  )}
+
+                  <FormSelect
+                    label="Trade Preference"
+                    value={form.toPreference}
+                    onChange={(v) => updateForm('toPreference', v)}
+                    options={prefOptions}
+                  />
                 </div>
+              </div>
 
-                {/* Profit Distribution */}
-                <ProfitDistribution data={filteredData} profitKey="Profit" className="mb-8" />
-
-                {/* Full Results Table */}
-                <TradingTable
-                  tableId="region-hauling-table"
-                  data={filteredData}
-                  columns={tableColumns}
-                  onRowClick={handleRowClick}
-                  defaultSort={{ column: 'Profit', direction: 'desc' }}
-                  emptyMessage="No trades found matching your criteria"
+              {/* Other Parameters */}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <FormInput
+                  label="Minimum Profit"
+                  type="number"
+                  value={form.minProfit}
+                  onChange={(v) => updateForm('minProfit', v)}
+                  suffix="ISK"
+                  min={0}
+                  step={100000}
                 />
-              </>
-            )}
-          </>
-        )}
+                <FormInput
+                  label="Max Cargo Weight"
+                  type="number"
+                  value={form.maxWeight}
+                  onChange={(v) => updateForm('maxWeight', v)}
+                  suffix="m³"
+                  min={0}
+                  step={1000}
+                />
+                <FormInput
+                  label="Minimum ROI"
+                  type="number"
+                  value={form.minROI}
+                  onChange={(v) => updateForm('minROI', v)}
+                  suffix="%"
+                  min={0}
+                  max={1000}
+                  step={1}
+                />
+                <FormInput
+                  label="Max Budget"
+                  type="number"
+                  value={form.maxBudget}
+                  onChange={(v) => updateForm('maxBudget', v)}
+                  suffix="ISK"
+                  min={0}
+                  step={10000000}
+                />
+              </div>
+
+              <div className="grid sm:grid-cols-1 gap-4 md:gap-6">
+                <FormSelect
+                  label="Sales Tax Level"
+                  value={form.tax}
+                  onChange={(v) => updateForm('tax', parseFloat(v))}
+                  options={taxOptions}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading || resourcesLoading}
+                variant="primary"
+                size="lg"
+                className="w-full text-base md:text-lg min-h-[44px]"
+                loading={loading}
+              >
+                {loading ? 'Searching...' : 'Find Trades'}
+              </Button>
+            </form>
+          </GlassmorphicCard>
+
+          {/* EVE Auth Info Panel */}
+          {isAuthenticated && (
+            <GlassmorphicCard className="mb-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-6 text-sm">
+                  <div>
+                    <div className="text-sm text-text-secondary mb-1">Character</div>
+                    <div className="text-text-primary font-medium">{character?.name}</div>
+                  </div>
+                  {walletBalance !== null && (
+                    <div>
+                      <div className="text-sm text-text-secondary mb-1">Available ISK</div>
+                      <div className="text-accent-cyan font-medium">{formatISK(walletBalance)}</div>
+                    </div>
+                  )}
+                  {form.fromRegion && (
+                    <div>
+                      <div className="text-sm text-text-secondary mb-1">Assets in {form.fromRegion}</div>
+                      <div className="text-accent-gold font-medium">{formatNumber(assetsAtOrigin, 0)} items</div>
+                    </div>
+                  )}
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyWithAssets}
+                    onChange={(e) => setShowOnlyWithAssets(e.target.checked)}
+                    className="w-4 h-4 rounded border-accent-cyan/30 bg-space-dark text-accent-cyan focus:ring-accent-cyan"
+                  />
+                  <span className="text-sm text-text-secondary">Show only routes with my assets</span>
+                </label>
+              </div>
+              {assetsLoading && (
+                <div className="mt-3 flex items-center gap-2 text-text-secondary text-sm">
+                  <div className="w-4 h-4 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+                  <span>Loading assets...</span>
+                </div>
+              )}
+            </GlassmorphicCard>
+          )}
+
+          {/* Error */}
+          {(error || assetsError) && (
+            <ActionableError
+              error={error || assetsError}
+              onRetry={() => {
+                if (error) handleSubmit({ preventDefault: () => { } });
+                else if (assetsError) loadAssetsAndWallet();
+              }}
+              className="mb-8"
+            />
+          )}
+
+          {/* Loading */}
+          {loading && (
+            <GlassmorphicCard>
+              <SkeletonTable rows={10} columns={8} />
+            </GlassmorphicCard>
+          )}
+
+          {/* Results */}
+          {data && !loading && (
+            <>
+              {filteredData.length === 0 ? (
+                <GlassmorphicCard className="text-center py-12">
+                  <p className="text-text-secondary text-lg">
+                    {showOnlyWithAssets && isAuthenticated
+                      ? 'No trades found where you own items in the origin region.'
+                      : 'No trades found matching your criteria.'}
+                  </p>
+                  <p className="text-text-secondary/70 mt-2">
+                    {showOnlyWithAssets && isAuthenticated
+                      ? 'Try disabling the asset filter or adjusting your parameters.'
+                      : 'Try adjusting your parameters or selecting different regions.'}
+                  </p>
+                </GlassmorphicCard>
+              ) : (
+                <>
+                  {/* Action Bar */}
+                  <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 md:gap-4 flex-wrap">
+                      <div className="text-text-secondary text-sm">
+                        Found <span className="text-accent-cyan font-medium">{filteredData.length}</span> profitable trades
+                        {showOnlyWithAssets && isAuthenticated && data.length !== filteredData.length && (
+                          <span className="ml-2 text-text-secondary/70">
+                            ({data.length} total)
+                          </span>
+                        )}
+                      </div>
+                      <DataFreshnessIndicator
+                        lastUpdated={lastUpdated}
+                        onRefresh={() => handleSubmit({ preventDefault: () => { } })}
+                        isLoading={loading}
+                        compact
+                      />
+                    </div>
+                    <button
+                      onClick={() => setShowSaveModal(true)}
+                      className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                      <span className="hidden sm:inline">Save Route</span>
+                      <span className="sm:hidden">Save</span>
+                    </button>
+                  </div>
+
+                  {/* Profit Distribution */}
+                  <ProfitDistribution data={filteredData} profitKey="Profit" className="mb-8" />
+
+                  {/* Full Results Table */}
+                  <TradingTable
+                    tableId="region-hauling-table"
+                    data={filteredData}
+                    columns={tableColumns}
+                    onRowClick={handleRowClick}
+                    defaultSort={{ column: 'Profit', direction: 'desc' }}
+                    emptyMessage="No trades found matching your criteria"
+                  />
+                </>
+              )}
+            </>
+          )}
         </div>
       </PullToRefresh>
 

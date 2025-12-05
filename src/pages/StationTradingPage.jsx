@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { SearchX } from 'lucide-react'; // Keeping this if used in EmptyState, but lint said unused? Wait, line 1762 uses SearchX.
 // Wait, I saw SearchX used at line 1762!
 // "icon={<SearchX className="w-10 h-10" />}"
@@ -132,7 +132,7 @@ const ITEM_CATEGORIES = {
  */
 export function StationTradingPage() {
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation(); // Unused
   const { universeList, loading: resourcesLoading, loadInvTypes, invTypes } = useResources();
   const { data, loading, error, lastUpdated, execute } = useApiCall(fetchStationTrading);
   const { saveRoute } = usePortfolio();
@@ -170,7 +170,6 @@ export function StationTradingPage() {
   const [usingPersonalTaxes, setUsingPersonalTaxes] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const toast = useToast();
-  const [selectedRowIndex] = useState(-1);
 
   const [highQualityOnly, setHighQualityOnly] = useState(false);
 
@@ -253,6 +252,13 @@ export function StationTradingPage() {
       setUsingPersonalTaxes(false);
     }
   }, [isAuthenticated, character?.id, getAccessToken]);
+
+  // Check price alerts when data changes
+  useEffect(() => {
+    if (data && Array.isArray(data) && data.length > 0) {
+      checkAlerts(data);
+    }
+  }, [data, checkAlerts]);
 
   // Custom validation for station-specific fields
   const customValidation = useCallback((formData) => {
@@ -605,7 +611,8 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     if (advancedSorts.length === 0) return dataToSort;
 
     return applySorts(dataToSort, advancedSorts, tableColumns);
-  }, [quickFilteredData, filteredData, advancedSorts, tableColumns]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quickFilteredData, filteredData, advancedSorts]);
 
 
 
@@ -1799,7 +1806,6 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
                   emptyMessage="No trades found matching your criteria"
                   showQualityIndicators={true}
                   searchInputRef={searchInputRef}
-                  selectedRowIndex={selectedRowIndex}
                   onClearFilters={() => {
                     setSmartFilters({
                       hideScams: false,

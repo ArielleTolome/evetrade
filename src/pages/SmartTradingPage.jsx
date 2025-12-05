@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
@@ -6,8 +6,8 @@ import { SmartPriceCalculator } from '../components/common/SmartPriceCalculator'
 import { TradeRecommendations } from '../components/common/TradeRecommendations';
 import { QuickReprice, BatchReprice } from '../components/common/QuickReprice';
 import { useEveAuth } from '../hooks/useEveAuth';
-import { formatISK, formatCompact, formatRelativeTime } from '../utils/formatters';
-import { getCharacterOrders, getTypeNames, getMarketOrders } from '../api/esi';
+import { formatCompact } from '../utils/formatters';
+import { getCharacterOrders, getTypeNames } from '../api/esi';
 
 /**
  * MarketVelocityIndicator Component
@@ -138,17 +138,17 @@ export function SmartTradingPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showCalculator, setShowCalculator] = useState(false);
   const [undercutOrders, setUndercutOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false); // Unused for now
   const [notificationMessage, setNotificationMessage] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated && character?.id) {
       checkForUndercuts();
     }
-  }, [isAuthenticated, character?.id]);
+  }, [isAuthenticated, character?.id, checkForUndercuts]);
 
-  const checkForUndercuts = async () => {
-    setLoading(true);
+  const checkForUndercuts = useCallback(async () => {
+    // setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (!accessToken) return;
@@ -185,9 +185,9 @@ export function SmartTradingPage() {
     } catch (error) {
       console.error('Failed to check for undercuts:', error);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
-  };
+  }, [character?.id, getAccessToken]);
 
   const handleSelectItem = (item) => {
     setSelectedItem(item);
@@ -201,14 +201,6 @@ export function SmartTradingPage() {
       checkForUndercuts();
     }
     // Other actions could navigate to different pages
-  };
-
-  const handleReprice = async (orderId, newPrice) => {
-    // Copy to clipboard
-    await navigator.clipboard.writeText(newPrice.toFixed(2));
-    // Show notification
-    setNotificationMessage(`Price ${formatISK(newPrice, false)} copied to clipboard!`);
-    setTimeout(() => setNotificationMessage(null), 3000);
   };
 
   const handleBatchReprice = async (orderIds) => {

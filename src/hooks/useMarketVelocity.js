@@ -301,62 +301,8 @@ export function useMarketVelocity(regionId, options = {}) {
     matchesCompetitionFilter,
   ]);
 
-  /**
-   * Auto-fetch on mount and when dependencies change
-   */
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      if (!regionId || !typeIds || typeIds.length === 0) {
-        setVelocityData([]);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const results = await Promise.all(
-          typeIds.map(typeId => analyzeItemVelocity(typeId))
-        );
-
-        const validResults = results.filter(result => !result.error);
-
-        if (isMounted) {
-          setVelocityData(validResults);
-          setLastUpdated(new Date());
-        }
-      } catch (err) {
-        console.error('Failed to fetch velocity data:', err);
-
-        Sentry.withScope((scope) => {
-          scope.setTag('errorType', 'useMarketVelocity');
-          scope.setExtra('regionId', regionId);
-          scope.setExtra('typeIds', typeIds);
-          Sentry.captureException(err);
-        });
-
-        if (isMounted) {
-          setError({
-            message: err.message || 'Failed to fetch market velocity data',
-            original: err,
-          });
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [regionId, JSON.stringify(typeIds)]);
+  // Note: Auto-fetch removed to prevent infinite loops from unstable dependencies.
+  // Data is fetched only when user clicks the "Analyze" button via refresh().
 
   /**
    * Manual refresh function

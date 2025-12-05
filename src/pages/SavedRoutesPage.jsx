@@ -4,7 +4,7 @@ import { PageLayout } from '../components/layout/PageLayout';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { usePortfolio } from '../hooks/usePortfolio';
-import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
+import { formatISK, formatNumber } from '../utils/formatters';
 import { useToast } from '../components/common/ToastProvider';
 
 /**
@@ -31,7 +31,7 @@ function RouteCard({ route, onDelete, onNavigate }) {
   return (
     <GlassmorphicCard className="relative group">
       {/* Route Type Badge */}
-      <div className={`absolute top-4 right-4 px-2 py-1 rounded-full text-xs font-medium ${typeInfo.bg} ${typeInfo.color}`}>
+      <div className={`absolute top - 4 right - 4 px - 2 py - 1 rounded - full text - xs font - medium ${typeInfo.bg} ${typeInfo.color} `}>
         {typeInfo.label}
       </div>
 
@@ -224,7 +224,7 @@ export function SavedRoutesPage() {
         ? '/station-hauling'
         : '/region-hauling';
 
-    navigate(`${path}${queryString ? `?${queryString}` : ''}`);
+    navigate(`${path}${queryString ? `?${queryString}` : ''} `);
   }, [navigate]);
 
   // Handle export
@@ -234,7 +234,7 @@ export function SavedRoutesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `evetrade-portfolio-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `evetrade - portfolio - ${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }, [exportData]);
@@ -262,10 +262,10 @@ export function SavedRoutesPage() {
 
   return (
     <PageLayout
-        title="Saved Routes"
-        subtitle="Your favorite trade routes for quick access"
-      >
-        <div className="max-w-7xl mx-auto px-4 py-8">
+      title="Saved Routes"
+      subtitle="Your favorite trade routes for quick access"
+    >
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header Actions */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           {/* Filters */}
@@ -280,10 +280,10 @@ export function SavedRoutesPage() {
                 key={f.value}
                 onClick={() => setFilter(f.value)}
                 variant={filter === f.value ? 'secondary' : 'ghost'}
-                className={`px-4 py-2 text-sm font-medium ${filter === f.value
-                  ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/50'
-                  : 'bg-white/5 text-text-secondary hover:bg-white/10 border-transparent'
-                  }`}
+                className={`px - 4 py - 2 text - sm font - medium ${filter === f.value
+                    ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/50'
+                    : 'bg-white/5 text-text-secondary hover:bg-white/10 border-transparent'
+                  } `}
               >
                 {f.label}
               </Button>
