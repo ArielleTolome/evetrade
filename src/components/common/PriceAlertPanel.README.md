@@ -89,20 +89,20 @@ import { AlertNotification } from '../components/common/AlertNotification';
 />
 ```
 
-### 4. `Toast` & `ToastContainer` Components
+### 4. `ToastProvider` & `useToast`
 
-Toast notification system (enhanced existing component).
+Toast notifications are wired through the global provider. Just grab the hook and call the helpers—no need to render a container manually.
 
 ```jsx
-import { ToastContainer, useToast } from '../components/common/Toast';
+import { useToast } from '../components/common/ToastProvider';
 
-const { toasts, addToast, removeToast } = useToast();
+const toast = useToast();
 
 // Add a toast
-addToast('Alert triggered!', 'alert', 5000);
+toast.warning('Alert triggered!', { duration: 5000 });
 
-// Render toasts
-<ToastContainer toasts={toasts} onRemove={removeToast} />
+// Dismiss all toasts if needed
+toast.dismissAll();
 ```
 
 ## Alert Types
@@ -131,27 +131,26 @@ addToast('Alert triggered!', 'alert', 5000);
 import { useState, useEffect } from 'react';
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { PriceAlertPanel } from '../components/common/PriceAlertPanel';
-import { ToastContainer, useToast } from '../components/common/Toast';
+import { useToast } from '../components/common/ToastProvider';
 
 function TradingPage() {
   const [trades, setTrades] = useState([]);
-  const { alerts, createAlert, checkAlerts, dismissTriggered } = usePriceAlerts();
-  const { toasts, addToast, removeToast } = useToast();
+  const { alerts, createAlert, checkAlerts } = usePriceAlerts();
+  const { warning } = useToast();
 
   // Check alerts when trades update
   useEffect(() => {
     if (trades.length > 0) {
       const triggered = checkAlerts(trades);
       triggered.forEach(alert => {
-        addToast(`Alert: ${alert.itemName}`, 'alert');
+        warning(`Alert: ${alert.itemName}`, { duration: 6000 });
       });
     }
-  }, [trades, checkAlerts, addToast]);
+  }, [trades, checkAlerts, warning]);
 
   return (
     <div>
       <PriceAlertPanel alerts={alerts} onCreateAlert={createAlert} />
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }
@@ -221,7 +220,7 @@ The table will automatically add an "Alert" column with bell icons. When clicked
 
 ```jsx
 const { checkAlerts } = usePriceAlerts();
-const { addToast } = useToast();
+const { info } = useToast();
 
 useEffect(() => {
   if (trades.length > 0) {
@@ -229,10 +228,10 @@ useEffect(() => {
 
     triggered.forEach(alert => {
       const message = `${alert.itemName}: ${alert.type} is ${alert.condition} ${formatThreshold(alert.threshold, alert.type)}`;
-      addToast(message, 'alert', 8000);
+      info(message, { duration: 8000 });
     });
   }
-}, [trades, checkAlerts, addToast]);
+}, [trades, checkAlerts, info]);
 ```
 
 ### Managing Notification Settings
@@ -435,7 +434,8 @@ const importAlerts = async (file) => {
 - `/src/hooks/usePriceAlerts.jsx` - Main hook
 - `/src/components/common/PriceAlertPanel.jsx` - Management UI
 - `/src/components/common/AlertNotification.jsx` - Notification component
-- `/src/components/common/Toast.jsx` - Toast system (enhanced)
+- `/src/components/common/Toast.jsx` - Individual toast UI
+- `/src/components/common/ToastProvider.jsx` - Toast context and container
 - `/src/components/common/PriceAlertPanel.example.jsx` - Usage examples
 
 ## Recent Enhancements (Completed)

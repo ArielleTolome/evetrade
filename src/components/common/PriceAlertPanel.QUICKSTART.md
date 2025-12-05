@@ -7,7 +7,7 @@ Get price alerts up and running in your EVETrade page in 5 minutes.
 ```jsx
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { PriceAlertPanel } from '../components/common/PriceAlertPanel';
-import { ToastContainer, useToast } from '../components/common/Toast';
+import { useToast } from '../components/common/ToastProvider';
 ```
 
 ## Step 2: Initialize in Your Component
@@ -27,7 +27,7 @@ function YourTradingPage() {
   } = usePriceAlerts();
   
   // Initialize toasts
-  const { toasts, addToast, removeToast } = useToast();
+  const { warning } = useToast();
 }
 ```
 
@@ -40,10 +40,10 @@ useEffect(() => {
     
     // Show toast for each triggered alert
     triggered.forEach(alert => {
-      addToast(`Alert: ${alert.itemName}`, 'alert', 5000);
+      warning(`Alert: ${alert.itemName}`, { duration: 5000 });
     });
   }
-}, [trades, checkAlerts, addToast]);
+}, [trades, checkAlerts, warning]);
 ```
 
 ## Step 4: Add UI Components
@@ -61,9 +61,6 @@ return (
       onResetAlert={resetAlert}
       onClearAll={clearAllAlerts}
     />
-    
-    {/* Toast Notifications */}
-    <ToastContainer toasts={toasts} onRemove={removeToast} />
   </div>
 );
 ```
@@ -74,7 +71,7 @@ return (
 import { useState, useEffect } from 'react';
 import { usePriceAlerts } from '../hooks/usePriceAlerts';
 import { PriceAlertPanel } from '../components/common/PriceAlertPanel';
-import { ToastContainer, useToast } from '../components/common/Toast';
+import { useToast } from '../components/common/ToastProvider';
 
 function StationTradingPageWithAlerts() {
   const [trades, setTrades] = useState([]);
@@ -90,17 +87,17 @@ function StationTradingPageWithAlerts() {
     clearAllAlerts,
   } = usePriceAlerts();
   
-  const { toasts, addToast, removeToast } = useToast();
+  const { warning } = useToast();
   
   // Check alerts when data updates
   useEffect(() => {
     if (trades.length > 0) {
       const triggered = checkAlerts(trades);
       triggered.forEach(alert => {
-        addToast(`Alert: ${alert.itemName}`, 'alert', 5000);
+        warning(`Alert: ${alert.itemName}`, { duration: 5000 });
       });
     }
-  }, [trades, checkAlerts, addToast]);
+  }, [trades, checkAlerts, warning]);
   
   return (
     <div className="min-h-screen bg-space-black p-6">
@@ -133,9 +130,6 @@ function StationTradingPageWithAlerts() {
       
       {/* Your existing trading form and table */}
       {/* ... */}
-      
-      {/* Toast Notifications */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

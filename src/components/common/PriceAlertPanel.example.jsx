@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { usePriceAlerts } from '../../hooks/usePriceAlerts';
 import { PriceAlertPanel } from '../../components/common/PriceAlertPanel';
 import { AlertNotification } from '../../components/common/AlertNotification';
-import { ToastContainer, useToast } from '../../components/common/Toast';
+import { useToast } from '../../components/common/ToastProvider';
 
 /**
  * Example: Integrating Price Alerts with Trading Page
@@ -28,7 +28,7 @@ export function ExampleTradingPageWithAlerts() {
   } = usePriceAlerts();
 
   // Initialize toast notifications
-  const { toasts, addToast, removeToast } = useToast();
+  const { warning } = useToast();
 
   // Check alerts whenever trades data changes
   useEffect(() => {
@@ -36,13 +36,13 @@ export function ExampleTradingPageWithAlerts() {
       const triggered = checkAlerts(trades);
       
       // Show toast notifications for triggered alerts
-      triggered.forEach(alert => {
+      triggered.forEach((alert) => {
         const itemName = alert.itemName || 'Unknown Item';
         const message = `Alert: ${itemName} - ${getAlertMessage(alert)}`;
-        addToast(message, 'alert', 8000);
+        warning(message, { duration: 8000 });
       });
     }
-  }, [trades, checkAlerts, addToast]);
+  }, [trades, checkAlerts, warning]);
 
   // Helper to format alert message
   const getAlertMessage = (alert) => {
@@ -145,8 +145,6 @@ export function ExampleTradingPageWithAlerts() {
         </div>
       )}
 
-      {/* Toast Notifications (top-right) */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }
