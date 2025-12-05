@@ -32,7 +32,7 @@ export function useDiscordWebhook() {
         cooldownMinutes: 5,
         embedColor: 0x00ff00, // Green
       };
-    } catch (e) {
+    } catch {
       return {
         enabled: true,
         sendPriceAlerts: true,

@@ -365,7 +365,7 @@ export function FuelCostCalculator({ className = '' }) {
                 </button>
               </div>
               <div className="space-y-2">
-                {jumps.map((jump, index) => (
+                {jumps.map((jump, _index) => (
                   <div
                     key={jump.id}
                     className="p-3 bg-space-dark/30 border border-accent-cyan/10 rounded-lg"

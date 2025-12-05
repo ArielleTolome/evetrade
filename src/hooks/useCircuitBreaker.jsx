@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   registry,
-  getESICircuit,
   ESI_CIRCUITS,
   CircuitBreakerError,
 } from '../utils/circuitBreaker';

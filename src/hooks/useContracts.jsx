@@ -112,7 +112,7 @@ export function useContracts() {
       }));
 
       return items;
-    } catch (err) {
+    } catch {
       return [];
     }
   }, [cache]);
@@ -228,7 +228,7 @@ export function useContracts() {
           profitPercent,
           itemCount: items.length,
         });
-      } catch (err) {
+      } catch {
         // Skip contracts that fail to fetch
       }
 

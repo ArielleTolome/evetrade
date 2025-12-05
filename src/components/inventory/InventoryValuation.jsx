@@ -474,7 +474,7 @@ export function InventoryValuation({
             Value History
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-            {valuationHistory.slice(-4).reverse().map((snapshot, index) => (
+            {valuationHistory.slice(-4).reverse().map((snapshot, _index) => (
               <div key={snapshot.timestamp}>
                 <div className="text-text-secondary text-xs">
                   {new Date(snapshot.timestamp).toLocaleDateString()}

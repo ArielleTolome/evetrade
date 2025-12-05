@@ -228,7 +228,7 @@ export function BulkOrderCalculator({
 
       {/* Items */}
       <div className="space-y-3 mb-6">
-        {calculations.map((item, index) => {
+        {calculations.map((item, _index) => {
           const isExpanded = expandedItems.has(item.id);
           const isProfitable = item.calc.netProfit > 0;
 

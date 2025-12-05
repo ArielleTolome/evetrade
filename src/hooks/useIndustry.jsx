@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 
 const ESI_BASE_URL = 'https://esi.evetech.net/latest';
 
