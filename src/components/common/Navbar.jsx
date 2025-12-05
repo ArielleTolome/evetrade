@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../store/ThemeContext';
 import { useEveAuth } from '../../hooks/useEveAuth';
+import GlobalSearch from './GlobalSearch';
 
 // Navigation structure with dropdown categories
 const navigationCategories = [
@@ -285,117 +286,6 @@ function NavItem({ category }) {
   );
 
   return content;
-}
-
-/**
- * Search Bar Component
- */
-function SearchBar({ isOpen, onClose }) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const searchRef = useRef(null);
-  const inputRef = useRef(null);
-
-  // Focus input when opened
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
-
-  // Search through all navigation items
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
-
-    const searchQuery = query.toLowerCase();
-    const allItems = navigationCategories.flatMap(cat =>
-      cat.items ? cat.items.map(item => ({ ...item, category: cat.label })) : []
-    );
-
-    const filtered = allItems.filter(item =>
-      item.label.toLowerCase().includes(searchQuery) ||
-      item.description.toLowerCase().includes(searchQuery)
-    );
-
-    setResults(filtered.slice(0, 6));
-  }, [query]);
-
-  // Close on click outside
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      ref={searchRef}
-      className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-space-dark/95 backdrop-blur-xl border border-accent-cyan/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in-up"
-    >
-      <div className="p-3 border-b border-accent-cyan/10">
-        <div className="relative">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search navigation..."
-            className="w-full pl-10 pr-4 py-2 bg-space-mid/50 border border-accent-cyan/20 rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent-cyan/40 focus:ring-1 focus:ring-accent-cyan/20"
-          />
-        </div>
-      </div>
-
-      {results.length > 0 && (
-        <div className="p-2 max-h-96 overflow-y-auto">
-          {results.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => {
-                onClose();
-                setQuery('');
-              }}
-              className="block px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-accent-cyan/10 transition-all duration-200"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm">{item.label}</div>
-                  <div className="text-xs text-text-muted mt-0.5">{item.description}</div>
-                </div>
-                <div className="text-xs text-accent-cyan/60 shrink-0">{item.category}</div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {query.trim() && results.length === 0 && (
-        <div className="p-8 text-center text-text-muted text-sm">
-          No results found for "{query}"
-        </div>
-      )}
-    </div>
-  );
 }
 
 /**
@@ -829,6 +719,7 @@ function MobileMenuButton({ isOpen, onClick, buttonRef }) {
  */
 export function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -895,6 +786,10 @@ export function Navbar() {
     }, 0);
   };
 
+  const handleSearchSelect = (item) => {
+    navigate(item.url);
+  };
+
   return (
     <nav className="sticky top-0 z-[100] bg-space-dark/80 dark:bg-space-dark/80 bg-white/80 backdrop-blur-xl border-b border-white/5 dark:border-white/5 shadow-lg shadow-black/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -919,19 +814,7 @@ export function Navbar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Search Button */}
-            <div className="relative hidden md:block">
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="p-2 rounded-lg text-text-secondary hover:text-accent-cyan hover:bg-accent-cyan/10 transition-colors"
-                aria-label="Search"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-              <SearchBar isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-            </div>
+            <GlobalSearch onSelect={handleSearchSelect} />
 
             {/* Notifications */}
             <div className="hidden sm:block">
