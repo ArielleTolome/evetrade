@@ -9,6 +9,7 @@ import { MultiCharacterProvider } from './hooks/useMultiCharacter';
 import { ToastProvider } from './components/common/ToastProvider';
 import { router } from './router';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { AlertBannerProvider } from './contexts/AlertBannerContext';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 
@@ -54,18 +55,20 @@ function App() {
     >
       <AccessibilityProvider>
         <ThemeProvider>
-          <ToastProvider>
-            <EveAuthProvider>
-            <MultiCharacterProvider>
-              <ResourceProvider>
-                <RouterProvider router={router} />
-                <KeyboardShortcuts isOpen={isShortcutsModalOpen} onClose={toggleShortcutsModal} />
-              </ResourceProvider>
-            </MultiCharacterProvider>
-          </EveAuthProvider>
-        </ToastProvider>
-      </ThemeProvider>
-    </AccessibilityProvider>
+          <AlertBannerProvider>
+            <ToastProvider>
+              <EveAuthProvider>
+                <MultiCharacterProvider>
+                  <ResourceProvider>
+                    <RouterProvider router={router} />
+                    <KeyboardShortcuts isOpen={isShortcutsModalOpen} onClose={toggleShortcutsModal} />
+                  </ResourceProvider>
+                </MultiCharacterProvider>
+              </EveAuthProvider>
+            </ToastProvider>
+          </AlertBannerProvider>
+        </ThemeProvider>
+      </AccessibilityProvider>
     </Sentry.ErrorBoundary>
   );
 }
