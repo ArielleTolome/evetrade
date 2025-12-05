@@ -108,6 +108,16 @@ export default {
         'fade-in-down': 'fadeInDown 0.4s ease-out forwards',
         'slide-in-up': 'slideInUp 0.4s ease-out forwards',
         'badge-pulse': 'badgePulse 2s ease-out infinite',
+
+        // Page transitions
+        'page-fade-in': 'pageFadeIn 300ms ease-out forwards',
+        'page-fade-out': 'pageFadeOut 300ms ease-out forwards',
+        'page-slide-in-left': 'pageSlideInLeft 300ms ease-out forwards',
+        'page-slide-out-right': 'pageSlideOutRight 300ms ease-out forwards',
+        'page-slide-in-right': 'pageSlideInRight 300ms ease-out forwards',
+        'page-slide-out-left': 'pageSlideOutLeft 300ms ease-out forwards',
+        'page-scale-in': 'pageScaleIn 300ms ease-out forwards',
+        'page-scale-out': 'pageScaleOut 300ms ease-out forwards',
       },
       keyframes: {
         badgePulse: {
@@ -208,6 +218,39 @@ export default {
         scaleIn: {
           '0%': { opacity: '0', transform: 'scale(0.9)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        // Page transitions
+        pageFadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        pageFadeOut: {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        pageSlideInLeft: {
+          '0%': { transform: 'translateX(-20px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        pageSlideOutRight: {
+          '0%': { transform: 'translateX(0)', opacity: '1' },
+          '100%': { transform: 'translateX(20px)', opacity: '0' },
+        },
+        pageSlideInRight: {
+          '0%': { transform: 'translateX(20px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        pageSlideOutLeft: {
+          '0%': { transform: 'translateX(0)', opacity: '1' },
+          '100%': { transform: 'translateX(-20px)', opacity: '0' },
+        },
+        pageScaleIn: {
+          '0%': { opacity: '0', transform: 'scale(0.98)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        pageScaleOut: {
+          '0%': { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(0.98)' },
         },
       },
     },
