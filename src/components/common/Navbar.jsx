@@ -342,7 +342,7 @@ function SearchBar({ isOpen, onClose }) {
   return (
     <div
       ref={searchRef}
-      className="absolute top-full right-0 mt-2 w-96 bg-space-dark/95 backdrop-blur-xl border border-accent-cyan/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in-up"
+      className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-space-dark/95 backdrop-blur-xl border border-accent-cyan/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in-up"
     >
       <div className="p-3 border-b border-accent-cyan/10">
         <div className="relative">
@@ -509,7 +509,7 @@ function UserMenu() {
             </svg>
           </div>
         )}
-        <span className="hidden sm:block text-sm text-text-primary max-w-[100px] truncate">
+        <span className="text-sm text-text-primary max-w-[60px] sm:max-w-[100px] truncate">
           {character?.name || 'Character'}
         </span>
         <svg className={`w-4 h-4 text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -904,7 +904,7 @@ export function Navbar() {
             <div className="w-8 h-8 bg-gradient-to-br from-accent-cyan to-accent-purple rounded-lg flex items-center justify-center shadow-lg shadow-accent-cyan/20 group-hover:shadow-accent-cyan/40 transition-shadow">
               <span className="font-display font-bold text-space-black text-sm">ET</span>
             </div>
-            <span className="font-display text-xl font-bold tracking-wide hidden sm:inline">
+            <span className="font-display text-xl font-bold tracking-wide inline">
               <span className="text-accent-cyan group-hover:text-accent-cyan-dim transition-colors">EVE</span>
               <span className="text-text-primary dark:text-text-primary text-light-text">Trade</span>
             </span>

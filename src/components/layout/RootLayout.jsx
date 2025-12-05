@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { SectionErrorBoundary } from '../common/ErrorBoundary';
 import { Sidebar, MobileNav } from '../common/Sidebar';
 import { AnimatedBackground } from './AnimatedBackground';
 import Header from './Header';
@@ -26,10 +27,12 @@ export function RootLayout() {
       <AnimatedBackground />
 
       {/* Desktop Sidebar */}
-      <Sidebar
-        isCollapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+      <SectionErrorBoundary name="Sidebar">
+        <Sidebar
+          isCollapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+      </SectionErrorBoundary>
 
       {/* Main Content Area */}
       <div
@@ -45,12 +48,16 @@ export function RootLayout() {
             pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0
           `}
         >
-          <Outlet />
+          <SectionErrorBoundary name="MainContent">
+            <Outlet />
+          </SectionErrorBoundary>
         </main>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileNav />
+      <SectionErrorBoundary name="MobileNav">
+        <MobileNav />
+      </SectionErrorBoundary>
 
       {/* Keyboard Shortcuts Help Modal */}
       <KeyboardShortcutsHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />

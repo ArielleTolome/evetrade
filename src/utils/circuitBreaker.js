@@ -133,7 +133,7 @@ export class CircuitBreaker {
 
     // Handle rate limits immediately
     if (errorType === ErrorType.RATE_LIMIT) {
-      const retryAfter = error.response.headers['retry-after'];
+      const retryAfter = error.response?.headers?.['retry-after'];
       const backoff = retryAfter ? parseInt(retryAfter, 10) * 1000 : this.config.openStateTimeout;
       this.open(backoff);
       return;
@@ -249,6 +249,36 @@ export class CircuitBreaker {
   }
 
   /**
+   * Add a listener for state changes
+   */
+  addListener(listener) {
+    this.listeners.add(listener);
+  }
+
+  /**
+   * Remove a listener
+   */
+  removeListener(listener) {
+    this.listeners.delete(listener);
+  }
+
+  /**
+   * Reset the circuit to closed state
+   */
+  reset() {
+    this.state = CircuitState.CLOSED;
+    this.probes = [];
+    this.nextRetryTime = null;
+    this.halfOpenSuccesses = 0;
+    this.gradualRecoveryIndex = 0;
+    if (this.healthCheckTimer) {
+      clearInterval(this.healthCheckTimer);
+      this.healthCheckTimer = null;
+    }
+    this.recordStateChange('CLOSED');
+  }
+
+  /**
    * Get current status and metrics
    */
   getStatus() {
@@ -257,6 +287,7 @@ export class CircuitBreaker {
       state: this.state,
       stats: this.stats,
       failureRate: this.calculateFailureRate(),
+      nextRetryTime: this.nextRetryTime,
     };
   }
 }
@@ -277,11 +308,17 @@ export class CircuitBreakerError extends Error {
 export class CircuitBreakerRegistry {
   constructor() {
     this.circuits = new Map();
+    this.globalListeners = new Set();
   }
 
   getCircuit(name, options, healthCheckFn) {
     if (!this.circuits.has(name)) {
-      this.circuits.set(name, new CircuitBreaker(name, options, healthCheckFn));
+      const circuit = new CircuitBreaker(name, options, healthCheckFn);
+      // Forward circuit state changes to global listeners
+      circuit.addListener((state, circuitName) => {
+        this.notifyGlobalListeners(state, circuitName);
+      });
+      this.circuits.set(name, circuit);
     }
     return this.circuits.get(name);
   }
@@ -298,6 +335,41 @@ export class CircuitBreakerRegistry {
       lastTrip: s.stats.lastTrip,
       stateChanges: s.stats.stateChanges.length,
     }));
+  }
+
+  /**
+   * Check if any circuits are open
+   */
+  hasOpenCircuits() {
+    return Array.from(this.circuits.values()).some(c => c.state === CircuitState.OPEN);
+  }
+
+  /**
+   * Add a global listener for all circuit state changes
+   */
+  addGlobalListener(listener) {
+    this.globalListeners.add(listener);
+  }
+
+  /**
+   * Remove a global listener
+   */
+  removeGlobalListener(listener) {
+    this.globalListeners.delete(listener);
+  }
+
+  /**
+   * Notify all global listeners
+   */
+  notifyGlobalListeners(state, circuitName) {
+    this.globalListeners.forEach(listener => listener(state, circuitName));
+  }
+
+  /**
+   * Reset all circuits
+   */
+  resetAll() {
+    this.circuits.forEach(circuit => circuit.reset());
   }
 }
 
@@ -316,3 +388,13 @@ export const ESI_CIRCUITS = {
   CONTRACTS: 'esi:contracts',
   ROUTES: 'esi:routes',
 };
+
+/**
+ * Get or create a circuit breaker for ESI endpoints
+ * @param {string} circuitName - Name from ESI_CIRCUITS
+ * @param {Object} options - Circuit breaker options
+ * @returns {CircuitBreaker}
+ */
+export function getESICircuit(circuitName, options = {}) {
+  return registry.getCircuit(circuitName, options);
+}
