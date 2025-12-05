@@ -170,7 +170,7 @@ export function StationTradingPage() {
   const [usingPersonalTaxes, setUsingPersonalTaxes] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const toast = useToast();
-  const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
+  const [selectedRowIndex] = useState(-1);
 
   const [highQualityOnly, setHighQualityOnly] = useState(false);
 
