@@ -86,7 +86,7 @@ function generateRoute(fromData, toData, routeSafety) {
   const route = [];
 
   for (let i = 0; i < numSystems; i++) {
-    const progress = i / (numSystems - 1);
+    const _progress = i / (numSystems - 1);
     let security;
 
     if (routeSafety === 'highsec') {

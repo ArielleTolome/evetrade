@@ -114,7 +114,7 @@ export function BasicUndercutMonitor({ characterId, accessToken }) {
  */
 export function AdvancedOrderManager({ characterId, accessToken }) {
   const {
-    undercutOrders,
+    undercutOrders: _undercutOrders,
     loading,
     checkOrders,
     calculateOptimalPrice,
@@ -195,7 +195,7 @@ export function AdvancedOrderManager({ characterId, accessToken }) {
  */
 export function OrderPriorityList({ characterId, accessToken }) {
   const {
-    undercutOrders,
+    undercutOrders: _undercutOrders,
     undercutStats,
     checkOrders,
     getRecommendedPrice,

@@ -57,6 +57,13 @@ const MobileCardView = ({
     };
   }, [data, hasMore, onLoadMore]);
 
+  // Animation transitions - must be called before any early returns
+  const transitions = useTransition(data || [], {
+    from: { opacity: 0, transform: 'translate3d(0,-40px,0)' },
+    enter: { opacity: 1, transform: 'translate3d(0,0px,0)' },
+    leave: { opacity: 0, transform: 'translate3d(0,-40px,0)' },
+    keys: item => item.id,
+  });
 
   if (!data || data.length === 0) {
     return (
@@ -101,7 +108,7 @@ const MobileCardView = ({
   };
 
   const Card = ({ row }) => {
-    const [{ x, bg, scale }, api] = useSpring(() => ({
+    const [{ x, bg, scale: _scale }, api] = useSpring(() => ({
       x: 0,
       scale: 1,
       bg: 'linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%)',
@@ -160,14 +167,6 @@ const MobileCardView = ({
       </animated.div>
     );
   };
-
-  const transitions = useTransition(data, {
-    from: { opacity: 0, transform: 'translate3d(0,-40px,0)' },
-    enter: { opacity: 1, transform: 'translate3d(0,0px,0)' },
-    leave: { opacity: 0, transform: 'translate3d(0,-40px,0)' },
-    keys: item => item.id,
-  });
-
 
   return (
     <div ref={scrollContainerRef} className="p-4 space-y-4 overflow-y-auto" {...bind()}>

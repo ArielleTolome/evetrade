@@ -306,7 +306,7 @@ export function useScamDetection(options = {}) {
     const volume = extractValue(trade, 'Volume', ['volume', 'Vol']);
     const margin = extractValue(trade, 'Gross Margin', ['margin', 'grossMargin']);
     const buyPrice = extractValue(trade, 'Buy Price', ['buyPrice', 'buy']);
-    const sellPrice = extractValue(trade, 'Sell Price', ['sellPrice', 'sell']);
+    const _sellPrice = extractValue(trade, 'Sell Price', ['sellPrice', 'sell']);
     const netProfit = extractValue(trade, 'Net Profit', ['netProfit', 'profit']);
     const itemName = trade['Item'] || trade.item || trade.name || '';
 

@@ -32,6 +32,7 @@ export function PriceAlertModal({ isOpen, onClose, onSave, initialAlert = null }
   useEffect(() => {
     // Only reset when modal transitions from closed to open
     if (isOpen && !wasOpenRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional form reset on modal open
       setFormData(getFormDataFromAlert(initialAlert));
       setErrors({});
       setSelectedItem(null);

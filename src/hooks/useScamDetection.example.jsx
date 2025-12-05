@@ -179,10 +179,10 @@ export function ConservativeScamDetection({ trades }) {
  */
 export function EnhancedStationTradingPage() {
   const { calculateScamRisk, getScamStatistics } = useScamDetection();
-  const [data, setData] = React.useState([]);
+  const [data, _setData] = React.useState([]);
 
   // Add scam risk to table columns
-  const enhancedColumns = [
+  const _enhancedColumns = [
     // ... existing columns ...
     {
       key: 'scamRisk',

@@ -17,7 +17,7 @@ export function ContractFinder() {
     formatVolume,
   } = useContracts();
 
-  const { regionList } = useResources();
+  const { regionList: _regionList } = useResources();
 
   const [selectedRegion, setSelectedRegion] = useState('10000002'); // The Forge (Jita)
   const [contractType, setContractType] = useState('courier');

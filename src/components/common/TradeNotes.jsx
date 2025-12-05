@@ -22,6 +22,7 @@ export default function TradeNotes({ itemId, itemName }) {
   // Load existing note text when expanded
   useEffect(() => {
     if (isExpanded && note) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync local state with stored note on expand
       setNoteText(note.text || '');
     }
   }, [isExpanded, note]);

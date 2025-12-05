@@ -57,7 +57,7 @@ describe('StockAlertPanel', () => {
   });
 
   it('persists alerts to localStorage', async () => {
-    const { rerender } = render(<StockAlertPanel inventory={mockInventory} />);
+    const { rerender: _rerender } = render(<StockAlertPanel inventory={mockInventory} />);
 
     // Open form
     fireEvent.click(screen.getByText('Add Alert'));

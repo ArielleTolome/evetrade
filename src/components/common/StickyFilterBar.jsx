@@ -8,7 +8,6 @@ export function StickyFilterBar({
   showShadow = true,
   summary,
 }) {
-  const [isSticky, setIsSticky] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [height, setHeight] = useState(0);
   const ref = useRef(null);
@@ -27,6 +26,7 @@ export function StickyFilterBar({
   }, []);
 
   const [originalTop, setOriginalTop] = useState(0);
+  const [isSticky, setIsSticky] = useState(false);
 
   useEffect(() => {
     if (ref.current) {
@@ -35,11 +35,8 @@ export function StickyFilterBar({
   }, []);
 
   useEffect(() => {
-    if (scrollPosition.y > originalTop - offset) {
-      setIsSticky(true);
-    } else {
-      setIsSticky(false);
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sticky state derived from scroll position is standard pattern
+    setIsSticky(scrollPosition.y > originalTop - offset);
   }, [scrollPosition, offset, originalTop]);
 
 

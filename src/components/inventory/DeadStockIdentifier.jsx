@@ -21,8 +21,9 @@ export function DeadStockIdentifier({
   const deadStockAnalysis = useMemo(() => {
     if (!inventory.length) return [];
 
+    // eslint-disable-next-line react-hooks/purity -- Date.now() needed for age calculation
     const now = Date.now();
-    const deadStockThreshold = deadStockDays * 24 * 60 * 60 * 1000; // Convert days to milliseconds
+    const _deadStockThreshold = deadStockDays * 24 * 60 * 60 * 1000; // Convert days to milliseconds (for future use)
 
     const analysis = inventory.map(item => {
       // Find sales for this item

@@ -19,6 +19,7 @@ export function TradeHistoryPanel() {
   const filteredTrades = useMemo(() => {
     if (dateFilter === 'all') return tradeAnalysis;
 
+    // eslint-disable-next-line react-hooks/purity -- Date.now() is intentionally used for filtering by relative date
     const now = Date.now();
     const cutoff = {
       '24h': now - 24 * 60 * 60 * 1000,

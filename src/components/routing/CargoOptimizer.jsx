@@ -102,7 +102,7 @@ export function CargoOptimizer({ trades = [], className = '' }) {
   const [selectedShip, setSelectedShip] = useState('');
   const [showExcluded, setShowExcluded] = useState(false);
   const [comparisonMode, setComparisonMode] = useState(false);
-  const [comparisonCapacities, setComparisonCapacities] = useState([10000, 50000, 360000]);
+  const [comparisonCapacities, _setComparisonCapacities] = useState([10000, 50000, 360000]);
 
   // Handle ship preset selection
   const handleShipSelect = useCallback((shipName) => {

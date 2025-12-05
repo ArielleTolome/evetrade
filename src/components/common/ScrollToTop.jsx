@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useScroll } from '../../hooks/useScroll';
 import { ArrowUp } from 'lucide-react';
 
@@ -6,16 +6,10 @@ export function ScrollToTop({
   threshold = 400,
   smooth = true,
 }) {
-  const [isVisible, setIsVisible] = useState(false);
   const { scrollPosition } = useScroll();
 
-  useEffect(() => {
-    if (scrollPosition.y > threshold) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-    }
-  }, [scrollPosition, threshold]);
+  // Derive visibility directly from scroll position - no need for state
+  const isVisible = scrollPosition.y > threshold;
 
   const scrollToTop = () => {
     window.scrollTo({

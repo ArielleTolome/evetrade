@@ -71,6 +71,7 @@ export function Tooltip({
       offset(10),
       flip(),
       shift({ padding: 8 }),
+      // eslint-disable-next-line react-hooks/refs -- floating-ui requires ref object for arrow positioning
       arrow({ element: arrowRef }),
     ],
     whileElementsMounted: autoUpdate,

@@ -266,6 +266,7 @@ export function RouteSafetyBadge({ systemId, systemName, onClick }) {
 
   useEffect(() => {
     if (systemId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state for async data fetch is standard pattern
       setLoading(true);
       getSystemSafety(systemId, { hours: 24 })
         .then(setSafety)
