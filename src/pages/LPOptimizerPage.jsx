@@ -529,6 +529,7 @@ ROI: ${formatPercent(conversion.analysis.roi / 100, 1)}`;
 
                 {/* Full Results Table */}
                 <TradingTable
+                  tableId="lp-optimizer-table"
                   data={data.conversions}
                   columns={tableColumns}
                   onRowClick={handleRowClick}

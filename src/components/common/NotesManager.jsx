@@ -133,7 +133,7 @@ export default function NotesManager() {
             placeholder="Search by item ID or note text..."
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
               bg-white dark:bg-gray-900 text-gray-900 dark:text-white
-              focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              focus-visible:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
@@ -288,7 +288,7 @@ export default function NotesManager() {
                 rows={10}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
                   bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm
-                  focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  focus-visible:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {importError && (
                 <p className="text-red-600 dark:text-red-400 text-sm mt-2">{importError}</p>

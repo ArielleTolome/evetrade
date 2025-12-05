@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useTheme } from '../../store/ThemeContext';
+import { Link, useLocation } from 'react-router-dom';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useEveAuth } from '../../hooks/useEveAuth';
-import GlobalSearch from './GlobalSearch';
+import { AccessibilitySettings } from './AccessibilitySettings';
+import { useModal } from './Modal';
 
 // Navigation structure with dropdown categories
 const navigationCategories = [
@@ -245,14 +246,15 @@ function NavItem({ category }) {
         <Link
           to={category.path}
           className={`
-            flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+            relative group flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
             transition-all duration-200
             ${isActive
               ? 'bg-accent-cyan/10 text-accent-cyan shadow-[0_0_10px_rgba(0,240,255,0.1)]'
-              : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+              : 'text-text-secondary hover:text-text-primary'
             }
           `}
         >
+          <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-cyan scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
           {category.icon}
           <span>{category.label}</span>
         </Link>
@@ -286,6 +288,117 @@ function NavItem({ category }) {
   );
 
   return content;
+}
+
+/**
+ * Search Bar Component
+ */
+function SearchBar({ isOpen, onClose }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const searchRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Focus input when opened
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Search through all navigation items
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const searchQuery = query.toLowerCase();
+    const allItems = navigationCategories.flatMap(cat =>
+      cat.items ? cat.items.map(item => ({ ...item, category: cat.label })) : []
+    );
+
+    const filtered = allItems.filter(item =>
+      item.label.toLowerCase().includes(searchQuery) ||
+      item.description.toLowerCase().includes(searchQuery)
+    );
+
+    setResults(filtered.slice(0, 6));
+  }, [query]);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      ref={searchRef}
+      className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-space-dark/95 backdrop-blur-xl border border-accent-cyan/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in-up"
+    >
+      <div className="p-3 border-b border-accent-cyan/10">
+        <div className="relative">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search navigation..."
+            className="w-full pl-10 pr-4 py-2 bg-space-mid/50 border border-accent-cyan/20 rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent-cyan/40 focus:ring-1 focus:ring-accent-cyan/20"
+          />
+        </div>
+      </div>
+
+      {results.length > 0 && (
+        <div className="p-2 max-h-96 overflow-y-auto">
+          {results.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => {
+                onClose();
+                setQuery('');
+              }}
+              className="block px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-accent-cyan/10 transition-all duration-200"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm">{item.label}</div>
+                  <div className="text-xs text-text-muted mt-0.5">{item.description}</div>
+                </div>
+                <div className="text-xs text-accent-cyan/60 shrink-0">{item.category}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {query.trim() && results.length === 0 && (
+        <div className="p-8 text-center text-text-muted text-sm">
+          No results found for "{query}"
+        </div>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -337,7 +450,7 @@ function ThemeToggle() {
 /**
  * User Menu Component - Login/Logout and Character Switcher
  */
-function UserMenu() {
+function UserMenu({ onOpenAccessibility }) {
   const { isAuthenticated, character, login, logout, loading, error } = useEveAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -452,6 +565,17 @@ function UserMenu() {
               </svg>
               Portfolio & Wallet
             </Link>
+
+            <button
+              onClick={() => {
+                onOpenAccessibility();
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm text-text-secondary hover:text-text-primary hover:bg-accent-cyan/10 rounded-lg transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v12"></path><path d="M6 12h12"></path></svg>
+              Accessibility
+            </button>
 
             <div className="my-2 border-t border-accent-cyan/10" />
 
@@ -719,15 +843,25 @@ function MobileMenuButton({ isOpen, onClick, buttonRef }) {
  */
 export function Navbar() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const {
+    isOpen: isAccessibilityOpen,
+    open: openAccessibility,
+    close: closeAccessibility
+  } = useModal();
   const menuButtonRef = useRef(null);
   const menuRef = useRef(null);
 
-  // Close menu on Escape key
+  // Close menu on Escape key / Open with shortcut
   useEffect(() => {
-    const handleEscape = (event) => {
+    const handleKeyDown = (event) => {
+      // Accessibility Shortcut
+      if (event.ctrlKey && event.shiftKey && event.key === 'A') {
+        event.preventDefault();
+        openAccessibility();
+      }
+
       if (event.key === 'Escape') {
         if (isMobileMenuOpen) {
           setIsMobileMenuOpen(false);
@@ -736,12 +870,15 @@ export function Navbar() {
         if (isSearchOpen) {
           setIsSearchOpen(false);
         }
+        if (isAccessibilityOpen) {
+          closeAccessibility();
+        }
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isMobileMenuOpen, isSearchOpen]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen, isSearchOpen, isAccessibilityOpen, openAccessibility, closeAccessibility]);
 
   // Focus trap implementation for mobile menu
   useEffect(() => {
@@ -786,10 +923,6 @@ export function Navbar() {
     }, 0);
   };
 
-  const handleSearchSelect = (item) => {
-    navigate(item.url);
-  };
-
   return (
     <nav className="sticky top-0 z-[100] bg-space-dark/80 dark:bg-space-dark/80 bg-white/80 backdrop-blur-xl border-b border-white/5 dark:border-white/5 shadow-lg shadow-black/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -814,14 +947,26 @@ export function Navbar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2 shrink-0">
-            <GlobalSearch onSelect={handleSearchSelect} />
+            {/* Search Button */}
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className="p-2 rounded-lg text-text-secondary hover:text-accent-cyan hover:bg-accent-cyan/10 transition-colors"
+                aria-label="Search"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              <SearchBar isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+            </div>
 
             {/* Notifications */}
             <div className="hidden sm:block">
               <NotificationBell />
             </div>
 
-            <UserMenu />
+            <UserMenu onOpenAccessibility={openAccessibility} />
             <ThemeToggle />
             <MobileMenuButton
               isOpen={isMobileMenuOpen}
@@ -839,6 +984,8 @@ export function Navbar() {
         location={location}
         handleMenuClose={handleMenuClose}
       />
+
+      <AccessibilitySettings isOpen={isAccessibilityOpen} onClose={closeAccessibility} />
     </nav>
   );
 }

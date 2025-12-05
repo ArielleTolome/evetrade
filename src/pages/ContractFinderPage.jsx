@@ -565,6 +565,7 @@ export function ContractFinderPage() {
 
                 {/* Contracts Table */}
                 <TradingTable
+                  tableId="contract-finder-table"
                   data={displayedContracts}
                   columns={tableColumns}
                   defaultSort={{ column: tableColumns.find(c => c.defaultSort)?.key || tableColumns[0].key, direction: 'desc' }}

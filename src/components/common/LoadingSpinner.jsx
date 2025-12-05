@@ -1,7 +1,11 @@
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { cn } from '../../lib/utils';
+
 /**
  * Loading Spinner Component
  */
 export function LoadingSpinner({ size = 'md', className = '' }) {
+  const { prefersReducedMotion } = useReducedMotion();
   const sizeClasses = {
     sm: 'w-4 h-4 border-2',
     md: 'w-8 h-8 border-2',
@@ -11,12 +15,14 @@ export function LoadingSpinner({ size = 'md', className = '' }) {
 
   return (
     <div
-      className={`
-        ${sizeClasses[size]}
-        border-accent-cyan/30 border-t-accent-cyan
-        rounded-full animate-spin
-        ${className}
-      `}
+      className={cn(
+        sizeClasses[size],
+        'rounded-full border-accent-cyan/30',
+        prefersReducedMotion
+          ? 'animate-pulse border-t-accent-cyan/30'
+          : 'animate-spin border-t-accent-cyan',
+        className
+      )}
       role="status"
       aria-busy="true"
       aria-label="Loading"
@@ -44,11 +50,30 @@ export function LoadingOverlay({ message = 'Loading...' }) {
  * Inline loading indicator
  */
 export function LoadingDots({ className = '' }) {
+  const { prefersReducedMotion } = useReducedMotion();
   return (
-    <span className={`inline-flex gap-1 ${className}`}>
-      <span className="w-1.5 h-1.5 bg-accent-cyan rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-      <span className="w-1.5 h-1.5 bg-accent-cyan rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-      <span className="w-1.5 h-1.5 bg-accent-cyan rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+    <span className={cn('inline-flex gap-1', className)}>
+      <span
+        className={cn(
+          'w-1.5 h-1.5 bg-accent-cyan rounded-full',
+          prefersReducedMotion ? 'animate-pulse' : 'animate-bounce'
+        )}
+        style={{ animationDelay: '0ms' }}
+      />
+      <span
+        className={cn(
+          'w-1.5 h-1.5 bg-accent-cyan rounded-full',
+          prefersReducedMotion ? 'animate-pulse' : 'animate-bounce'
+        )}
+        style={{ animationDelay: '150ms' }}
+      />
+      <span
+        className={cn(
+          'w-1.5 h-1.5 bg-accent-cyan rounded-full',
+          prefersReducedMotion ? 'animate-pulse' : 'animate-bounce'
+        )}
+        style={{ animationDelay: '300ms' }}
+      />
     </span>
   );
 }
