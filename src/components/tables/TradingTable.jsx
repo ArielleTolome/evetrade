@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Database } from 'lucide-react';
+import { Database, Check, Clipboard } from 'lucide-react';
 import { Button } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { CopyButton } from '../ui/CopyButton';
 
 /**
  * Get quality tier based on row data stats
@@ -450,6 +452,7 @@ export function TradingTable({
     URL.revokeObjectURL(url);
   }, [sortedData, columns]);
 
+  const { copy, copied } = useCopyToClipboard();
   // Copy to clipboard
   const copyToClipboard = useCallback(() => {
     const headers = columns.map(c => c.label).join('\t');
@@ -457,8 +460,8 @@ export function TradingTable({
       columns.map(col => String(row[col.key] ?? '')).join('\t')
     );
     const text = [headers, ...rows].join('\n');
-    navigator.clipboard.writeText(text);
-  }, [sortedData, columns]);
+    copy(text);
+  }, [sortedData, columns, copy]);
 
   // Toggle row expansion
   const toggleRowExpansion = useCallback((rowId, event) => {
@@ -477,6 +480,19 @@ export function TradingTable({
   // Render cell value with special handling for margin trends and badges
   const renderCell = useCallback((row, col) => {
     const value = row[col.key];
+
+    // Special handling for Item and Net Profit columns - add CopyButton
+    if (col.key === 'Item' || col.key === 'Net Profit') {
+      const displayValue = col.render ? col.render(value, row) : value;
+      return (
+        <div className="flex items-center gap-2 group">
+          <span>{displayValue}</span>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <CopyButton value={String(value)} />
+          </div>
+        </div>
+      );
+    }
 
     // Special handling for Margin column - add trend indicator
     if (col.key === 'Gross Margin') {
@@ -548,14 +564,16 @@ export function TradingTable({
         <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-1">
           <Button
             onClick={copyToClipboard}
-            variant="secondary"
+            variant={copied ? "success" : "secondary"}
             size="sm"
             className="flex-1 sm:flex-none min-h-[44px] text-xs sm:text-sm"
           >
-            <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <span className="hidden sm:inline">Copy</span>
+            {copied ? (
+              <Check className="w-4 h-4 sm:mr-1" />
+            ) : (
+              <Clipboard className="w-4 h-4 sm:mr-1" />
+            )}
+            <span className="hidden sm:inline">{copied ? "Copied!" : "Copy"}</span>
           </Button>
           <Button
             onClick={exportCSV}
