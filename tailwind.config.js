@@ -1,13 +1,12 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   darkMode: 'class',
   theme: {
-    extend: {
-      colors: {
+    colors: {
         // Space theme colors (dark mode) - Deep, rich space tones
         'space-black': '#050508', // Darker black
         'space-dark': '#0f1016',  // Deep blue-black
@@ -45,7 +44,12 @@ export default {
         'sec-02': '#f04800',   // 0.2
         'sec-01': '#d73000',   // 0.1
         'sec-00': '#f00000',   // 0.0 and below
-      },
+
+        // Skeleton loader colors
+        'skeleton-base': '#1B263B',
+        'skeleton-shimmer': '#415A77',
+    },
+    extend: {
       fontFamily: {
         'display': ['Orbitron', 'sans-serif'],
         'body': ['Inter', 'sans-serif'],
@@ -142,8 +146,8 @@ export default {
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         shimmer: {
-          '0%': { backgroundPosition: '200% 0' },
-          '100%': { backgroundPosition: '-200% 0' },
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
         },
         press: {
           '0%': { transform: 'scale(1)' },
