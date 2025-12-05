@@ -519,7 +519,7 @@ function UserMenu() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-space-dark border border-accent-cyan/20 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1rem)] bg-space-dark border border-accent-cyan/20 rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
           {/* Character Info */}
           <div className="p-4 border-b border-accent-cyan/10">
             <div className="flex items-center gap-3">
