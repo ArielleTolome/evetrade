@@ -26,6 +26,12 @@ export default {
         'text-primary': '#f0f2f5',
         'text-secondary': '#9ca3af',
         'text-muted': '#6b7280',
+        'deep-sea': {
+          'label-default': '#778DA9',
+          'label-focused': '#415A77',
+          'border': '#415A77',
+          'bg': '#1B263B',
+        },
 
         // Light mode colors (Clean, modern)
         'light-bg': '#f8fafc',

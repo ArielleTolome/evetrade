@@ -18,6 +18,7 @@ export const FormSelect = forwardRef(function FormSelect(
     disabled = false,
     className = '',
     selectClassName = '',
+    floatingLabel = false,
     ...props
   },
   ref
@@ -30,9 +31,11 @@ export const FormSelect = forwardRef(function FormSelect(
     onChange?.(e.target.value);
   };
 
+  const hasValue = value !== '' && value !== undefined && value !== null;
+
   return (
     <div className={`space-y-1 ${className}`}>
-      {label && (
+      {!floatingLabel && label && (
         <label
           htmlFor={selectId}
           className="block text-sm font-medium text-text-secondary"
@@ -55,23 +58,28 @@ export const FormSelect = forwardRef(function FormSelect(
           aria-describedby={error ? errorId : helper ? helperId : undefined}
           className={`
             w-full px-3 sm:px-4 py-3 rounded-lg appearance-none
-            bg-space-dark/50 dark:bg-space-dark/50 bg-white
-            border ${error ? 'border-red-500' : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'}
             text-text-primary dark:text-text-primary text-light-text text-sm
-            focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan
+            focus:outline-none
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all duration-200
             cursor-pointer
             min-h-[48px] sm:min-h-[44px]
+            ${
+              floatingLabel
+                ? `bg-deep-sea-bg border ${
+                    error ? 'border-red-500' : 'border-deep-sea-border'
+                  } focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan peer`
+                : `bg-space-dark/50 dark:bg-space-dark/50 bg-white border ${
+                    error
+                      ? 'border-red-500'
+                      : 'border-accent-cyan/20 dark:border-accent-cyan/20 border-gray-300'
+                  } focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan`
+            }
             ${selectClassName}
           `}
           {...props}
         >
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
+          {placeholder && <option value="" disabled>{floatingLabel ? '' : placeholder}</option>}
           {options.map((option) => (
             <option
               key={option.value}
@@ -82,6 +90,34 @@ export const FormSelect = forwardRef(function FormSelect(
             </option>
           ))}
         </select>
+
+        {floatingLabel && label && (
+          <label
+            htmlFor={selectId}
+            className={`
+              absolute left-4 top-1/2 -translate-y-1/2
+              text-sm
+              transition-all duration-200 ease-in-out
+              origin-top-left
+              pointer-events-none
+              peer-focus:scale-85 peer-focus:-translate-y-[120%]
+              ${
+                hasValue
+                  ? 'scale-85 -translate-y-[120%]'
+                  : 'scale-100 translate-y-[-50%]'
+              }
+              ${
+                error
+                  ? 'text-red-400'
+                  : 'text-deep-sea-label-default peer-focus:text-deep-sea-label-focused'
+              }
+              ${hasValue ? 'text-deep-sea-label-focused' : ''}
+            `}
+          >
+            {label}
+            {required && <span className="ml-1">*</span>}
+          </label>
+        )}
 
         {/* Custom dropdown arrow */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
