@@ -261,7 +261,7 @@ export function BreakEvenCalculator() {
                 </tr>
               </thead>
               <tbody>
-                {calculations.scenarios.map((scenario, index) => (
+                {calculations.scenarios.map((scenario, _index) => (
                   <tr
                     key={scenario.margin}
                     className={`border-b border-accent-cyan/10 hover:bg-accent-cyan/5 transition-colors ${

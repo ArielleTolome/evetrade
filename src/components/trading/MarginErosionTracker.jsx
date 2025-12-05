@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
-import { formatISK } from '../../utils/formatters';
+import { formatISK, formatRelativeTime } from '../../utils/formatters';
 
 /**
  * MarginErosionTracker Component

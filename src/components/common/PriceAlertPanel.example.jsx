@@ -225,7 +225,7 @@ export function QuickAlertButton({ trade, onCreateAlert }) {
  * Simplest way to add price alerts to any page
  */
 export function MinimalAlertExample() {
-  const { alerts: _alerts, createAlert: _createAlert, checkAlerts } = usePriceAlerts();
+  const { alerts, createAlert, checkAlerts } = usePriceAlerts();
   const [trades, _setTrades] = useState([]);
 
   // Check alerts whenever data updates
