@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useCallback, createContext, useContext } from 'react';
+import React, { useEffect, useRef, useCallback, createContext } from 'react';
 import { createPortal } from 'react-dom';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { cn } from '../../lib/utils';
 
 /**
  * Modal Context for managing modal state
@@ -136,7 +138,7 @@ function ModalTitle({ children, className = '', id, ...props }) {
  */
 function ModalBody({ children, className = '' }) {
   return (
-    <div className={`px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto max-h-[60dvh] sm:max-h-[70dvh] ${className}`}>
+    <div className={`px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto max-h-[60dvh] sm:max-h-[60dvh] ${className}`}>
       {children}
     </div>
   );
@@ -183,6 +185,7 @@ export function Modal({
   const modalRef = useRef(null);
   const modalId = useRef(`modal-${Math.random().toString(36).substr(2, 9)}`);
   const zIndexRef = useRef(1000);
+  const { prefersReducedMotion } = useReducedMotion();
 
   // Manage focus trap
   useFocusTrap(isOpen, modalRef);
@@ -248,24 +251,28 @@ export function Modal({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-space-black/80 backdrop-blur-sm animate-fade-in"
+        className={cn(
+          'absolute inset-0 bg-space-black/80 backdrop-blur-sm',
+          !prefersReducedMotion && 'animate-fade-in'
+        )}
         aria-hidden="true"
       />
 
       {/* Modal Container */}
       <div
         ref={modalRef}
-        className={`
-          relative w-full ${sizeClasses[size]}
-          bg-space-dark/95 backdrop-blur-xl
-          rounded-t-2xl sm:rounded-2xl shadow-2xl
-          border border-accent-cyan/20 border-b-0 sm:border-b
-          animate-fade-in-up
-          overflow-hidden
-          max-h-[90vh] sm:max-h-[85vh]
-          ${size === 'full' ? 'flex flex-col' : ''}
-          ${className}
-        `}
+        className={cn(
+          'relative w-full',
+          sizeClasses[size],
+          'bg-space-dark/95 backdrop-blur-xl',
+          'rounded-t-2xl sm:rounded-2xl shadow-2xl',
+          'border border-accent-cyan/20 border-b-0 sm:border-b',
+          !prefersReducedMotion && 'animate-fade-in-up',
+          'overflow-hidden',
+          'max-h-[90vh] sm:max-h-[85vh]',
+          size === 'full' ? 'flex flex-col' : '',
+          className
+        )}
         style={{
           boxShadow: '0 0 30px rgba(0, 240, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5)',
         }}

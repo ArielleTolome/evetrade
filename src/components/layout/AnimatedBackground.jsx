@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { cn } from '../../lib/utils';
 
 /**
  * Generate random star positions
@@ -20,6 +22,7 @@ function generateStars(count) {
  */
 export function AnimatedBackground() {
   const { isDark } = useTheme();
+  const { prefersReducedMotion } = useReducedMotion();
 
   // Generate stars only once
   const stars = useMemo(() => generateStars(100), []);
@@ -41,14 +44,17 @@ export function AnimatedBackground() {
         {stars.map((star) => (
           <div
             key={star.id}
-            className="absolute rounded-full bg-white animate-twinkle"
+            className={cn(
+              'absolute rounded-full bg-white',
+              !prefersReducedMotion && 'animate-twinkle'
+            )}
             style={{
               left: `${star.left}%`,
               top: `${star.top}%`,
               width: `${star.size}px`,
               height: `${star.size}px`,
-              animationDelay: `${star.delay}s`,
-              animationDuration: `${star.duration}s`,
+              animationDelay: prefersReducedMotion ? '0s' : `${star.delay}s`,
+              animationDuration: prefersReducedMotion ? '0s' : `${star.duration}s`,
               opacity: 0.7,
             }}
           />
@@ -57,7 +63,10 @@ export function AnimatedBackground() {
 
       {/* Nebula effects */}
       <div
-        className="absolute w-[300px] h-[300px] rounded-full blur-[50px] opacity-20 sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] sm:blur-[80px] md:blur-[100px]"
+        className={cn(
+          "absolute w-[300px] h-[300px] rounded-full blur-[50px] opacity-20 sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] sm:blur-[80px] md:blur-[100px]",
+          !prefersReducedMotion && "animate-float"
+        )}
         style={{
           background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)',
           top: '10%',
@@ -65,11 +74,15 @@ export function AnimatedBackground() {
         }}
       />
       <div
-        className="absolute w-[250px] h-[250px] rounded-full blur-[40px] opacity-15 sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] sm:blur-[60px] md:blur-[80px]"
+        className={cn(
+          "absolute w-[250px] h-[250px] rounded-full blur-[40px] opacity-15 sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] sm:blur-[60px] md:blur-[80px]",
+          !prefersReducedMotion && "animate-float"
+        )}
         style={{
           background: 'radial-gradient(circle, rgba(0,212,255,0.3) 0%, transparent 70%)',
           bottom: '-5%',
           left: '-5%',
+          animationDelay: '-3s',
         }}
       />
       <div

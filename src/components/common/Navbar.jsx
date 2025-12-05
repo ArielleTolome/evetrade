@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../store/ThemeContext';
 import { useEveAuth } from '../../hooks/useEveAuth';
+import { SettingsModal } from './SettingsModal';
 
 // Navigation structure with dropdown categories
 const navigationCategories = [
@@ -940,6 +941,7 @@ export function Navbar() {
 
             <UserMenu />
             <ThemeToggle />
+            <SettingsModal />
             <MobileMenuButton
               isOpen={isMobileMenuOpen}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

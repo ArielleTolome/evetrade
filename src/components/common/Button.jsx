@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { cn } from '../../lib/utils';
 
 /**
  * Button Component
@@ -19,6 +21,8 @@ export function Button({
     type = 'button',
     ...props
 }) {
+    const { prefersReducedMotion } = useReducedMotion();
+
     // Base classes
     const baseClasses = `
     inline-flex items-center justify-center
@@ -35,7 +39,7 @@ export function Button({
       bg-gradient-to-r from-accent-cyan to-accent-purple
       text-white
       shadow-lg shadow-accent-cyan/20
-      hover:shadow-accent-cyan/40 hover:-translate-y-0.5
+      hover:shadow-accent-cyan/40
       border border-transparent
     `,
         secondary: `
@@ -65,12 +69,15 @@ export function Button({
         lg: 'text-base px-6 sm:px-8 py-3 sm:py-4 rounded-xl gap-3 min-h-[48px]',
     };
 
-    const classes = `
-    ${baseClasses}
-    ${variants[variant] || variants.primary}
-    ${sizes[size] || sizes.md}
-    ${className}
-  `;
+    const motionClasses = prefersReducedMotion ? '' : 'hover:-translate-y-0.5';
+
+    const classes = cn(
+        baseClasses,
+        variants[variant] || variants.primary,
+        sizes[size] || sizes.md,
+        motionClasses,
+        className
+    );
 
     const spinner = (
         <svg className="animate-spin h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

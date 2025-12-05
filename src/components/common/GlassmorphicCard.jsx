@@ -1,3 +1,6 @@
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { cn } from '../../lib/utils';
+
 /**
  * Glassmorphic Card Component
  * A frosted glass effect container for content
@@ -10,6 +13,8 @@ export function GlassmorphicCard({
   padding = 'p-4 sm:p-6',
   onClick,
 }) {
+  const { prefersReducedMotion } = useReducedMotion();
+
   const baseClasses = `
     bg-white/80 dark:bg-space-dark/60
     backdrop-blur-xl
@@ -20,16 +25,18 @@ export function GlassmorphicCard({
   `;
 
   const hoverClasses = hover
-    ? 'transition-all duration-300 hover:border-accent-cyan/30 hover:shadow-xl hover:shadow-accent-cyan/10 hover:-translate-y-1 cursor-pointer group'
+    ? 'transition-all duration-300 hover:border-accent-cyan/30 hover:shadow-xl hover:shadow-accent-cyan/10 cursor-pointer group'
     : '';
 
-  const glowClasses = glow
+  const motionHoverClasses = !prefersReducedMotion && hover ? 'hover:-translate-y-1' : '';
+
+  const glowClasses = glow && !prefersReducedMotion
     ? 'animate-glow border-accent-cyan/30'
     : '';
 
   return (
     <div
-      className={`${baseClasses} ${hoverClasses} ${glowClasses} ${padding} ${className}`}
+      className={cn(baseClasses, hoverClasses, motionHoverClasses, glowClasses, padding, className)}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
