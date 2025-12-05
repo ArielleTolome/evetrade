@@ -597,7 +597,7 @@ export function TradingTable({
       )}
 
       {/* Desktop Table */}
-      <div className={`relative overflow-x-auto scrollbar-thin scrollbar-thumb-accent-cyan/30 scrollbar-track-transparent ${enableMobileCards ? 'hidden md:block' : ''}`}>
+      <div className={`relative overflow-x-auto md:scrollbar-thin md:scrollbar-thumb-accent-cyan/30 md:scrollbar-track-transparent ${enableMobileCards ? 'hidden md:block' : ''}`}>
         {/* Scroll hint for tablet-sized screens */}
         <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-space-dark/80 to-transparent pointer-events-none z-10 lg:hidden" aria-hidden="true" />
         <table className="w-full border-collapse text-sm text-left">
