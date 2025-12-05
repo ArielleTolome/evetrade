@@ -42,7 +42,7 @@ function HealthScoreBadge({ health }) {
  * Displays corporation market orders with health monitoring and undercut detection
  */
 export function CorpOrdersPage() {
-  const { isAuthenticated, character, login } = useEveAuth();
+  const { isAuthenticated, character: _character, login } = useEveAuth();
   const [corporationId, setCorporationId] = useState('');
   const [groupBy, setGroupBy] = useState('item');
   const [includeHistory, setIncludeHistory] = useState(false);
@@ -58,7 +58,6 @@ export function CorpOrdersPage() {
     orders,
     fetchOrders,
     refresh,
-    getOrdersNeedingAttention,
     getUndercutOrders,
     getExpiringOrders,
     getTotalExposure,
@@ -90,7 +89,6 @@ export function CorpOrdersPage() {
   // Get statistics
   const orderBreakdown = getOrderTypeBreakdown();
   const healthStats = getHealthStats();
-  const ordersNeedingAttention = getOrdersNeedingAttention();
   const undercutOrders = getUndercutOrders();
   const expiringOrders = getExpiringOrders();
   const totalExposure = getTotalExposure();
