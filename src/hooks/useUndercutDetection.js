@@ -241,7 +241,7 @@ export function useUndercutDetection() {
     let reason;
 
     switch (strategy) {
-      case 'aggressive':
+      case 'aggressive': {
         // Beat best price by 0.01 ISK
         if (isBuyOrder) {
           recommendedPrice = bestPrice + 0.01;
@@ -251,14 +251,14 @@ export function useUndercutDetection() {
           reason = 'Aggressive: Undercut best sell order by 0.01 ISK';
         }
         break;
-
-      case 'moderate':
+      }
+      case 'moderate': {
         // Match best price
         recommendedPrice = bestPrice;
         reason = 'Moderate: Match best price (timestamp priority)';
         break;
-
-      case 'conservative':
+      }
+      case 'conservative': {
         // Stay within top 5 orders
         const top5Index = Math.min(4, competitorOrders.length - 1);
         const top5Price = competitorOrders[top5Index].price;
@@ -273,10 +273,11 @@ export function useUndercutDetection() {
           reason = 'Conservative: Match top 5 sell orders';
         }
         break;
-
-      default:
+      }
+      default: {
         recommendedPrice = order.price;
         reason = 'Unknown strategy - maintaining current price';
+      }
     }
 
     // Calculate price change
