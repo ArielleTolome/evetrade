@@ -3,85 +3,88 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 const ThemeContext = createContext(null);
 
 const THEME_KEY = 'evetrade-theme';
+const HIGH_CONTRAST_KEY = 'evetrade-high-contrast';
 
 /**
  * Theme Provider Component
  */
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    // Check localStorage first
-    const stored = localStorage.getItem(THEME_KEY);
-    if (stored) return stored;
-
-    // Default to system
-    return 'system';
+    const storedTheme = localStorage.getItem(THEME_KEY);
+    if (storedTheme) return storedTheme;
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light';
+    }
+    return 'dark';
   });
 
-  const applyTheme = useCallback((themeToApply) => {
+  const [highContrast, setHighContrast] = useState(() => {
+    const storedContrast = localStorage.getItem(HIGH_CONTRAST_KEY);
+    return storedContrast === 'true';
+  });
+
+  useEffect(() => {
     const root = document.documentElement;
-    let effectiveTheme = themeToApply;
-
-    if (themeToApply === 'system') {
-      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    if (effectiveTheme === 'dark') {
+    if (theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-  }, []);
-
-
-  // Apply theme to document
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme, applyTheme]);
-
-  // Listen for system preference changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleChange = () => {
-      if (theme === 'system') {
-        applyTheme('system');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme, applyTheme]);
-
-  const toggleTheme = useCallback(() => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem(THEME_KEY, newTheme);
-    setTheme(newTheme);
+    localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
-  const setDarkTheme = useCallback(() => {
-    localStorage.setItem(THEME_KEY, 'dark');
-    setTheme('dark');
+  useEffect(() => {
+    const root = document.documentElement;
+    if (highContrast) {
+      root.classList.add('high-contrast');
+    } else {
+      root.classList.remove('high-contrast');
+    }
+    localStorage.setItem(HIGH_CONTRAST_KEY, highContrast);
+  }, [highContrast]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e) => {
+      if (!localStorage.getItem(THEME_KEY)) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key === 'h') {
+        toggleHighContrast();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [toggleHighContrast]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   }, []);
 
-  const setLightTheme = useCallback(() => {
-    localStorage.setItem(THEME_KEY, 'light');
-    setTheme('light');
+  const toggleHighContrast = useCallback(() => {
+    setHighContrast((prev) => !prev);
   }, []);
 
-  const setSystemTheme = useCallback(() => {
-    localStorage.removeItem(THEME_KEY);
-    setTheme('system');
-  }, []);
+  const setDarkTheme = useCallback(() => setTheme('dark'), []);
+  const setLightTheme = useCallback(() => setTheme('light'), []);
 
   const value = {
     theme,
-    isDark: theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches),
-    isLight: theme === 'light' || (theme === 'system' && !window.matchMedia('(prefers-color-scheme: dark)').matches),
-    isSystemTheme: theme === 'system',
+    isDark: theme === 'dark',
+    isLight: theme === 'light',
+    highContrast,
     toggleTheme,
+    toggleHighContrast,
     setDarkTheme,
     setLightTheme,
-    setSystemTheme
   };
 
   return (

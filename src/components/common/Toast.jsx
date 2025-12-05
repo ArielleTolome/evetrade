@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { cn } from '../../lib/utils';
 
 /**
  * Individual Toast Component
@@ -11,6 +13,7 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
   const pausedRef = useRef(false);
   const animationFrameRef = useRef(null);
   const dismissTimeoutRef = useRef(null);
+  const { prefersReducedMotion } = useReducedMotion();
 
   // Toast type configurations with cyberpunk/space theme
   const config = {
@@ -143,24 +146,24 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
     pausedRef.current = false;
   };
 
+  const exitAnimationClasses = prefersReducedMotion
+    ? 'opacity-0'
+    : 'opacity-0 translate-x-full scale-95';
+
   return (
     <div
       role="alert"
       aria-live="polite"
       aria-atomic="true"
-      className={`
-        relative w-full overflow-hidden
-        ${toastConfig.bgColor}
-        backdrop-blur-xl
-        border ${toastConfig.borderColor}
-        rounded-lg shadow-xl ${toastConfig.glowColor}
-        transition-all duration-300 ease-out
-        ${
-          isExiting
-            ? 'opacity-0 translate-x-full scale-95'
-            : 'opacity-100 translate-x-0 scale-100'
-        }
-      `}
+      className={cn(
+        'relative w-full overflow-hidden',
+        toastConfig.bgColor,
+        'backdrop-blur-xl',
+        'border', toastConfig.borderColor,
+        'rounded-lg shadow-xl', toastConfig.glowColor,
+        'transition-all duration-300 ease-out',
+        isExiting ? exitAnimationClasses : 'opacity-100 translate-x-0 scale-100'
+      )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -187,7 +190,7 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
                 onClick={action.onClick}
                 className={`
                   mt-2 text-xs font-semibold ${toastConfig.iconColor}
-                  hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-cyan/50 rounded
+                  hover:underline focus:outline-none focus-visible:ring-2 focus:ring-offset-2 focus:ring-accent-cyan/50 rounded
                   transition-all
                 `}
               >
@@ -201,7 +204,7 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
             onClick={handleDismiss}
             className="
               flex-shrink-0 text-text-secondary hover:text-text-primary
-              transition-colors focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 rounded p-1
+              transition-colors focus:outline-none focus-visible:ring-2 focus:ring-accent-cyan/50 rounded p-1
             "
             aria-label="Dismiss notification"
           >
@@ -216,7 +219,11 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
       {duration !== Infinity && (
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20 dark:bg-white/5">
           <div
-            className={`h-full ${toastConfig.progressColor} transition-all duration-100 ease-linear`}
+            className={cn(
+              'h-full',
+              toastConfig.progressColor,
+              !prefersReducedMotion && 'transition-all duration-100 ease-linear'
+            )}
             style={{ width: `${progress}%` }}
             role="progressbar"
             aria-valuenow={progress}

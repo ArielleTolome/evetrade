@@ -1,6 +1,6 @@
-import { Component } from 'react';
+import { Component, cloneElement, isValidElement } from 'react';
 import * as Sentry from '@sentry/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { GlassmorphicCard } from './GlassmorphicCard';
 
 /**
@@ -58,11 +58,23 @@ export class ErrorBoundary extends Component {
     if (this.state.hasError) {
       // Render custom fallback UI if provided
       if (this.props.fallback) {
-        return this.props.fallback({
+        const fallbackProps = {
           error: this.state.error,
           errorInfo: this.state.errorInfo,
           resetError: this.handleReset,
-        });
+        };
+
+        // Support both component references and pre-created elements
+        if (isValidElement(this.props.fallback)) {
+          return cloneElement(this.props.fallback, fallbackProps);
+        }
+
+        if (typeof this.props.fallback === 'function') {
+          const FallbackComponent = this.props.fallback;
+          return <FallbackComponent {...fallbackProps} />;
+        }
+
+        return this.props.fallback;
       }
 
       // Default fallback UI
@@ -240,14 +252,15 @@ export function ResourceErrorFallback({ error, resetError, loadingProgress }) {
 }
 
 export function PageErrorFallback({ error, resetError }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const handleGoBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (window.history?.length > 1) {
+      window.history.back();
     } else {
-      navigate('/');
+      window.location.assign('/');
     }
   };
 
@@ -325,7 +338,7 @@ function SectionErrorFallback({ error }) {
       <div className="text-center text-red-400">
         <p className="text-sm font-semibold">Error Loading Section</p>
         {process.env.NODE_ENV === 'development' && (
-          <p className="text-xs mt-1 truncate max-w-xs">{error.message}</p>
+          <p className="text-xs mt-1 truncate max-w-xs">{error.message || 'An unknown error occurred'}</p>
         )}
       </div>
     </div>
