@@ -255,9 +255,9 @@ export function useIndustryProfits(options = {}) {
 
     // Filter by runs (originals only or copies only)
     if (filters.runsType === 'original') {
-      filtered = filtered.filter(bp => bp['Runs'] === 'Original');
+      filtered = filtered.filter(bp => bp['Runs'] === -1);
     } else if (filters.runsType === 'copy') {
-      filtered = filtered.filter(bp => bp['Runs'] !== 'Original');
+      filtered = filtered.filter(bp => bp['Runs'] !== -1);
     }
 
     return filtered;

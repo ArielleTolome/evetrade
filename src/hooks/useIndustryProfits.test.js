@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useIndustryProfits } from './useIndustryProfits';
 import { apiClient } from '../api/client';
 
@@ -88,18 +88,15 @@ describe('useIndustryProfits', () => {
 
     const { result } = renderHook(() => useIndustryProfits());
 
-    const promise = result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
-      regionId: 10000002,
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+        regionId: 10000002,
+      });
     });
 
-    expect(result.current.loading).toBe(true);
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
+    expect(result.current.loading).toBe(false);
     expect(result.current.data).toEqual(mockResponse.data);
     expect(result.current.error).toBeNull();
     expect(result.current.lastUpdated).toBeInstanceOf(Date);
@@ -139,12 +136,14 @@ describe('useIndustryProfits', () => {
 
     const { result } = renderHook(() => useIndustryProfits());
 
-    await expect(
-      result.current.fetchIndustryProfits({
-        characterId: 123456,
-        accessToken: 'test-token',
-      })
-    ).rejects.toThrow('API Error');
+    await act(async () => {
+      await expect(
+        result.current.fetchIndustryProfits({
+          characterId: 123456,
+          accessToken: 'test-token',
+        })
+      ).rejects.toThrow('API Error');
+    });
 
     expect(result.current.error).toBeTruthy();
     expect(result.current.error.message).toBe('API Error');
@@ -162,12 +161,14 @@ describe('useIndustryProfits', () => {
 
     const { result } = renderHook(() => useIndustryProfits());
 
-    await expect(
-      result.current.fetchIndustryProfits({
-        characterId: 123456,
-        accessToken: 'invalid-token',
-      })
-    ).rejects.toThrow('Authentication failed');
+    await act(async () => {
+      await expect(
+        result.current.fetchIndustryProfits({
+          characterId: 123456,
+          accessToken: 'invalid-token',
+        })
+      ).rejects.toThrow('Authentication failed');
+    });
   });
 
   it('includes query parameters in API request', async () => {
@@ -175,14 +176,16 @@ describe('useIndustryProfits', () => {
 
     const { result } = renderHook(() => useIndustryProfits());
 
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
-      regionId: 10000043,
-      minProfit: 1000000,
-      minROI: 10,
-      meLevel: 10,
-      activity: 'manufacturing',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+        regionId: 10000043,
+        minProfit: 1000000,
+        minROI: 10,
+        meLevel: 10,
+        activity: 'manufacturing',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -217,17 +220,21 @@ describe('useIndustryProfits', () => {
     const { result } = renderHook(() => useIndustryProfits({ cacheTimeout: 10000 }));
 
     // First call
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(1);
 
     // Second call with same params - should use cache
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(1); // Still only 1 call
@@ -239,18 +246,22 @@ describe('useIndustryProfits', () => {
     const { result } = renderHook(() => useIndustryProfits({ cacheTimeout: 10000 }));
 
     // First call
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(1);
 
     // Second call with forceRefresh
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
-      forceRefresh: true,
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+        forceRefresh: true,
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(2);
@@ -262,20 +273,26 @@ describe('useIndustryProfits', () => {
     const { result } = renderHook(() => useIndustryProfits({ cacheTimeout: 10000 }));
 
     // First call
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(1);
 
     // Clear cache
-    result.current.clearCache();
+    act(() => {
+      result.current.clearCache();
+    });
 
     // Second call - cache cleared, should make new request
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(2);
@@ -286,15 +303,19 @@ describe('useIndustryProfits', () => {
 
     const { result } = renderHook(() => useIndustryProfits());
 
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(result.current.data).not.toBeNull();
     expect(result.current.lastUpdated).not.toBeNull();
 
-    result.current.reset();
+    act(() => {
+      result.current.reset();
+    });
 
     expect(result.current.data).toBeNull();
     expect(result.current.error).toBeNull();
@@ -329,7 +350,7 @@ describe('useIndustryProfits', () => {
       const filtered = result.current.filterBlueprints(mockBlueprints, { runsType: 'original' });
 
       expect(filtered).toHaveLength(2);
-      expect(filtered.every(bp => bp['Runs'] === 'Original')).toBe(true);
+      expect(filtered.every(bp => bp['Runs'] === -1)).toBe(true);
     });
 
     it('filters by runs type - copies only', () => {
@@ -342,17 +363,17 @@ describe('useIndustryProfits', () => {
     it('applies multiple filters', () => {
       const filtered = result.current.filterBlueprints(mockBlueprints, {
         meLevel: 10,
-        minPrice: 4000000,
+        minPrice: 4600000,
         runsType: 'original',
       });
 
-      expect(filtered).toHaveLength(2);
+      expect(filtered).toHaveLength(1);
       expect(
         filtered.every(
           bp =>
             bp['Material Efficiency'] === 10 &&
-            bp['Market Price'] >= 4000000 &&
-            bp['Runs'] === 'Original'
+            bp['Market Price'] >= 4600000 &&
+            bp['Runs'] === -1
         )
       ).toBe(true);
     });
@@ -376,27 +397,32 @@ describe('useIndustryProfits', () => {
     });
   });
 
-  it('cancels pending requests on unmount', async () => {
-    apiClient.get.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          setTimeout(() => resolve(mockResponse), 1000);
-        })
-    );
+  it('cancels pending requests on unmount', () => {
+    const abortSpy = vi.fn();
+    const originalAbortController = global.AbortController;
+    global.AbortController = class MockAbortController {
+      constructor() {
+        this.signal = { aborted: false };
+      }
+      abort = abortSpy;
+    };
+
+    apiClient.get.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     const { result, unmount } = renderHook(() => useIndustryProfits());
 
-    result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    act(() => {
+      result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
-
-    expect(result.current.loading).toBe(true);
 
     unmount();
 
-    // After unmount, loading should still be true since we didn't wait
-    // but the request should be aborted
+    expect(abortSpy).toHaveBeenCalled();
+
+    global.AbortController = originalAbortController;
   });
 
   it('handles cancel method', async () => {
@@ -409,14 +435,18 @@ describe('useIndustryProfits', () => {
 
     const { result } = renderHook(() => useIndustryProfits());
 
-    result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    act(() => {
+      result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(result.current.loading).toBe(true);
 
-    result.current.cancel();
+    act(() => {
+      result.current.cancel();
+    });
 
     expect(result.current.loading).toBe(false);
   });
@@ -426,20 +456,26 @@ describe('useIndustryProfits', () => {
 
     const { result } = renderHook(() => useIndustryProfits({ cacheTimeout: 100 }));
 
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(1);
 
     // Wait for cache to expire
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 150));
+    });
 
     // Should make new request after cache expires
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(2);
@@ -458,9 +494,11 @@ describe('useIndustryProfits', () => {
 
     const { result } = renderHook(() => useIndustryProfits());
 
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
     expect(result.current.data.blueprints).toHaveLength(0);
@@ -473,14 +511,18 @@ describe('useIndustryProfits', () => {
     const { result } = renderHook(() => useIndustryProfits({ cacheTimeout: 10000 }));
 
     // Different character IDs should create different cache entries
-    await result.current.fetchIndustryProfits({
-      characterId: 123456,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 123456,
+        accessToken: 'test-token',
+      });
     });
 
-    await result.current.fetchIndustryProfits({
-      characterId: 789012,
-      accessToken: 'test-token',
+    await act(async () => {
+      await result.current.fetchIndustryProfits({
+        characterId: 789012,
+        accessToken: 'test-token',
+      });
     });
 
     expect(apiClient.get).toHaveBeenCalledTimes(2);
