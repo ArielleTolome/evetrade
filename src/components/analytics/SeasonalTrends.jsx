@@ -69,8 +69,8 @@ export function SeasonalTrends() {
     });
 
     const allPrices = analyzed.filter((d) => d.avgPrice > 0).map((d) => d.avgPrice);
-    const minPrice = Math.min(...allPrices);
-    const maxPrice = Math.max(...allPrices);
+    const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
+    const maxPrice = allPrices.length > 0 ? Math.max(...allPrices) : 0;
 
     return {
       data: analyzed,
@@ -121,8 +121,8 @@ export function SeasonalTrends() {
     });
 
     const allPrices = analyzed.filter((d) => d.avgPrice > 0).map((d) => d.avgPrice);
-    const minPrice = Math.min(...allPrices);
-    const maxPrice = Math.max(...allPrices);
+    const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
+    const maxPrice = allPrices.length > 0 ? Math.max(...allPrices) : 0;
 
     return {
       data: analyzed,

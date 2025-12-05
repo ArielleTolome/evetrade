@@ -111,10 +111,15 @@ ROI: ${formatPercent(roi / 100, 1)}`;
   // Add station to list
   const addStation = useCallback((type, station) => {
     if (!station) return;
-    setForm((prev) => ({
-      ...prev,
-      [`${type}Stations`]: [...prev[`${type}Stations`], station],
-    }));
+    setForm((prev) => {
+      const key = `${type}Stations`;
+      // Check for duplicates
+      if (prev[key].some(s => s.id === station.id)) return prev;
+      return {
+        ...prev,
+        [key]: [...prev[key], station],
+      };
+    });
     if (type === 'from') setFromInput('');
     else setToInput('');
   }, []);
