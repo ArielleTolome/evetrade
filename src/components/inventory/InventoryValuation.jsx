@@ -371,7 +371,6 @@ export function InventoryValuation({
       {/* Pie Chart */}
       {showChart && categoryData.length > 0 && (
         <div className="flex flex-col lg:flex-row items-center justify-center gap-8 mb-6 p-6 bg-space-mid/20 rounded-lg">
-          {/* eslint-disable-next-line react-hooks/components -- PieChart is defined inline intentionally for access to parent scope */}
           <PieChart data={categoryData} size={280} />
 
           {/* Legend */}

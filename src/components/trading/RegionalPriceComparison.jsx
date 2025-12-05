@@ -48,7 +48,7 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
  * @param {number} typeId - EVE item type ID
  * @returns {Promise<object>} Market data
  */
-async function fetchRegionMarket(regionId, typeId) {
+async function fetchRegionMarket(regionId, _typeId) {
   // Simulated market data - in production, fetch from ESI
   // ESI endpoint: /markets/{region_id}/orders/?type_id={type_id}
 
@@ -93,9 +93,9 @@ function calculateJumps(fromHub, toHub) {
 function calculateArbitrage(hubData, volume) {
   const opportunities = [];
 
-  // Find best buy and sell locations
-  const sortedBySell = [...hubData].sort((a, b) => a.lowestSell - b.lowestSell);
-  const sortedByBuy = [...hubData].sort((a, b) => b.highestBuy - a.highestBuy);
+  // Find best buy and sell locations (sorted arrays kept for potential future use)
+  const _sortedBySell = [...hubData].sort((a, b) => a.lowestSell - b.lowestSell);
+  const _sortedByBuy = [...hubData].sort((a, b) => b.highestBuy - a.highestBuy);
 
   hubData.forEach(buyHub => {
     hubData.forEach(sellHub => {

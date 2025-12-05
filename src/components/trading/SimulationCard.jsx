@@ -9,9 +9,9 @@ import { GlassmorphicCard } from '../common/GlassmorphicCard';
  */
 export function SimulationCard({ scenario, onCopy, onDelete, isBest, className = '' }) {
   const {
-    buyPrice,
-    sellPrice,
-    quantity,
+    buyPrice: _buyPrice,
+    sellPrice: _sellPrice,
+    quantity: _quantity,
     profit,
     roi,
     margin,
