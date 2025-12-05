@@ -20,6 +20,7 @@ export class ErrorBoundary extends Component {
 
   static getDerivedStateFromError(error) {
     // Update state so the next render will show the fallback UI
+    console.error('ErrorBoundary derived state from error:', error);
     return { hasError: true };
   }
 
