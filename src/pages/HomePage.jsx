@@ -157,9 +157,9 @@ export function HomePage() {
       {/* Hero Section - Above the Fold */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-3 sm:px-4 py-12 sm:py-20 overflow-hidden">
         {/* Animated Background Elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[600px] md:w-[1000px] h-[400px] sm:h-[600px] md:h-[1000px] bg-accent-cyan/5 rounded-full blur-[100px] sm:blur-[150px] pointer-events-none animate-pulse"></div>
-        <div className="absolute top-0 left-1/4 w-[250px] sm:w-[350px] md:w-[500px] h-[250px] sm:h-[350px] md:h-[500px] bg-accent-purple/10 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none animate-float"></div>
-        <div className="absolute bottom-0 right-1/4 w-[300px] sm:w-[450px] md:w-[600px] h-[300px] sm:h-[450px] md:h-[600px] bg-accent-gold/5 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] sm:w-[600px] md:w-[1000px] h-[80vw] sm:h-[600px] md:h-[1000px] bg-accent-cyan/5 rounded-full blur-[100px] sm:blur-[150px] pointer-events-none animate-pulse"></div>
+        <div className="absolute top-0 left-1/4 w-[50vw] sm:w-[350px] md:w-[500px] h-[50vw] sm:h-[350px] md:h-[500px] bg-accent-purple/10 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none animate-float"></div>
+        <div className="absolute bottom-0 right-1/4 w-[60vw] sm:w-[450px] md:w-[600px] h-[60vw] sm:h-[450px] md:h-[600px] bg-accent-gold/5 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
 
         {/* Hero Content */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in-up relative z-10 max-w-5xl mx-auto">
