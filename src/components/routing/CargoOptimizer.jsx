@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
 import { FormInput } from '../forms';
-import { formatISK, formatVolume, formatNumber } from '../../utils/formatters';
+import { formatISK, formatVolume } from '../../utils/formatters';
 
 /**
  * Common ship cargo capacities in EVE Online

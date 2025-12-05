@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatISK, formatPercent, formatCompact } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 
 /**
  * Risk level definitions with color schemes and thresholds

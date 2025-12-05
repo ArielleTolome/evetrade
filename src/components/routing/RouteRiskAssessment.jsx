@@ -4,7 +4,6 @@ import { StationAutocomplete } from '../forms';
 import { FormInput } from '../forms';
 import { useResources } from '../../hooks/useResources';
 import { getStationData } from '../../utils/stations';
-import { formatISK, formatNumber } from '../../utils/formatters';
 import { SECURITY_COLORS } from '../../utils/constants';
 
 /**

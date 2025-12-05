@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
-import { formatISK, formatPercent, formatNumber } from '../../utils/formatters';
+import { formatISK, formatPercent } from '../../utils/formatters';
 
 /**
  * BreakEvenCalculator Component

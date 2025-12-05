@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useEveAuth } from '../../hooks/useEveAuth';
 import { getWalletJournal } from '../../api/esi';
-import { formatISK, formatNumber } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 import { GlassmorphicCard } from './GlassmorphicCard';
 
 /**

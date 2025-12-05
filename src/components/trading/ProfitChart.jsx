@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { formatISK, formatNumber } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 
 /**
  * A simple SVG chart to visualize profit curves for trade scenarios.

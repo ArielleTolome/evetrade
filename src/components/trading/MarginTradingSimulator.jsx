@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
-import { formatISK, formatNumber, formatPercent } from '../../utils/formatters';
+import { formatISK, formatPercent } from '../../utils/formatters';
 import { preciseRound } from '../../utils/profitCalculations';
 
 /**

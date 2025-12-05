@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
-import { formatISK, formatPercent, formatNumber, formatCompact } from '../../utils/formatters';
+import { formatISK, formatPercent, formatCompact } from '../../utils/formatters';
 
 /**
  * OptimalPricing Component

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
-import { formatPercent, formatISK, formatNumber } from '../../utils/formatters';
+import { formatPercent, formatISK } from '../../utils/formatters';
 
 /**
  * TaxCalculator Component

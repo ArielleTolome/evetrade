@@ -8,7 +8,7 @@ import {
   getCharacterOrders,
   getWalletTransactions,
 } from '../../api/esi';
-import { formatISK, formatNumber, formatPercent } from '../../utils/formatters';
+import { formatISK, formatNumber } from '../../utils/formatters';
 
 /**
  * Real-Time Profit Dashboard Component

@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatISK, formatPercent, formatNumber } from '../../utils/formatters';
+import { formatISK, formatPercent } from '../../utils/formatters';
 import { Button } from '../common/Button';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
 

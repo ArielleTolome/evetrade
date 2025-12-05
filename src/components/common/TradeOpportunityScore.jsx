@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { formatISK, formatNumber, formatPercent } from '../../utils/formatters';
 
 /**
  * Trade Opportunity Score Component

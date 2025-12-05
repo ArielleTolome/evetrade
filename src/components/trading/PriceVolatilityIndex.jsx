@@ -32,7 +32,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { formatISK, formatPercent, formatNumber } from '../../utils/formatters';
+import { formatISK, formatPercent } from '../../utils/formatters';
 import { getMarketHistory } from '../../api/esi';
 import { getCached, setCached } from '../../hooks/useCache';
 import { LoadingSpinner } from '../common/LoadingSpinner';

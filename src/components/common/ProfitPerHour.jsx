@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatISK, formatPercent, formatDuration } from '../../utils/formatters';
+import { formatISK, formatPercent } from '../../utils/formatters';
 import { useProfitMetrics } from '../../hooks/useProfitMetrics';
 
 /**
