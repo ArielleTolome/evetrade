@@ -200,7 +200,7 @@ export function CopyComponentsIntegrationExample() {
                           type="checkbox"
                           checked={selectedTrades.length === tradeOpportunities.length}
                           onChange={toggleAll}
-                          className="w-4 h-4 rounded border-accent-cyan/30 bg-space-light/10 text-accent-cyan focus:ring-2 focus:ring-accent-cyan/50 cursor-pointer"
+                          className="w-4 h-4 rounded border-accent-cyan/30 bg-space-light/10 text-accent-cyan focus-visible:ring-2 focus:ring-accent-cyan/50 cursor-pointer"
                         />
                       </th>
                       <th className="text-left py-3 px-4 text-text-secondary font-medium">Item</th>
@@ -225,7 +225,7 @@ export function CopyComponentsIntegrationExample() {
                             type="checkbox"
                             checked={selectedTrades.includes(trade.id)}
                             onChange={() => toggleTrade(trade.id)}
-                            className="w-4 h-4 rounded border-accent-cyan/30 bg-space-light/10 text-accent-cyan focus:ring-2 focus:ring-accent-cyan/50 cursor-pointer"
+                            className="w-4 h-4 rounded border-accent-cyan/30 bg-space-light/10 text-accent-cyan focus-visible:ring-2 focus:ring-accent-cyan/50 cursor-pointer"
                           />
                         </td>
                         <td className="py-3 px-4">
