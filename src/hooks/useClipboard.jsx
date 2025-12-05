@@ -19,7 +19,7 @@ export function useClipboard() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to load clipboard history:', err);
       return [];
     }
@@ -31,7 +31,7 @@ export function useClipboard() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to save clipboard history:', err);
     }
   }, [history]);
@@ -147,7 +147,7 @@ export function useClipboard() {
       }
 
       return { success: true, text };
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to copy to clipboard:', err);
       return { success: false, error: err.message };
     }

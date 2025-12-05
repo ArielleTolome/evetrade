@@ -142,7 +142,7 @@ export function useTradingSkills() {
 
       setSkills(skillsData);
       setStandings(standingsData);
-    } catch (_err) {
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);

@@ -130,7 +130,7 @@ export function useStockAlerts() {
 
       // Auto-close notification after 5 seconds
       setTimeout(() => notification.close(), 5000);
-    } catch (_error) {
+    } catch (error) {
       console.error('Failed to send notification:', error);
     }
   };

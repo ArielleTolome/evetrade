@@ -18,7 +18,7 @@ export function useTradeNotes() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : {};
-    } catch (_e) {
+    } catch (e) {
       return {};
     }
   });
@@ -121,7 +121,7 @@ export function useTradeNotes() {
       const imported = JSON.parse(jsonString);
       setNotes(prev => ({ ...prev, ...imported }));
       return true;
-    } catch (_e) {
+    } catch (e) {
       return false;
     }
   }, []);

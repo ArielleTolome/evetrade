@@ -26,7 +26,7 @@ import {
  *     try {
  *       const result = await execute(() => fetchMarketOrders(regionId));
  *       setData(result);
- *     } catch (_error) {
+ *     } catch (error) {
  *       if (error.isCircuitBreakerError) {
  *         setError(`Service unavailable. Retry in ${retryAfter}s`);
  *       }
@@ -181,7 +181,7 @@ export function useProtectedApiCall(circuitName, apiFunction, options = {}) {
       const result = await execute(() => apiFunction(...args));
       setData(result);
       return result;
-    } catch (_err) {
+    } catch (err) {
       if (err instanceof CircuitBreakerError || err.isCircuitBreakerError) {
         setIsCircuitError(true);
         setError({

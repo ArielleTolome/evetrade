@@ -116,7 +116,7 @@ export function useUndercutDetection() {
       setUndercutOrders(undercuts);
       setLoading(false);
       return undercuts;
-    } catch (_err) {
+    } catch (err) {
       const errorMessage = err.message || 'Failed to check for undercuts';
       setError({ message: errorMessage, original: err });
       setLoading(false);

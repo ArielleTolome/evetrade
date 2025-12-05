@@ -18,7 +18,7 @@ export function useProfit() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (_error) {
+    } catch (error) {
       console.error('Error loading profit history:', error);
       return [];
     }
@@ -28,7 +28,7 @@ export function useProfit() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-    } catch (_error) {
+    } catch (error) {
       console.error('Error saving profit history:', error);
     }
   }, [history]);

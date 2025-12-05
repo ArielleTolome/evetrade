@@ -58,7 +58,7 @@ export function BasicUndercutMonitor({ characterId, accessToken }) {
 
         // 4. Check for undercuts
         await checkOrders(orders, allMarketOrders);
-      } catch (_err) {
+      } catch (err) {
         console.error('Failed to check orders:', err);
       }
     }
@@ -148,7 +148,7 @@ export function AdvancedOrderManager({ characterId, accessToken }) {
       });
 
       setPricingRecommendations(recommendations);
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to analyze orders:', err);
     }
   }
@@ -222,7 +222,7 @@ export function OrderPriorityList({ characterId, accessToken }) {
       // Sort by priority: highest profit loss first
       const sorted = [...undercuts].sort((a, b) => b.profitLoss - a.profitLoss);
       setSortedByPriority(sorted);
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to check orders:', err);
     }
   }
@@ -304,7 +304,7 @@ export function UndercutAlertSystem({ characterId, accessToken, notificationsEna
 
       setPreviousUndercutCount(undercuts.length);
       setLastCheckTime(new Date());
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to check for undercuts:', err);
     }
   }
@@ -375,7 +375,7 @@ export function BatchPriceUpdater({ characterId, accessToken }) {
       }
 
       await checkOrders(orders, allMarketOrders);
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to load undercuts:', err);
     }
   }

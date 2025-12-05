@@ -163,7 +163,7 @@ export function useIndustryProfits(options = {}) {
         }
 
         return null;
-      } catch (_err) {
+      } catch (err) {
         // Don't set error state for intentional aborts
         if (err.name === 'AbortError' || err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
           console.log('Industry request cancelled');

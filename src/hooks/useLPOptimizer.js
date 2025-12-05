@@ -100,7 +100,7 @@ export function useLPOptimizer(options = {}) {
         }
 
         return result;
-      } catch (_err) {
+      } catch (err) {
         // Don't set error state for intentional aborts
         if (err.name === 'AbortError' || err.name === 'CanceledError') {
           console.log('LP optimizer request cancelled');

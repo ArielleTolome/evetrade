@@ -93,7 +93,7 @@ export function useArbitrageScanner() {
         setLastUpdated(new Date());
         return result;
       }
-    } catch (_err) {
+    } catch (err) {
       // Don't set error state for intentional aborts
       if (err.name === 'AbortError' || err.name === 'CanceledError') {
         console.log('Arbitrage scan cancelled');
@@ -203,7 +203,7 @@ export function useArbitrageScanner() {
         resetFilters();
       }
       return true;
-    } catch (_error) {
+    } catch (error) {
       console.warn('Error during scanner reset:', error);
       return false;
     }

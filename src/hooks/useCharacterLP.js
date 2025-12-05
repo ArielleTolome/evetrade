@@ -102,7 +102,7 @@ export function useCharacterLP(options = {}) {
       setLastUpdated(new Date());
 
       return sortedLP;
-    } catch (_err) {
+    } catch (err) {
       if (err.name === 'AbortError') {
         return null;
       }

@@ -39,7 +39,7 @@ export function useContractFinder() {
     async (params) => {
       try {
         return await execute(params);
-      } catch (_err) {
+      } catch (err) {
         console.error('Contract search failed:', err);
         throw err;
       }

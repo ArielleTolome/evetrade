@@ -12,7 +12,7 @@ export function usePriceAlerts() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (_e) {
+    } catch (e) {
       console.warn('Failed to load alerts from localStorage:', e);
       return [];
     }
@@ -28,7 +28,7 @@ export function usePriceAlerts() {
         soundEnabled: true,
         soundVolume: 0.5,
       };
-    } catch (_e) {
+    } catch (e) {
       return {
         browserNotifications: false,
         soundEnabled: true,
@@ -56,7 +56,7 @@ export function usePriceAlerts() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
-    } catch (_e) {
+    } catch (e) {
       console.warn('Failed to save alerts to localStorage:', e);
     }
   }, [alerts]);
@@ -65,7 +65,7 @@ export function usePriceAlerts() {
   useEffect(() => {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    } catch (_e) {
+    } catch (e) {
       console.warn('Failed to save alert settings to localStorage:', e);
     }
   }, [settings]);
@@ -120,7 +120,7 @@ export function usePriceAlerts() {
       };
 
       setTimeout(() => notification.close(), 10000);
-    } catch (_e) {
+    } catch (e) {
       console.warn('Failed to show notification:', e);
     }
   }, [settings.browserNotifications, notificationPermission]);
@@ -137,7 +137,7 @@ export function usePriceAlerts() {
       audioRef.current.play().catch(e => {
         console.warn('Failed to play notification sound:', e);
       });
-    } catch (_e) {
+    } catch (e) {
       console.warn('Failed to play notification sound:', e);
     }
   }, [settings.soundEnabled, settings.soundVolume]);

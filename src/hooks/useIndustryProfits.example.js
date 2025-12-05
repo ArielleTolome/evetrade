@@ -45,7 +45,7 @@ function IndustryProfitsExample() {
         meLevel: meFilter,
         forceRefresh: false, // Use cache if available
       });
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to fetch blueprints:', err);
     }
   };
@@ -62,7 +62,7 @@ function IndustryProfitsExample() {
         meLevel: meFilter,
         forceRefresh: true, // Force fresh data
       });
-    } catch (_err) {
+    } catch (err) {
       console.error('Failed to refresh blueprints:', err);
     }
   };

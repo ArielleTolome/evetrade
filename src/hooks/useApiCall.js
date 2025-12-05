@@ -46,7 +46,7 @@ export function useApiCall(apiFunction) {
           setLastUpdated(new Date());
         }
         return result;
-      } catch (_err) {
+      } catch (err) {
         // Don't set error state for intentional aborts
         if (err.name === 'AbortError' || err.name === 'CanceledError') {
           console.log('Request cancelled');

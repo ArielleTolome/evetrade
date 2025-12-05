@@ -49,7 +49,7 @@ export function useOfflineMode() {
   useEffect(() => {
     try {
       localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(settings));
-    } catch (_e) {
+    } catch (e) {
       console.warn('Failed to save offline settings:', e);
     }
   }, [settings]);
@@ -101,7 +101,7 @@ export function useOfflineMode() {
       try {
         const stats = await getCacheStats();
         setCacheStats(stats);
-      } catch (_e) {
+      } catch (e) {
         console.warn('Failed to load cache stats:', e);
       }
     };
@@ -136,7 +136,7 @@ export function useOfflineMode() {
         }
 
         return { data: freshData, fromCache: false, stale: false };
-      } catch (_error) {
+      } catch (error) {
         console.warn('Fetch failed, trying cache:', error);
         // Fall through to cache
       }
@@ -157,7 +157,7 @@ export function useOfflineMode() {
           fetchedAt: cached.fetchedAt,
         };
       }
-    } catch (_e) {
+    } catch (e) {
       console.warn('Cache read failed:', e);
     }
 
@@ -172,7 +172,7 @@ export function useOfflineMode() {
           });
         }
         return { data: freshData, fromCache: false, stale: false };
-      } catch (_error) {
+      } catch (error) {
         throw error;
       }
     }
@@ -191,7 +191,7 @@ export function useOfflineMode() {
         fetchedAt: Date.now(),
       });
       return true;
-    } catch (_e) {
+    } catch (e) {
       console.warn('Failed to precache data:', e);
       return false;
     }

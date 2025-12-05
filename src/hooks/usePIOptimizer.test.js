@@ -73,7 +73,7 @@ describe('usePIOptimizer', () => {
 
     try {
       await result.current.fetchPIOpportunities({ regionId: 10000002 });
-    } catch (_err) {
+    } catch (err) {
       // Expected to throw
     }
 

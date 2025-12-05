@@ -13,7 +13,7 @@ export default function useSidebar() {
     try {
       const storedValue = localStorage.getItem(STORAGE_KEY);
       return storedValue ? JSON.parse(storedValue) : false;
-    } catch (_error) {
+    } catch (error) {
       return false;
     }
   });
@@ -35,7 +35,7 @@ export default function useSidebar() {
       setIsCollapsed(newState);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
-      } catch (_error) {
+      } catch (error) {
         console.error("Failed to save sidebar state to localStorage:", error);
       }
     }
