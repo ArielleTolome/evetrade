@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useDrag } from '@use-gesture/react';
+// eslint-disable-next-line no-unused-vars -- animated is used in JSX as <animated.div>
 import { animated, useSpring, useTransition } from '@react-spring/web';
 import { Loader, Trash2, PlusCircle } from 'lucide-react';
 
