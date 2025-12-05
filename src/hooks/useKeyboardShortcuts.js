@@ -1,10 +1,26 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useCallback } from 'react';
+import { router } from '../router';
+
+const navigateSafely = (path) => {
+  if (!path) return;
+
+  if (router && typeof router.navigate === 'function') {
+    router.navigate(path);
+    return;
+  }
+
+  if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+    window.history.pushState({}, '', path);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+};
 
 export const useKeyboardShortcuts = (toggleShortcutsModal, toggleSearchModal) => {
   const keySequence = useRef('');
-  const navigate = useNavigate();
   const sequenceTimeout = useRef(null);
+  const navigate = useCallback((path) => {
+    navigateSafely(path);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event) => {

@@ -2,10 +2,13 @@ import { renderHook } from '@testing-library/react';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { vi } from 'vitest';
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
+vi.mock('../router', () => ({
+  router: {
+    navigate: vi.fn(),
+  },
 }));
+import { router } from '../router';
+const mockNavigate = router.navigate;
 
 describe('useKeyboardShortcuts', () => {
   let toggleShortcutsModal;

@@ -43,6 +43,14 @@ export function ThemeProvider({ children }) {
     localStorage.setItem(HIGH_CONTRAST_KEY, highContrast);
   }, [highContrast]);
 
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  }, []);
+
+  const toggleHighContrast = useCallback(() => {
+    setHighContrast((prev) => !prev);
+  }, []);
+
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => {
@@ -64,14 +72,6 @@ export function ThemeProvider({ children }) {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [toggleHighContrast]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  }, []);
-
-  const toggleHighContrast = useCallback(() => {
-    setHighContrast((prev) => !prev);
-  }, []);
 
   const setDarkTheme = useCallback(() => setTheme('dark'), []);
   const setLightTheme = useCallback(() => setTheme('light'), []);
