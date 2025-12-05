@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useEveAuth } from '../../hooks/useEveAuth';
 import {
   getCharacterInfo,
@@ -24,14 +24,7 @@ export function CharacterProfile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load character data when authenticated
-  useEffect(() => {
-    if (isAuthenticated && character?.id) {
-      loadCharacterData();
-    }
-  }, [isAuthenticated, character?.id]);
-
-  const loadCharacterData = async () => {
+  const loadCharacterData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -83,7 +76,14 @@ export function CharacterProfile() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAccessToken, character?.id]);
+
+  // Load character data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && character?.id) {
+      loadCharacterData();
+    }
+  }, [isAuthenticated, character?.id, loadCharacterData]);
 
   // Not authenticated - show login button
   if (!isAuthenticated) {
