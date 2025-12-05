@@ -180,7 +180,7 @@ export function MarketHealth({
       {/* Overall Score */}
       <div className="mb-4">
         <div className="flex items-end justify-between mb-2">
-          <span className="text-xs text-gray-400">Overall Score</span>
+          <span className="text-xs text-text-secondary">Overall Score</span>
           <div className="text-right">
             <div className={`text-3xl font-bold font-mono ${status.color}`}>
               {overallScore}
@@ -255,7 +255,7 @@ function ScoreRow({ label, score, icon, tooltip }) {
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <span className="text-sm">{icon}</span>
-          <span className="text-xs text-gray-400" title={tooltip}>
+          <span className="text-xs text-text-secondary" title={tooltip}>
             {label}
           </span>
         </div>
@@ -432,7 +432,7 @@ export function HealthMeter({ score, size = 80 }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className={`text-xl font-bold ${status.color}`}>{score}</div>
-        <div className="text-[8px] text-gray-400">HEALTH</div>
+        <div className="text-[8px] text-text-secondary">HEALTH</div>
       </div>
     </div>
   );

@@ -8,6 +8,13 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Deep Sea Palette (New)
+        'deep-sea-900': 'var(--deep-sea-900)',
+        'deep-sea-800': 'var(--deep-sea-800)',
+        'deep-sea-700': 'var(--deep-sea-700)',
+        'deep-sea-600': 'var(--deep-sea-600)',
+        'deep-sea-100': 'var(--deep-sea-100)',
+
         // Space theme colors (dark mode) - Deep, rich space tones
         'space-black': '#050508', // Darker black
         'space-dark': '#0f1016',  // Deep blue-black
@@ -18,20 +25,19 @@ export default {
         'accent-cyan': '#00f0ff', // Cyberpunk cyan
         'accent-cyan-dim': 'rgba(0, 240, 255, 0.1)',
         'accent-gold': '#ffd700', // Gold
+        'accent-warning': '#FBBF24', // Amber/Yellow for warnings
         'accent-purple': '#bc13fe', // Neon purple
         'accent-pink': '#ff0099', // Neon pink
         'accent-green': '#00ff9d', // Neon green
 
         // Text
-        'text-primary': '#f0f2f5',
-        'text-secondary': '#9ca3af',
-        'text-muted': '#6b7280',
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-muted': 'var(--color-text-muted)',
 
-        // Light mode colors (Clean, modern)
-        'light-bg': '#f8fafc',
-        'light-surface': '#ffffff',
-        'light-text': '#0f172a',
-        'light-text-secondary': '#64748b',
+        // Backgrounds
+        'bg-primary': 'var(--color-bg-primary)',
+        'bg-secondary': 'var(--color-bg-secondary)',
 
         // Security status colors (EVE accurate)
         'sec-10': '#2fefef',   // 1.0
@@ -45,6 +51,27 @@ export default {
         'sec-02': '#f04800',   // 0.2
         'sec-01': '#d73000',   // 0.1
         'sec-00': '#f00000',   // 0.0 and below
+
+        // Notification Badge colors
+        'badge-default': '#415A77',
+        'badge-urgent': '#d73000',
+        'badge-text': '#E0E1DD',
+
+        // Skeleton loader colors
+        'skeleton-base': '#1B263B',
+        'skeleton-shimmer': '#415A77',
+      },
+      backgroundColor: {
+        'primary': 'var(--deep-sea-900)',
+        'secondary': 'var(--deep-sea-800)',
+        'interactive': 'var(--deep-sea-700)',
+      },
+      textColor: {
+        'primary': 'var(--deep-sea-100)',
+        'secondary': 'var(--deep-sea-600)',
+      },
+      borderColor: {
+        'default': 'var(--deep-sea-700)',
       },
       fontFamily: {
         'display': ['Orbitron', 'sans-serif'],
@@ -79,13 +106,43 @@ export default {
         'glow-pulse': 'glowPulse 2s ease-in-out infinite',
         'slide-in-left': 'slideInLeft 0.3s ease-out forwards',
         'bounce-in': 'bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-        'shake': 'shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97)',
+        'shake': 'shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both',
         'count-up': 'countUp 0.6s ease-out forwards',
         'scale-in': 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'fade-in-down': 'fadeInDown 0.4s ease-out forwards',
         'slide-in-up': 'slideInUp 0.4s ease-out forwards',
+        'slide-down-and-fade-in': 'slideDownAndFadeIn 0.5s ease-out forwards',
+        'badge-pulse': 'badgePulse 2s ease-out infinite',
+
+        // Page transitions
+        'page-fade-in': 'pageFadeIn 300ms ease-out forwards',
+        'page-fade-out': 'pageFadeOut 300ms ease-out forwards',
+        'page-slide-in-left': 'pageSlideInLeft 300ms ease-out forwards',
+        'page-slide-out-right': 'pageSlideOutRight 300ms ease-out forwards',
+        'page-slide-in-right': 'pageSlideInRight 300ms ease-out forwards',
+        'page-slide-out-left': 'pageSlideOutLeft 300ms ease-out forwards',
+        'page-scale-in': 'pageScaleIn 300ms ease-out forwards',
+        'page-scale-out': 'pageScaleOut 300ms ease-out forwards',
       },
       keyframes: {
+        slideDownAndFadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(-100%)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        badgePulse: {
+          '0%': {
+            transform: 'scale(1)',
+            boxShadow: '0 0 0 0 rgba(65, 90, 119, 0.7)',
+          },
+          '70%': {
+            transform: 'scale(1)',
+            boxShadow: '0 0 0 10px rgba(65, 90, 119, 0)',
+          },
+          '100%': {
+            transform: 'scale(1)',
+            boxShadow: '0 0 0 0 rgba(65, 90, 119, 0)',
+          },
+        },
         twinkle: {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.3', transform: 'scale(0.8)' },
@@ -170,6 +227,39 @@ export default {
         scaleIn: {
           '0%': { opacity: '0', transform: 'scale(0.9)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        // Page transitions
+        pageFadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        pageFadeOut: {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        pageSlideInLeft: {
+          '0%': { transform: 'translateX(-20px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        pageSlideOutRight: {
+          '0%': { transform: 'translateX(0)', opacity: '1' },
+          '100%': { transform: 'translateX(20px)', opacity: '0' },
+        },
+        pageSlideInRight: {
+          '0%': { transform: 'translateX(20px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        pageSlideOutLeft: {
+          '0%': { transform: 'translateX(0)', opacity: '1' },
+          '100%': { transform: 'translateX(-20px)', opacity: '0' },
+        },
+        pageScaleIn: {
+          '0%': { opacity: '0', transform: 'scale(0.98)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        pageScaleOut: {
+          '0%': { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(0.98)' },
         },
       },
     },

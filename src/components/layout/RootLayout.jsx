@@ -1,10 +1,12 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, useNavigate, useLocation, useNavigationType, ScrollRestoration } from 'react-router-dom';
+import PageTransition from '../common/PageTransition';
 import { SectionErrorBoundary } from '../common/ErrorBoundary';
 import { Sidebar, MobileNav } from '../common/Sidebar';
+import SkipLink from '../common/SkipLink';
 import { AnimatedBackground } from './AnimatedBackground';
 import Header from './Header';
 import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../../hooks/useKeyboardShortcuts.jsx';
-import useSidebar from '../../hooks/useSidebar';
 
 /**
  * Root Layout Component
@@ -13,24 +15,44 @@ import useSidebar from '../../hooks/useSidebar';
 export function RootLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const navigationType = useNavigationType();
   const { showHelp, setShowHelp } = useKeyboardShortcuts(undefined, undefined, {
     navigate,
     pathname: location.pathname,
   });
-  const { isCollapsed, isHovering, setIsHovering, toggleSidebar } = useSidebar();
-  const showMiniMode = isCollapsed && !isHovering;
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const stored = localStorage.getItem('evetrade_sidebar_collapsed');
+    return stored ? JSON.parse(stored) : false;
+  });
+  const [transitionType, setTransitionType] = useState('fade');
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem('evetrade_sidebar_collapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  // Determine transition type based on navigation action
+  useEffect(() => {
+    if (navigationType === 'PUSH') {
+      setTransitionType('slide-left');
+    } else if (navigationType === 'POP') {
+      setTransitionType('slide-right');
+    } else {
+      setTransitionType('fade');
+    }
+  }, [location, navigationType]);
 
   return (
     <div className="min-h-screen bg-space-black">
+      <ScrollRestoration />
+      <SkipLink />
       <AnimatedBackground />
 
       {/* Desktop Sidebar */}
       <SectionErrorBoundary name="Sidebar">
         <Sidebar
-          isCollapsed={isCollapsed}
-          isHovering={isHovering}
-          setIsHovering={setIsHovering}
-          onToggle={toggleSidebar}
+          isCollapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
       </SectionErrorBoundary>
 
@@ -38,18 +60,27 @@ export function RootLayout() {
       <div
         className={`
           transition-all duration-300
-          ${isCollapsed && !isHovering ? 'lg:pl-[60px]' : 'lg:pl-64'}
+          ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
         `}
       >
         <Header />
         <main
+          id="main-content"
           className={`
             min-h-screen
             pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0
           `}
         >
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-accent-cyan focus:text-space-black"
+          >
+            Skip to main content
+          </a>
           <SectionErrorBoundary name="MainContent">
-            <Outlet />
+            <PageTransition location={location} type={transitionType}>
+              <Outlet />
+            </PageTransition>
           </SectionErrorBoundary>
         </main>
       </div>

@@ -69,3 +69,11 @@ vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 // Mock scrollIntoView for autocomplete tests
 Element.prototype.scrollIntoView = vi.fn();
+
+// Mock navigator.clipboard
+Object.defineProperty(navigator, 'clipboard', {
+  value: {
+    writeText: vi.fn(() => Promise.resolve()),
+  },
+  writable: true,
+});
