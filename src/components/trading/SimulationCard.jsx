@@ -3,6 +3,14 @@ import { formatISK, formatPercent } from '../../utils/formatters';
 import { Button } from '../common/Button';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
 
+/** Helper component for displaying a metric row */
+const Metric = ({ label, value, tooltip, valueClassName = 'text-text-primary' }) => (
+  <div className="flex justify-between items-baseline" title={tooltip}>
+    <span className="text-sm text-text-secondary">{label}</span>
+    <span className={`font-mono text-base ${valueClassName}`}>{value}</span>
+  </div>
+);
+
 /**
  * A component to display a single trade simulation scenario.
  * It shows calculated metrics and provides copy/delete actions.
@@ -20,13 +28,6 @@ export function SimulationCard({ scenario, onCopy, onDelete, isBest, className =
     worstCase,
     expectedProfit,
   } = scenario;
-
-  const Metric = ({ label, value, tooltip, valueClassName = 'text-text-primary' }) => (
-    <div className="flex justify-between items-baseline" title={tooltip}>
-      <span className="text-sm text-text-secondary">{label}</span>
-      <span className={`font-mono text-base ${valueClassName}`}>{value}</span>
-    </div>
-  );
 
   return (
     <GlassmorphicCard

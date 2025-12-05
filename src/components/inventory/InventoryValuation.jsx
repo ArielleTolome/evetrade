@@ -2,6 +2,107 @@ import { useState, useMemo, useEffect } from 'react';
 import { GlassmorphicCard } from '../common/GlassmorphicCard';
 import { formatNumber, formatISK, formatPercent } from '../../utils/formatters';
 
+/** Chart colors for pie chart */
+const CHART_COLORS = [
+  '#00d4ff', // accent-cyan
+  '#ffd700', // accent-gold
+  '#8b5cf6', // accent-purple
+  '#2fefef', // sec-10
+  '#48f048', // sec-09
+  '#00ef47', // sec-08
+  '#f06000', // sec-03
+  '#d77700', // sec-04
+];
+
+/**
+ * Simple pie chart component for inventory valuation
+ */
+const PieChart = ({ data, size = 300, totalValue }) => {
+  const radius = size / 2;
+  const centerX = radius;
+  const centerY = radius;
+  const chartRadius = radius * 0.8;
+
+  let currentAngle = -90; // Start at top
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform rotate-0">
+        {data.map((category, index) => {
+          const percentage = category.percentage;
+          const angle = (percentage / 100) * 360;
+          const startAngle = currentAngle;
+          const endAngle = currentAngle + angle;
+
+          // Calculate arc path
+          const startRad = (startAngle * Math.PI) / 180;
+          const endRad = (endAngle * Math.PI) / 180;
+
+          const x1 = centerX + chartRadius * Math.cos(startRad);
+          const y1 = centerY + chartRadius * Math.sin(startRad);
+          const x2 = centerX + chartRadius * Math.cos(endRad);
+          const y2 = centerY + chartRadius * Math.sin(endRad);
+
+          const largeArc = angle > 180 ? 1 : 0;
+
+          const pathData = [
+            `M ${centerX} ${centerY}`,
+            `L ${x1} ${y1}`,
+            `A ${chartRadius} ${chartRadius} 0 ${largeArc} 1 ${x2} ${y2}`,
+            'Z',
+          ].join(' ');
+
+          currentAngle = endAngle;
+
+          return (
+            <path
+              key={category.name}
+              d={pathData}
+              fill={CHART_COLORS[index % CHART_COLORS.length]}
+              opacity="0.8"
+              stroke="#0a0a0f"
+              strokeWidth="2"
+              className="transition-opacity hover:opacity-100 cursor-pointer"
+              title={`${category.name}: ${formatPercent(category.percentage / 100)}`}
+            />
+          );
+        })}
+
+        {/* Center circle for donut effect */}
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r={chartRadius * 0.5}
+          fill="#0a0a0f"
+          stroke="#00d4ff"
+          strokeWidth="2"
+        />
+
+        {/* Center text */}
+        <text
+          x={centerX}
+          y={centerY - 10}
+          textAnchor="middle"
+          fill="#e2e8f0"
+          fontSize="14"
+          fontWeight="bold"
+        >
+          Total Value
+        </text>
+        <text
+          x={centerX}
+          y={centerY + 10}
+          textAnchor="middle"
+          fill="#00d4ff"
+          fontSize="12"
+        >
+          {formatISK(totalValue)}
+        </text>
+      </svg>
+    </div>
+  );
+};
+
 /**
  * Inventory Valuation Component
  * Calculates total inventory value and tracks changes over time
@@ -126,109 +227,6 @@ export function InventoryValuation({
 
     return categories;
   }, [currentValuation]);
-
-  /**
-   * Generate chart colors
-   */
-  const chartColors = [
-    '#00d4ff', // accent-cyan
-    '#ffd700', // accent-gold
-    '#8b5cf6', // accent-purple
-    '#2fefef', // sec-10
-    '#48f048', // sec-09
-    '#00ef47', // sec-08
-    '#f06000', // sec-03
-    '#d77700', // sec-04
-  ];
-
-  /**
-   * Simple pie chart component
-   */
-  const PieChart = ({ data, size = 300 }) => {
-    const radius = size / 2;
-    const centerX = radius;
-    const centerY = radius;
-    const chartRadius = radius * 0.8;
-
-    let currentAngle = -90; // Start at top
-
-    return (
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="transform rotate-0">
-          {data.map((category, index) => {
-            const percentage = category.percentage;
-            const angle = (percentage / 100) * 360;
-            const startAngle = currentAngle;
-            const endAngle = currentAngle + angle;
-
-            // Calculate arc path
-            const startRad = (startAngle * Math.PI) / 180;
-            const endRad = (endAngle * Math.PI) / 180;
-
-            const x1 = centerX + chartRadius * Math.cos(startRad);
-            const y1 = centerY + chartRadius * Math.sin(startRad);
-            const x2 = centerX + chartRadius * Math.cos(endRad);
-            const y2 = centerY + chartRadius * Math.sin(endRad);
-
-            const largeArc = angle > 180 ? 1 : 0;
-
-            const pathData = [
-              `M ${centerX} ${centerY}`,
-              `L ${x1} ${y1}`,
-              `A ${chartRadius} ${chartRadius} 0 ${largeArc} 1 ${x2} ${y2}`,
-              'Z',
-            ].join(' ');
-
-            currentAngle = endAngle;
-
-            return (
-              <path
-                key={category.name}
-                d={pathData}
-                fill={chartColors[index % chartColors.length]}
-                opacity="0.8"
-                stroke="#0a0a0f"
-                strokeWidth="2"
-                className="transition-opacity hover:opacity-100 cursor-pointer"
-                title={`${category.name}: ${formatPercent(category.percentage / 100)}`}
-              />
-            );
-          })}
-
-          {/* Center circle for donut effect */}
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r={chartRadius * 0.5}
-            fill="#0a0a0f"
-            stroke="#00d4ff"
-            strokeWidth="2"
-          />
-
-          {/* Center text */}
-          <text
-            x={centerX}
-            y={centerY - 10}
-            textAnchor="middle"
-            fill="#e2e8f0"
-            fontSize="14"
-            fontWeight="bold"
-          >
-            Total Value
-          </text>
-          <text
-            x={centerX}
-            y={centerY + 10}
-            textAnchor="middle"
-            fill="#00d4ff"
-            fontSize="12"
-          >
-            {formatISK(currentValuation.total)}
-          </text>
-        </svg>
-      </div>
-    );
-  };
 
   /**
    * Export valuation report
@@ -371,7 +369,7 @@ export function InventoryValuation({
       {/* Pie Chart */}
       {showChart && categoryData.length > 0 && (
         <div className="flex flex-col lg:flex-row items-center justify-center gap-8 mb-6 p-6 bg-space-mid/20 rounded-lg">
-          <PieChart data={categoryData} size={280} />
+          <PieChart data={categoryData} size={280} totalValue={currentValuation.total} />
 
           {/* Legend */}
           <div className="flex-1 space-y-2 max-w-md">
@@ -383,7 +381,7 @@ export function InventoryValuation({
                 <div className="flex items-center flex-1">
                   <div
                     className="w-4 h-4 rounded mr-3 flex-shrink-0"
-                    style={{ backgroundColor: chartColors[index % chartColors.length] }}
+                    style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-text-primary truncate">
@@ -422,7 +420,7 @@ export function InventoryValuation({
                   <div className="flex items-center">
                     <div
                       className="w-3 h-3 rounded mr-3"
-                      style={{ backgroundColor: chartColors[index % chartColors.length] }}
+                      style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                     />
                     <span className="font-semibold text-text-primary">
                       {category.name}
