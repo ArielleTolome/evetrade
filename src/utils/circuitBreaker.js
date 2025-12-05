@@ -133,7 +133,7 @@ export class CircuitBreaker {
 
     // Handle rate limits immediately
     if (errorType === ErrorType.RATE_LIMIT) {
-      const retryAfter = error.response.headers['retry-after'];
+      const retryAfter = error.response?.headers?.['retry-after'];
       const backoff = retryAfter ? parseInt(retryAfter, 10) * 1000 : this.config.openStateTimeout;
       this.open(backoff);
       return;

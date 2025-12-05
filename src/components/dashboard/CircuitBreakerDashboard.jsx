@@ -68,10 +68,10 @@ const CircuitBreakerDashboard = () => {
                   </Badge>
                 </td>
                 <td className="px-4 py-2">
-                  {(circuit.failureRate * 100).toFixed(2)}%
+                  {((circuit.failureRate ?? 0) * 100).toFixed(2)}%
                 </td>
                 <td className="px-4 py-2">
-                  {circuit.stats.lastTrip ? new Date(circuit.stats.lastTrip.time).toLocaleTimeString() : 'N/A'}
+                  {circuit.stats?.lastTrip?.time ? new Date(circuit.stats.lastTrip.time).toLocaleTimeString() : 'N/A'}
                 </td>
               </tr>
             ))}
