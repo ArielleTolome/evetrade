@@ -60,7 +60,7 @@ export function PriceSparkline({
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
-  const { history, path, trend, trendPercent } = useMemo(() => {
+  const { history: _history, path, trend, trendPercent } = useMemo(() => {
     const history = generatePriceHistory(price, points);
     const path = calculatePath(history, width, height);
     const firstPrice = history[0];
