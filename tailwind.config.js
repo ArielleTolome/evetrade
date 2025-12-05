@@ -56,6 +56,10 @@ export default {
         'badge-default': '#415A77',
         'badge-urgent': '#d73000',
         'badge-text': '#E0E1DD',
+
+        // Skeleton loader colors
+        'skeleton-base': '#1B263B',
+        'skeleton-shimmer': '#415A77',
       },
       backgroundColor: {
         'primary': 'var(--deep-sea-900)',
