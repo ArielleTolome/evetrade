@@ -191,7 +191,7 @@ export function OrderBookCard({
   regionId,
   typeId,
   stationId = null,
-  itemName = 'Item',
+  itemName: _itemName = 'Item',
   className = '',
 }) {
   const [orders, setOrders] = useState(null);

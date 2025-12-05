@@ -17,7 +17,7 @@ import { formatISK, formatNumber, formatPercent, formatRelativeTime } from '../u
  */
 export function AnalyticsPage() {
   const { isAuthenticated, character, getAccessToken, login } = useEveAuth();
-  const [walletBalance, setWalletBalance] = useState(0);
+  const [_walletBalance, setWalletBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [journalEntries, setJournalEntries] = useState([]);
   const [typeNames, setTypeNames] = useState({});

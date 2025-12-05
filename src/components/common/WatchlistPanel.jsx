@@ -10,7 +10,7 @@ import { FormInput } from '../forms/FormInput';
  */
 export function WatchlistPanel({ className = '' }) {
   const {
-    watchlists,
+    watchlists: _watchlists,
     watchlistArray,
     activeList,
     setActiveList,
@@ -214,7 +214,7 @@ export function WatchlistPanel({ className = '' }) {
     return '—';
   };
 
-  const handleSort = useCallback((newSortBy) => {
+  const _handleSort = useCallback((newSortBy) => {
     if (sortBy === newSortBy) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {

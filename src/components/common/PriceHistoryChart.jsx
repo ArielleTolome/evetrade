@@ -115,16 +115,19 @@ export function PriceHistoryChart({
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
+  // Stable timestamp for calculations (initialized once on mount)
+  const [mountTimestamp] = useState(() => Date.now());
+
   // Use ESI data if provided, otherwise generate mock data
   const data = useMemo(() => {
     if (historyData && historyData.length > 0) {
       const converted = convertESIHistoryToChartData(historyData);
       // Filter to only show last N days
-      const cutoffDate = Date.now() - (days * 24 * 60 * 60 * 1000);
+      const cutoffDate = mountTimestamp - (days * 24 * 60 * 60 * 1000);
       return converted.filter(d => d.timestamp >= cutoffDate);
     }
     return generateDetailedPriceHistory(price, days);
-  }, [historyData, price, days]);
+  }, [historyData, price, days, mountTimestamp]);
 
   const { linePath, areaPath, points, min, max } = useMemo(
     () => calculateChartPath(data, width, height),

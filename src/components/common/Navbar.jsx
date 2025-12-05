@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useEveAuth } from '../../hooks/useEveAuth';
@@ -295,7 +295,6 @@ function NavItem({ category }) {
  */
 function SearchBar({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
   const searchRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -306,11 +305,10 @@ function SearchBar({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  // Search through all navigation items
-  useEffect(() => {
+  // Compute search results based on query (derived state, no useEffect needed)
+  const results = useMemo(() => {
     if (!query.trim()) {
-      setResults([]);
-      return;
+      return [];
     }
 
     const searchQuery = query.toLowerCase();
@@ -323,7 +321,7 @@ function SearchBar({ isOpen, onClose }) {
       item.description.toLowerCase().includes(searchQuery)
     );
 
-    setResults(filtered.slice(0, 6));
+    return filtered.slice(0, 6);
   }, [query]);
 
   // Close on click outside

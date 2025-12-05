@@ -109,7 +109,7 @@ function StandingSlider({ label, value, onChange }) {
 /**
  * Skill Calculator Component
  */
-export function SkillCalculator({ tradeValue = 100000000, onSettingsChange }) {
+export function SkillCalculator({ tradeValue = 100000000, onSettingsChange: _onSettingsChange }) {
   const { isAuthenticated, character, getAccessToken } = useEveAuth();
   const [accounting, setAccounting] = useState(5);
   const [brokerRelations, setBrokerRelations] = useState(5);

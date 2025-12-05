@@ -20,7 +20,6 @@ export function Skeleton({
   // Handle circle variant
   if (circle) {
     const sizeValue = size || width || height || 40;
-    const sizeClass = typeof sizeValue === 'number' ? `w-[${sizeValue}px] h-[${sizeValue}px]` : sizeValue;
 
     return (
       <div
@@ -243,11 +242,11 @@ export function SkeletonChart({ height = 300, showLegend = true, className = '',
         />
         {/* Chart bars overlay effect */}
         <div className="absolute inset-0 flex items-end justify-around p-4 gap-2">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {[45, 72, 38, 85, 52, 67, 41, 78].map((height, i) => (
             <div
               key={i}
               className={`flex-1 ${animation === 'shimmer' ? 'animate-shimmer' : 'animate-pulse'} bg-gradient-to-t from-accent-cyan/20 to-transparent rounded-t`}
-              style={{ height: `${Math.random() * 60 + 30}%` }}
+              style={{ height: `${height}%` }}
             />
           ))}
         </div>

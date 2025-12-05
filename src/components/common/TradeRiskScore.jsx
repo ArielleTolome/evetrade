@@ -71,7 +71,7 @@ export function calculateRiskFactors(trade) {
   const margin = trade['Gross Margin'] || 0;
   const buyPrice = trade['Buy Price'] || 0;
   const sellPrice = trade['Sell Price'] || 0;
-  const netProfit = trade['Net Profit'] || 0;
+  const _netProfit = trade['Net Profit'] || 0;
 
   // 1. Volume Risk (35% weight) - Low volume = scam potential
   let volumeRisk = 0;

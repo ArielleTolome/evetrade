@@ -140,7 +140,7 @@ function calculateJumps(fromHub, toHub) {
  */
 export function RegionalPriceComparison({
   buyPrice,
-  sellPrice,
+  sellPrice: _sellPrice,
   volume = 100,
   currentStation = '',
   compact = false,

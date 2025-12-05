@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { formatISK, formatNumber, formatPercent } from '../../utils/formatters';
 
 /**
@@ -175,7 +175,7 @@ export function RollingProfitStats({
   sellTransactions = 0,
   className = ''
 }) {
-  const netProfit = tradeIncome - tradePurchases - salesTax - brokerFees;
+  const _netProfit = tradeIncome - tradePurchases - salesTax - brokerFees;
 
   return (
     <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 ${className}`}>

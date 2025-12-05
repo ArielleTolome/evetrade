@@ -6,7 +6,7 @@ import { useMemo } from 'react';
  */
 export function TradeOpportunityScore({
   trade,
-  allTrades = [],
+  allTrades: _allTrades = [],
   showBreakdown = false,
   size = 'md', // 'sm', 'md', 'lg'
   className = '',

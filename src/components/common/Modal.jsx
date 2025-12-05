@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, createContext } from 'react';
+import React, { useEffect, useRef, useCallback, createContext, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 /**
@@ -181,8 +181,9 @@ export function Modal({
   backdropClassName = '',
 }) {
   const modalRef = useRef(null);
-  const modalId = useRef(`modal-${Math.random().toString(36).substr(2, 9)}`);
-  const zIndexRef = useRef(1000);
+  const generatedId = useId();
+  const modalIdRef = useRef(`modal-${generatedId}`);
+  const [zIndex, setZIndex] = useState(1000);
 
   // Manage focus trap
   useFocusTrap(isOpen, modalRef);
@@ -192,11 +193,12 @@ export function Modal({
 
   // Register/unregister modal in stack
   useEffect(() => {
+    const currentModalId = modalIdRef.current;
     if (isOpen) {
-      zIndexRef.current = registerModal(modalId.current);
+      setZIndex(registerModal(currentModalId));
     }
     return () => {
-      unregisterModal(modalId.current);
+      unregisterModal(currentModalId);
     };
   }, [isOpen]);
 
@@ -239,8 +241,8 @@ export function Modal({
 
   const modalContent = (
     <div
-      className={`fixed inset-0 z-[${zIndexRef.current}] flex items-end sm:items-center justify-center p-0 sm:p-6 pt-safe ${backdropClassName}`}
-      style={{ zIndex: zIndexRef.current }}
+      className={`fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6 pt-safe ${backdropClassName}`}
+      style={{ zIndex }}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"

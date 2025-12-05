@@ -16,6 +16,9 @@ export function OrderUpdatePriorityQueue({
   const [completedOrders, setCompletedOrders] = useState(new Set());
   const [showCompleted, setShowCompleted] = useState(false);
 
+  // Stable timestamp for calculations (initialized once on mount)
+  const [now] = useState(() => Date.now());
+
   // Calculate priority for each order
   const prioritizedOrders = useMemo(() => {
     if (!orders.length) return [];
@@ -57,7 +60,7 @@ export function OrderUpdatePriorityQueue({
 
       // Calculate time since last update
       const lastUpdated = new Date(order.issued);
-      const hoursSinceUpdate = (Date.now() - lastUpdated) / (1000 * 60 * 60);
+      const hoursSinceUpdate = (now - lastUpdated) / (1000 * 60 * 60);
 
       // Potential profit if order fills
       const profitPotential = marketItem
@@ -119,7 +122,7 @@ export function OrderUpdatePriorityQueue({
       }
       return b.priority - a.priority;
     });
-  }, [orders, marketData, typeNames, completedOrders]);
+  }, [orders, marketData, typeNames, completedOrders, now]);
 
   // Active (not completed) orders
   const activeOrders = prioritizedOrders.filter(o => !o.isCompleted);

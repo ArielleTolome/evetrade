@@ -12,7 +12,7 @@ export function QuickAlertButton({
   ALERT_TYPES,
   PRIORITY_LEVELS,
   ALERT_PRESETS,
-  historicalData = null,
+  historicalData: _historicalData = null,
   className = '',
 }) {
   const [showMenu, setShowMenu] = useState(false);

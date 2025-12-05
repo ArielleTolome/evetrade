@@ -270,7 +270,7 @@ export function TradeRiskScoreDemo() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {Object.entries(SAMPLE_TRADES).map(([key, trade]) => {
                 const factors = calculateRiskFactors(trade);
-                const { totalScore, level } = calculateOverallRisk(factors);
+                const { totalScore, level: _level } = calculateOverallRisk(factors);
                 return (
                   <div key={key} className="text-center">
                     <div className="text-xs text-text-secondary mb-2 capitalize">

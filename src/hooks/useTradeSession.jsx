@@ -79,10 +79,11 @@ export function useTradeSession() {
     });
   }, []);
 
-  // Session duration in minutes
+  // Session duration in minutes (uses stable timestamp from state initialization)
+  const [mountTime] = useState(() => Date.now());
   const sessionDuration = useMemo(() => {
-    return Math.floor((Date.now() - session.startTime) / 60000); // minutes
-  }, [session.startTime]);
+    return Math.floor((mountTime - session.startTime) / 60000); // minutes
+  }, [session.startTime, mountTime]);
 
   return {
     session,

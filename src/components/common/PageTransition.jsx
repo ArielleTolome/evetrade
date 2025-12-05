@@ -2,12 +2,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
 
 const PageTransition = ({ children, type = 'fade', location }) => {
-  const [isReducedMotion, setIsReducedMotion] = useState(false);
+  // Initialize with media query value using lazy initializer (runs once on mount)
+  const [isReducedMotion, setIsReducedMotion] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+    return false;
+  });
   const nodeRef = useRef(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setIsReducedMotion(mediaQuery.matches);
 
     const handleChange = () => setIsReducedMotion(mediaQuery.matches);
     mediaQuery.addEventListener('change', handleChange);

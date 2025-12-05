@@ -118,7 +118,7 @@ export function QuickFiltersBar({
   };
 
   // Get active filter functions for external use
-  const getActiveFilterFunctions = () => {
+  const _getActiveFilterFunctions = () => {
     return filterPresets
       .filter(p => activeFilters.includes(p.id))
       .map(p => p.filter);

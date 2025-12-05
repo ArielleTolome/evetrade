@@ -276,7 +276,7 @@ export function SmartMultibuyBudget({
         {/* Item List */}
         {showList && optimizedList.items.length > 0 && (
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {optimizedList.items.map((item, idx) => (
+            {optimizedList.items.map((item, _idx) => (
               <div
                 key={item.itemId}
                 className="p-2 rounded-lg bg-white/5 flex items-center justify-between"

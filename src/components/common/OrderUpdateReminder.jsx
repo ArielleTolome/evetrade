@@ -10,7 +10,7 @@ export function OrderUpdateReminder({
   typeNames = {},
   marketData = [],
   staleThresholdHours = 4,
-  onUpdateOrder: _onUpdateOrder,
+  onUpdateOrder,
   onCopyPrice,
   className = '',
 }) {

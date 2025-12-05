@@ -18,7 +18,7 @@ export function useTradeNotes() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : {};
-    } catch (e) {
+    } catch {
       return {};
     }
   });
@@ -88,7 +88,7 @@ export function useTradeNotes() {
   // Delete note
   const deleteNote = useCallback((itemId) => {
     setNotes(prev => {
-      const { [itemId]: removed, ...rest } = prev;
+      const { [itemId]: _removed, ...rest } = prev;
       return rest;
     });
   }, []);
@@ -97,7 +97,7 @@ export function useTradeNotes() {
   const searchNotes = useCallback((query) => {
     const lowercaseQuery = query.toLowerCase();
     return Object.entries(notes)
-      .filter(([itemId, note]) =>
+      .filter(([_itemId, note]) =>
         note.text?.toLowerCase().includes(lowercaseQuery)
       )
       .map(([itemId, note]) => ({ itemId, ...note }));
@@ -106,7 +106,7 @@ export function useTradeNotes() {
   // Get all items with specific tag
   const getItemsByTag = useCallback((tagId) => {
     return Object.entries(notes)
-      .filter(([itemId, note]) => note.tags?.includes(tagId))
+      .filter(([_itemId, note]) => note.tags?.includes(tagId))
       .map(([itemId, note]) => ({ itemId, ...note }));
   }, [notes]);
 
@@ -121,7 +121,7 @@ export function useTradeNotes() {
       const imported = JSON.parse(jsonString);
       setNotes(prev => ({ ...prev, ...imported }));
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   }, []);

@@ -112,7 +112,7 @@ function getSummary(decision, reasons) {
 /**
  * Compact badge showing GO/WAIT/AVOID
  */
-export function TradeDecisionBadge({ trade, allTrades = [], showReasons = false, className = '' }) {
+export function TradeDecisionBadge({ trade, allTrades = [], showReasons: _showReasons = false, className = '' }) {
   const { decision, reasons, confidence } = useMemo(
     () => calculateTradeDecision(trade, allTrades),
     [trade, allTrades]

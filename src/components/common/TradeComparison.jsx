@@ -200,7 +200,7 @@ export function TradeComparison({
   // Share comparison
   const shareComparison = useCallback(() => {
     const hash = generateComparisonHash(trades);
-    const url = `${window.location.origin}${window.location.pathname}?comparison=${hash}`;
+    const _url = `${window.location.origin}${window.location.pathname}?comparison=${hash}`;
     setShowShareModal(true);
   }, [trades]);
 
@@ -254,7 +254,7 @@ export function TradeComparison({
     setDragOver(null);
   }, []);
 
-  const handleDrop = useCallback((e, slotIndex) => {
+  const handleDrop = useCallback((e, _slotIndex) => {
     if (!enableDragDrop) return;
     e.preventDefault();
     setDragOver(null);

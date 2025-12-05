@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { GlassmorphicCard } from './GlassmorphicCard';
 import { formatISK, formatPercent, formatCompact } from '../../utils/formatters';
-import { getWalletTransactions, getMarketHistory } from '../../api/esi';
+import { getWalletTransactions } from '../../api/esi';
 import { useEveAuth } from '../../hooks/useEveAuth';
 
 /**

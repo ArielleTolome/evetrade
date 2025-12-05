@@ -217,7 +217,7 @@ export function useTradingSkills() {
     const maxOrders = BASE_RATES.maxOrders + tradeOrders + retailOrders + wholesaleOrders + tycoonOrders;
 
     // Calculate total fees for a round trip (buy + sell)
-    const _totalFees = salesTax + brokerFee * 2;
+    const totalFees = salesTax + brokerFee * 2;
 
     return {
       salesTax,
@@ -327,7 +327,7 @@ export function useTradingSkills() {
    * @returns {Object} Profitability analysis
    */
   const calculateProfitImpact = useCallback((buyPrice, sellPrice, quantity = 1) => {
-    const { salesTax, brokerFee, totalFees } = currentRates;
+    const { salesTax, brokerFee, totalFees: _totalFees } = currentRates;
 
     // Current profit calculation
     const buyFee = buyPrice * brokerFee;

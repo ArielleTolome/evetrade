@@ -8,7 +8,7 @@ import useTradeNotes from '../../hooks/useTradeNotes';
  * Usage: Import and render in a test page to see all features
  */
 export default function TradeNotesDemo() {
-  const { stats, exportNotes, importNotes, notes } = useTradeNotes();
+  const { stats, exportNotes, importNotes: _importNotes, notes } = useTradeNotes();
   const [showStats, setShowStats] = useState(true);
 
   // Sample trade items for demonstration

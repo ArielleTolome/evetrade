@@ -40,8 +40,8 @@ export function TradingDashboard({
 
     // Sort by different criteria
     const byProfit = [...data].sort((a, b) => (b['Net Profit'] || 0) - (a['Net Profit'] || 0));
-    const byMargin = [...data].sort((a, b) => (b['Gross Margin'] || 0) - (a['Gross Margin'] || 0));
-    const byVolume = [...data].sort((a, b) => (b['Volume'] || 0) - (a['Volume'] || 0));
+    const _byMargin = [...data].sort((a, b) => (b['Gross Margin'] || 0) - (a['Gross Margin'] || 0));
+    const _byVolume = [...data].sort((a, b) => (b['Volume'] || 0) - (a['Volume'] || 0));
 
     // Quick flips: high volume, decent margin
     const quickFlips = data

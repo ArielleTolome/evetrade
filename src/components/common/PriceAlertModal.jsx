@@ -1,43 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { ItemAutocomplete } from '../forms/ItemAutocomplete';
 import { Button } from './Button';
+
+/**
+ * Compute form data from initial alert
+ */
+const getFormDataFromAlert = (alert) => ({
+  itemName: alert?.itemName || '',
+  typeId: alert?.typeId || '',
+  alertType: alert?.alertType || 'price_below',
+  threshold: alert?.threshold || '',
+  regionId: alert?.regionId || 10000002,
+});
 
 /**
  * Price Alert Modal Component
  * Create or edit price alerts with mobile-friendly form
  */
 export function PriceAlertModal({ isOpen, onClose, onSave, initialAlert = null }) {
-  const [formData, setFormData] = useState({
-    itemName: '',
-    typeId: '',
-    alertType: 'price_below',
-    threshold: '',
-    regionId: 10000002, // The Forge
-  });
+  // Compute initial form data from alert prop
+  const initialFormData = useMemo(() => getFormDataFromAlert(initialAlert), [initialAlert]);
 
+  const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Initialize form with alert data if editing
+  // Track previous open state to detect modal opening
+  const wasOpenRef = useRef(isOpen);
+
+  // Reset form when modal opens or initialAlert changes
   useEffect(() => {
-    if (initialAlert) {
-      setFormData({
-        itemName: initialAlert.itemName || '',
-        typeId: initialAlert.typeId || '',
-        alertType: initialAlert.alertType || 'price_below',
-        threshold: initialAlert.threshold || '',
-        regionId: initialAlert.regionId || 10000002,
-      });
-    } else {
-      setFormData({
-        itemName: '',
-        typeId: '',
-        alertType: 'price_below',
-        threshold: '',
-        regionId: 10000002,
-      });
+    // Only reset when modal transitions from closed to open
+    if (isOpen && !wasOpenRef.current) {
+      setFormData(getFormDataFromAlert(initialAlert));
+      setErrors({});
+      setSelectedItem(null);
     }
-  }, [initialAlert, isOpen]);
+    wasOpenRef.current = isOpen;
+  }, [isOpen, initialAlert]);
 
   // Handle item selection from autocomplete
   const handleItemSelect = (item) => {

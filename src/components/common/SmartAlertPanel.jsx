@@ -14,7 +14,7 @@ export function SmartAlertPanel({
   onCreateFromPreset,
   onRemoveAlert,
   onResetAlert,
-  onUpdateAlert,
+  onUpdateAlert: _onUpdateAlert,
   onClearAll,
   settings = {},
   notificationPermission = 'default',
@@ -23,7 +23,7 @@ export function SmartAlertPanel({
   ALERT_TYPES,
   PRIORITY_LEVELS,
   ALERT_PRESETS,
-  onCalculateOptimalThreshold,
+  onCalculateOptimalThreshold: _onCalculateOptimalThreshold,
 }) {
   const [isCreating, setIsCreating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -458,7 +458,7 @@ export function SmartAlertPanel({
                   onChange={(e) => handleInputChange('type', e.target.value)}
                   className="w-full px-4 py-3 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan"
                 >
-                  {Object.entries(ALERT_TYPES).map(([key, value]) => (
+                  {Object.entries(ALERT_TYPES).map(([_key, value]) => (
                     <option key={value} value={value}>{getAlertTypeLabel(value)}</option>
                   ))}
                 </select>
@@ -500,7 +500,7 @@ export function SmartAlertPanel({
                   onChange={(e) => handleInputChange('priority', e.target.value)}
                   className="w-full px-4 py-3 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan"
                 >
-                  {Object.entries(PRIORITY_LEVELS).map(([key, value]) => {
+                  {Object.entries(PRIORITY_LEVELS).map(([_key, value]) => {
                     const badge = getPriorityBadge(value);
                     return (
                       <option key={value} value={value}>
@@ -555,7 +555,7 @@ export function SmartAlertPanel({
               className="px-3 py-2 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-purple"
             >
               <option value="all">All Priorities</option>
-              {Object.entries(PRIORITY_LEVELS).map(([key, value]) => {
+              {Object.entries(PRIORITY_LEVELS).map(([_key, value]) => {
                 const badge = getPriorityBadge(value);
                 return (
                   <option key={value} value={value}>{badge.label}</option>
@@ -569,7 +569,7 @@ export function SmartAlertPanel({
               className="px-3 py-2 rounded-lg bg-space-dark/50 border border-accent-cyan/20 text-text-primary text-sm focus:outline-none focus:border-accent-purple"
             >
               <option value="all">All Types</option>
-              {Object.entries(ALERT_TYPES).map(([key, value]) => (
+              {Object.entries(ALERT_TYPES).map(([_key, value]) => (
                 <option key={value} value={value}>{getAlertTypeLabel(value)}</option>
               ))}
             </select>
