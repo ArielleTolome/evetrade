@@ -23,7 +23,7 @@ import { PriceSparkline } from '../components/common/PriceSparkline';
 import { CompetitionAnalysis } from '../components/common/CompetitionAnalysis';
 import { ItemTierBadge } from '../components/common/ItemTierBadge';
 import { TradeSimulator } from '../components/trading/TradeSimulator';
-import { AdvancedSortPanel, applySorts } from '../components/common/AdvancedSortPanel';
+import { AdvancedSortPanel, applySorts, SORTABLE_COLUMNS } from '../components/common/AdvancedSortPanel';
 import { BulkActionsBar, SelectionCheckbox } from '../components/common/BulkActionsBar';
 import { DataFreshnessIndicator } from '../components/common/DataFreshnessIndicator';
 import { TradingDashboard } from '../components/common/TradingDashboard';
@@ -625,7 +625,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     if (!dataToSort || !Array.isArray(dataToSort)) return dataToSort;
     if (advancedSorts.length === 0) return dataToSort;
 
-    return applySorts(dataToSort, advancedSorts, tableColumns);
+    return applySorts(dataToSort, advancedSorts, SORTABLE_COLUMNS);
   }, [quickFilteredData, filteredData, advancedSorts]);
 
   // Keyboard shortcuts configuration
