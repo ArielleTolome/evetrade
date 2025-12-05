@@ -12,6 +12,8 @@ export { ProgressBar } from './ProgressBar';
 export { ErrorBoundary } from './ErrorBoundary';
 export { Tooltip, TooltipTrigger, InfoTooltip } from './Tooltip';
 export { Modal, useModal } from './Modal';
+export { Timeline } from './Timeline';
+export { TimelineItem } from './TimelineItem';
 
 // Skeleton loading components
 export {
