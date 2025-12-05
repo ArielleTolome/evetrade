@@ -95,8 +95,13 @@ export default {
           '50%': { transform: 'translateY(-15px)' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 5px rgba(0, 240, 255, 0.2)' },
-          '100%': { boxShadow: '0 0 25px rgba(0, 240, 255, 0.6)' },
+          '0%': {
+            boxShadow: '0 0 5px rgba(0, 240, 255, 0.4), 0 0 10px rgba(0, 240, 255, 0.3)',
+
+          },
+          '100%': {
+            boxShadow: '0 0 20px rgba(0, 240, 255, 0.8), 0 0 30px rgba(0, 240, 255, 0.6)',
+          },
         },
         fadeIn: {
           '0%': { opacity: '0' },
