@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Bell } from 'lucide-react';
 import { PageLayout } from '../components/layout/PageLayout';
+import { EmptyState } from '../components/common/EmptyState';
 import { GlassmorphicCard } from '../components/common/GlassmorphicCard';
 import { Button } from '../components/common/Button';
 import { PriceAlertModal } from '../components/common/PriceAlertModal';
@@ -460,30 +462,22 @@ export function AlertsPage() {
 
         {/* Alerts Grid */}
         {filteredAlerts.length === 0 ? (
-          <GlassmorphicCard className="text-center py-12">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-accent-cyan/10 flex items-center justify-center">
-              <svg className="w-10 h-10 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </div>
-            <h3 className="text-xl text-text-primary mb-2">
-              {alerts.length === 0 ? 'No alerts yet' : 'No alerts match your filter'}
-            </h3>
-            <p className="text-text-secondary mb-6">
-              {alerts.length === 0
-                ? 'Create your first price alert to start monitoring the market'
-                : 'Try adjusting your filter to see more alerts'}
-            </p>
-            {alerts.length === 0 && (
-              <Button
-                onClick={() => setShowModal(true)}
-                variant="primary"
-                className="px-6"
-              >
-                Create Your First Alert
-              </Button>
+          <>
+            {alerts.length === 0 ? (
+              <EmptyState
+                icon={<Bell className="w-10 h-10" />}
+                title="No alerts configured"
+                description="Create alerts to get notified about price changes, undercuts, or expiring orders."
+                action={{ text: 'Create Alert', onClick: () => setShowModal(true) }}
+              />
+            ) : (
+              <EmptyState
+                variant="search"
+                title="No alerts match your filter"
+                description="Try adjusting your filter to see more alerts."
+              />
             )}
-          </GlassmorphicCard>
+          </>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

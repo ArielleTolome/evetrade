@@ -1,5 +1,4 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 
 /**
  * Keyboard shortcuts configuration for navigation
@@ -23,15 +22,21 @@ const SHORTCUTS = {
  * @param {object} customHandlers - Object mapping shortcut keys to handler functions
  * @param {object} options - Configuration options
  */
-export function useKeyboardShortcuts(customHandlers = {}, options = {}) {
+export function useKeyboardShortcuts(customHandlers = {}, options = {}, routerApi = {}) {
   const {
     enabled = true,
     preventDefault = true,
     ignoreInputs = true,
   } = options;
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const fallbackNavigate = useCallback((path) => {
+    if (typeof window !== 'undefined') {
+      window.location.assign(path);
+    }
+  }, []);
+
+  const navigate = routerApi.navigate || fallbackNavigate;
+  const currentPathname = routerApi.pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
   const [showHelp, setShowHelp] = useState(false);
   const handlersRef = useRef(customHandlers);
   handlersRef.current = customHandlers;
@@ -99,7 +104,7 @@ export function useKeyboardShortcuts(customHandlers = {}, options = {}) {
       // Set up listener for next key
       const handleNextKey = (e) => {
         const shortcut = SHORTCUTS[e.key.toLowerCase()];
-        if (shortcut && shortcut.path !== location.pathname) {
+        if (shortcut && shortcut.path !== currentPathname && navigate) {
           e.preventDefault();
           navigate(shortcut.path);
         }
@@ -127,13 +132,13 @@ export function useKeyboardShortcuts(customHandlers = {}, options = {}) {
         '/help',
       ];
       const index = parseInt(event.key) - 1;
-      if (pages[index] && pages[index] !== location.pathname) {
+      if (pages[index] && pages[index] !== currentPathname && navigate) {
         event.preventDefault();
         navigate(pages[index]);
       }
       return;
     }
-  }, [navigate, location.pathname, showHelp, enabled, preventDefault, ignoreInputs]);
+  }, [navigate, currentPathname, showHelp, enabled, preventDefault, ignoreInputs]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
