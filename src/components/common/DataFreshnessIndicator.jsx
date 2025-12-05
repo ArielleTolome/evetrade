@@ -54,7 +54,7 @@ export const DataFreshnessIndicator = ({
   className,
   isRefreshing = false,
 }) => {
-  const [_, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
   const [countdown, setCountdown] = useState(refreshInterval ? refreshInterval / 1000 : 0);
 
   useEffect(() => {
@@ -77,8 +77,8 @@ export const DataFreshnessIndicator = ({
     }
   }, [autoRefresh, refreshInterval, onRefresh]);
 
-  const { status, color, textColor } = useMemo(() => getFreshness(lastUpdated), [lastUpdated, _]);
-  const relativeTime = useMemo(() => formatRelativeTime(lastUpdated), [lastUpdated, _]);
+  const { status, color, textColor } = useMemo(() => getFreshness(lastUpdated), [lastUpdated, tick]);
+  const relativeTime = useMemo(() => formatRelativeTime(lastUpdated), [lastUpdated, tick]);
   const exactTime = useMemo(() => formatExactTime(lastUpdated), [lastUpdated]);
 
   const sizeClasses = { sm: 'w-2 h-2', md: 'w-3 h-3', lg: 'w-4 h-4' };
