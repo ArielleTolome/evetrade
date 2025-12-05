@@ -29,14 +29,21 @@ const DonutChart = ({
   }, [data, progressTotal]);
 
   const segments = useMemo(() => {
-    let cumulativePercent = 0;
-    return data.map(segment => {
+    return data.reduce((acc, segment) => {
       const percent = totalValue > 0 ? segment.value / totalValue : 0;
-      const startAngle = cumulativePercent;
-      cumulativePercent += percent;
-      const endAngle = cumulativePercent;
-      return { ...segment, percent, startAngle, endAngle };
-    });
+      const startAngle = acc.cumulativePercent;
+      const endAngle = startAngle + percent;
+
+      acc.segments.push({
+        ...segment,
+        percent,
+        startAngle,
+        endAngle,
+      });
+
+      acc.cumulativePercent = endAngle;
+      return acc;
+    }, { segments: [], cumulativePercent: 0 }).segments;
   }, [data, totalValue]);
 
   if (!data || data.length === 0 || totalValue === 0) {
