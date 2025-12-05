@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatISK, formatNumber } from '../../utils/formatters';
+import { formatISK } from '../../utils/formatters';
 
 /**
  * ISKPerHourEstimator - Estimates ISK per hour based on trading activity

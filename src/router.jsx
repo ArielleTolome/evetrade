@@ -1,8 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
-import { PageErrorBoundary } from './components/common/ErrorBoundary';
-import { SkeletonPage } from './components/common/SkeletonLoader';
 import { RootLayout } from './components/layout/RootLayout';
+import { LazyPage } from './components/common/LazyPage';
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -39,18 +38,7 @@ const CorpOrdersPage = lazy(() => import('./pages/CorpOrdersPage'));
 const SmartRouteOptimizerPage = lazy(() => import('./pages/SmartRouteOptimizerPage'));
 const ItemDetailPage = lazy(() => import('./pages/ItemDetailPage'));
 
-/**
- * Lazy page wrapper with loading fallback
- */
-function LazyPage({ children }) {
-  return (
-    <PageErrorBoundary>
-      <Suspense fallback={<SkeletonPage />}>
-        {children}
-      </Suspense>
-    </PageErrorBoundary>
-  );
-}
+
 
 /**
  * Application Router Configuration

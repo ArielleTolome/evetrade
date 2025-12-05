@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useModal } from './Modal';
+// useModal available from './Modal' if needed
 import { Search, X, Command, ChevronsUp, Option } from 'lucide-react';
 
 const Icon = ({ name, platform, ...props }) => {

@@ -9,7 +9,7 @@ import { ItemAutocomplete } from '../components/forms';
 import { usePortfolio } from '../hooks/usePortfolio';
 import { useResources } from '../hooks/useResources';
 import { useEveAuth } from '../hooks/useEveAuth';
-import { getCharacterAssets, getCharacterOrders, getTypeNames } from '../api/esi';
+import { getCharacterAssets, getCharacterOrders } from '../api/esi';
 import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 
 /**
@@ -240,54 +240,53 @@ export function WatchlistPage() {
 
   // Load character assets and orders when authenticated
   useEffect(() => {
+    const loadCharacterData = async () => {
+      setLoadingCharacterData(true);
+      try {
+        const accessToken = await getAccessToken();
+        if (!accessToken) return;
+
+        // Load assets from all pages
+        let allAssets = [];
+        let page = 1;
+        let hasMorePages = true;
+
+        while (hasMorePages) {
+          const pageAssets = await getCharacterAssets(character.id, accessToken, page);
+          if (pageAssets && pageAssets.length > 0) {
+            allAssets = [...allAssets, ...pageAssets];
+            page++;
+            if (pageAssets.length < 1000) {
+              hasMorePages = false;
+            }
+          } else {
+            hasMorePages = false;
+          }
+        }
+
+        // Filter to only hangar assets (top-level items)
+        const hangarAssets = allAssets.filter(
+          (asset) => asset.location_flag === 'Hangar' || !asset.location_flag
+        );
+        setAssets(hangarAssets);
+
+        // Load orders
+        const characterOrders = await getCharacterOrders(character.id, accessToken);
+        setOrders(characterOrders || []);
+      } catch (err) {
+        console.error('Error loading character data:', err);
+      } finally {
+        setLoadingCharacterData(false);
+      }
+    };
+
     if (isAuthenticated && character?.id) {
       loadCharacterData();
     } else {
       setAssets([]);
       setOrders([]);
     }
-  }, [isAuthenticated, character?.id]);
-
-  // Load character assets and orders
-  const loadCharacterData = async () => {
-    setLoadingCharacterData(true);
-    try {
-      const accessToken = await getAccessToken();
-      if (!accessToken) return;
-
-      // Load assets from all pages
-      let allAssets = [];
-      let page = 1;
-      let hasMorePages = true;
-
-      while (hasMorePages) {
-        const pageAssets = await getCharacterAssets(character.id, accessToken, page);
-        if (pageAssets && pageAssets.length > 0) {
-          allAssets = [...allAssets, ...pageAssets];
-          page++;
-          if (pageAssets.length < 1000) {
-            hasMorePages = false;
-          }
-        } else {
-          hasMorePages = false;
-        }
-      }
-
-      // Filter to only hangar assets (top-level items)
-      const hangarAssets = allAssets.filter(
-        (asset) => asset.location_flag === 'Hangar' || !asset.location_flag
-      );
-      setAssets(hangarAssets);
-
-      // Load orders
-      const characterOrders = await getCharacterOrders(character.id, accessToken);
-      setOrders(characterOrders || []);
-    } catch (err) {
-      console.error('Error loading character data:', err);
-    } finally {
-      setLoadingCharacterData(false);
-    }
-  };
+  }, [isAuthenticated, character?.id, getAccessToken]);
 
   // Handle adding item to watchlist
   const handleAdd = useCallback((item) => {
@@ -376,7 +375,7 @@ export function WatchlistPage() {
     }
 
     return baseStats;
-  }, [watchlist, isAuthenticated, assets, orders, getAssetQuantity, getActiveOrders]);
+  }, [watchlist, isAuthenticated, getAssetQuantity, getActiveOrders]);
 
   return (
     <PageLayout

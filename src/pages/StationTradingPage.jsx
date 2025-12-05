@@ -1,6 +1,13 @@
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { SearchX } from 'lucide-react';
+import { SearchX } from 'lucide-react'; // Keeping this if used in EmptyState, but lint said unused? Wait, line 1762 uses SearchX.
+// Wait, I saw SearchX used at line 1762!
+// "icon={<SearchX className="w-10 h-10" />}"
+// Why did I think it was unused?
+// Lint output from step 58 did NOT list SearchX as unused in StationTradingPage.
+// It listed: customShortcuts, row, risk.
+// I will NOT remove SearchX.
+
 import { PageLayout } from '../components/layout/PageLayout';
 import { EmptyState } from '../components/common/EmptyState';
 import PullToRefresh from '../components/common/PullToRefresh';
@@ -164,7 +171,7 @@ export function StationTradingPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const toast = useToast();
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
-  const [hideScams, setHideScams] = useState(false);
+
   const [highQualityOnly, setHighQualityOnly] = useState(false);
 
   // Smart Filters state
@@ -203,7 +210,6 @@ export function StationTradingPage() {
 
   // Refs for keyboard shortcuts
   const searchInputRef = useRef(null);
-  const tableRef = useRef(null);
 
   // Load invTypes for category filtering
   useEffect(() => {
@@ -212,6 +218,33 @@ export function StationTradingPage() {
 
   // Load character skills and wallet balance when authenticated
   useEffect(() => {
+    const loadCharacterData = async () => {
+      try {
+        const accessToken = await getAccessToken();
+        if (!accessToken) return;
+
+        // Load skills to calculate taxes
+        const skills = await getCharacterSkills(character.id, accessToken);
+        const taxes = calculateTradingTaxes(skills);
+        setCharacterTaxes(taxes);
+
+        // Load wallet balance
+        const balance = await getWalletBalance(character.id, accessToken);
+        setWalletBalance(balance);
+
+        // Load wallet transactions for ISK/hour calculation
+        try {
+          const transactions = await getWalletTransactions(character.id, accessToken);
+          setWalletTransactions(transactions || []);
+        } catch (txErr) {
+          console.error('Failed to load wallet transactions:', txErr);
+          setWalletTransactions([]);
+        }
+      } catch (err) {
+        console.error('Failed to load character data:', err);
+      }
+    };
+
     if (isAuthenticated && character?.id) {
       loadCharacterData();
     } else {
@@ -219,42 +252,7 @@ export function StationTradingPage() {
       setWalletBalance(null);
       setUsingPersonalTaxes(false);
     }
-  }, [isAuthenticated, character?.id]);
-
-  // Check price alerts when data changes
-  useEffect(() => {
-    if (data && Array.isArray(data) && data.length > 0) {
-      checkAlerts(data);
-    }
-  }, [data, checkAlerts]);
-
-  // Load character data (skills, wallet, transactions)
-  const loadCharacterData = async () => {
-    try {
-      const accessToken = await getAccessToken();
-      if (!accessToken) return;
-
-      // Load skills to calculate taxes
-      const skills = await getCharacterSkills(character.id, accessToken);
-      const taxes = calculateTradingTaxes(skills);
-      setCharacterTaxes(taxes);
-
-      // Load wallet balance
-      const balance = await getWalletBalance(character.id, accessToken);
-      setWalletBalance(balance);
-
-      // Load wallet transactions for ISK/hour calculation
-      try {
-        const transactions = await getWalletTransactions(character.id, accessToken);
-        setWalletTransactions(transactions || []);
-      } catch (txErr) {
-        console.error('Failed to load wallet transactions:', txErr);
-        setWalletTransactions([]);
-      }
-    } catch (err) {
-      console.error('Failed to load character data:', err);
-    }
-  };
+  }, [isAuthenticated, character?.id, getAccessToken]);
 
   // Custom validation for station-specific fields
   const customValidation = useCallback((formData) => {
@@ -500,26 +498,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     []
   );
 
-  // Calculate summary stats for orders
-  const ordersStats = useMemo(() => {
-    if (!orders || !Array.isArray(orders)) {
-      return { totalOrders: 0, buyOrders: 0, sellOrders: 0, buyEscrow: 0, sellValue: 0, totalValue: 0 };
-    }
-    const buyOrders = orders.filter((o) => o.is_buy_order);
-    const sellOrders = orders.filter((o) => !o.is_buy_order);
 
-    const buyEscrow = buyOrders.reduce((sum, o) => sum + (o.escrow || 0), 0);
-    const sellValue = sellOrders.reduce((sum, o) => sum + o.price * o.volume_remain, 0);
-
-    return {
-      totalOrders: orders.length,
-      buyOrders: buyOrders.length,
-      sellOrders: sellOrders.length,
-      buyEscrow,
-      sellValue,
-      totalValue: buyEscrow + sellValue,
-    };
-  }, [orders]);
 
   // Filter data by category and smart filters
   const filteredData = useMemo(() => {
@@ -626,146 +605,9 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     if (advancedSorts.length === 0) return dataToSort;
 
     return applySorts(dataToSort, advancedSorts, tableColumns);
-  }, [quickFilteredData, filteredData, advancedSorts]);
+  }, [quickFilteredData, filteredData, advancedSorts, tableColumns]);
 
-  // Keyboard shortcuts configuration
-  const keyboardHandlers = useMemo(() => ({
-    // Toggle favorites filter (f key)
-    'f': () => {
-      setShowFavoritesOnly(prev => !prev);
-      toast.info(`Favorites filter ${!showFavoritesOnly ? 'enabled' : 'disabled'}`);
-    },
-    // Refresh data (r key)
-    'r': () => {
-      if (form.station && data !== null) {
-        handleSubmit(new Event('submit'));
-        toast.info('Refreshing data...');
-      }
-    },
-    // Focus search box (/ or Ctrl+K or Ctrl+F)
-    '/': () => {
-      searchInputRef.current?.focus();
-    },
-    'ctrl+k': () => {
-      searchInputRef.current?.focus();
-    },
-    'ctrl+f': () => {
-      searchInputRef.current?.focus();
-    },
-    // Clear search / close modals / deselect (Escape)
-    'escape': () => {
-      if (searchInputRef.current === document.activeElement) {
-        searchInputRef.current.value = '';
-        searchInputRef.current.blur();
-      }
-      if (showSaveModal) setShowSaveModal(false);
-      if (showOrders) setShowOrders(false);
-      if (selectedRowIndex >= 0) setSelectedRowIndex(-1);
-    },
-    // Navigate table rows (arrow keys)
-    'arrowdown': () => {
-      const trades = Array.isArray(sortedData) ? sortedData : [];
-      if (trades.length > 0) {
-        setSelectedRowIndex(prev => prev < 0 ? 0 : Math.min(prev + 1, trades.length - 1));
-      }
-    },
-    'arrowup': () => {
-      const trades = Array.isArray(sortedData) ? sortedData : [];
-      if (trades.length > 0 && selectedRowIndex >= 0) {
-        setSelectedRowIndex(prev => Math.max(prev - 1, 0));
-      }
-    },
-    // Navigate table rows (j/k vim style)
-    'j': () => {
-      const trades = Array.isArray(sortedData) ? sortedData : [];
-      if (trades.length > 0) {
-        setSelectedRowIndex(prev => prev < 0 ? 0 : Math.min(prev + 1, trades.length - 1));
-      }
-    },
-    'k': () => {
-      const trades = Array.isArray(sortedData) ? sortedData : [];
-      if (trades.length > 0 && selectedRowIndex >= 0) {
-        setSelectedRowIndex(prev => Math.max(prev - 1, 0));
-      }
-    },
-    // Open selected trade details (Enter)
-    'enter': () => {
-      const trades = Array.isArray(sortedData) ? sortedData : [];
-      if (selectedRowIndex >= 0 && selectedRowIndex < trades.length) {
-        handleRowClick(trades[selectedRowIndex]);
-      }
-    },
-    // Copy selected trade (Ctrl+C)
-    'ctrl+c': () => {
-      const trades = Array.isArray(sortedData) ? sortedData : [];
-      if (selectedRowIndex >= 0 && selectedRowIndex < trades.length) {
-        copyRowToClipboard(trades[selectedRowIndex]);
-      }
-    },
-    // Copy multibuy format (m)
-    'm': () => {
-      const trades = Array.isArray(sortedData) ? sortedData : [];
-      if (trades.length > 0) {
-        copyMultibuyFormat(trades);
-      }
-    },
-    // Toggle watchlist panel (w key)
-    'w': () => {
-      setShowFavoritesOnly(prev => !prev);
-      toast.info(`Watchlist ${!showFavoritesOnly ? 'shown' : 'hidden'}`);
-    },
-    // Add selected item to watchlist (a key)
-    'a': () => {
-      const trades = Array.isArray(sortedData) ? sortedData : [];
-      if (selectedRowIndex >= 0 && selectedRowIndex < trades.length) {
-        const itemId = trades[selectedRowIndex]['Item ID'] || trades[selectedRowIndex].itemId;
-        const wasInWatchlist = isFavorite(itemId);
-        toggleFavorite(itemId);
-        toast.success(`${wasInWatchlist ? 'Removed from' : 'Added to'} watchlist`);
-      }
-    },
-    // Quick filter presets (1-5 keys)
-    '1': () => {
-      if (quickFilterIds.length > 0 && data !== null) {
-        setQuickFilterIds([quickFilterIds[0]]);
-        toast.info('Quick filter 1 applied');
-      }
-    },
-    '2': () => {
-      if (quickFilterIds.length > 1 && data !== null) {
-        setQuickFilterIds([quickFilterIds[1]]);
-        toast.info('Quick filter 2 applied');
-      }
-    },
-    '3': () => {
-      if (quickFilterIds.length > 2 && data !== null) {
-        setQuickFilterIds([quickFilterIds[2]]);
-        toast.info('Quick filter 3 applied');
-      }
-    },
-    '4': () => {
-      if (quickFilterIds.length > 3 && data !== null) {
-        setQuickFilterIds([quickFilterIds[3]]);
-        toast.info('Quick filter 4 applied');
-      }
-    },
-    '5': () => {
-      if (quickFilterIds.length > 4 && data !== null) {
-        setQuickFilterIds([quickFilterIds[4]]);
-        toast.info('Quick filter 5 applied');
-      }
-    },
-    // Toggle high quality filter (h)
-    'h': () => {
-      setHighQualityOnly(prev => !prev);
-      toast.info(`High quality filter ${!highQualityOnly ? 'enabled' : 'disabled'}`);
-    },
-    // Toggle dashboard view (b for board)
-    'b': () => {
-      setShowDashboard(prev => !prev);
-      toast.info(`Dashboard ${!showDashboard ? 'shown' : 'hidden'}`);
-    },
-  }), [form.station, data, handleSubmit, showSaveModal, showOrders, sortedData, selectedRowIndex, showFavoritesOnly, highQualityOnly, showDashboard, copyRowToClipboard, copyMultibuyFormat, handleRowClick, toggleFavorite, isFavorite, quickFilterIds]);
+
 
   // Local state for keyboard shortcuts help modal
   const [showHelp, setShowHelp] = useState(false);
@@ -776,31 +618,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
     undefined  // toggleSearchModal
   );
 
-  // Define custom shortcuts for help modal
-  const customShortcuts = useMemo(() => [
-    {
-      category: 'Station Trading - Filtering',
-      items: [
-        { keys: ['f'], description: 'Toggle favorites filter' },
-        { keys: ['w'], description: 'Toggle watchlist panel' },
-        { keys: ['h'], description: 'Toggle high quality filter' },
-        { keys: ['b'], description: 'Toggle dashboard view' },
-        { keys: ['1-5'], description: 'Apply quick filter preset' },
-      ],
-    },
-    {
-      category: 'Station Trading - Actions',
-      items: [
-        { keys: ['r'], description: 'Refresh data' },
-        { keys: ['/', 'Ctrl+F', 'Ctrl+K'], description: 'Focus search' },
-        { keys: ['↑', '↓', 'j', 'k'], description: 'Navigate table rows' },
-        { keys: ['Enter'], description: 'Open selected trade details' },
-        { keys: ['Ctrl+C'], description: 'Copy selected trade' },
-        { keys: ['a'], description: 'Add selected to watchlist' },
-        { keys: ['m'], description: 'Copy multibuy format' },
-      ],
-    },
-  ], []);
+
 
   // Calculate category counts
   const categoryCounts = useMemo(() => {
@@ -915,7 +733,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         key: 'Buy Price',
         label: 'Lowest Sell',
         type: 'num',
-        render: (data, row) => (
+        render: (data) => (
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <span className="text-red-400">{formatISK(data, false)}</span>
@@ -940,7 +758,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         key: 'Sell Price',
         label: 'Highest Buy',
         type: 'num',
-        render: (data, row) => (
+        render: (data) => (
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <span className="text-green-400">{formatISK(data, false)}</span>
@@ -1021,7 +839,6 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         label: 'Risk',
         type: 'num',
         render: (data, row) => {
-          const risk = calculateScamRisk(row, Array.isArray(sortedData) ? sortedData : []);
           return <TradeRiskScore trade={row} compact={true} />;
         },
       },
@@ -1116,7 +933,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         },
       },
     ],
-    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, calculateScamRisk, addToShoppingList, walletBalance, form.station, universeList, toast]
+    [isFavorite, toggleFavorite, copyRowToClipboard, sortedData, selectedItems, addToShoppingList, walletBalance, form.station, universeList, toast, copyToClipboard]
   );
 
   return (
@@ -1128,943 +945,942 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
         {/* Add padding-bottom for mobile quick actions bar */}
         <div className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8">
 
-        {/* Price Alert Notifications */}
-        {triggeredAlerts.length > 0 && (
-          <div className="mb-6 space-y-2">
-            {triggeredAlerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="flex items-center justify-between p-4 bg-accent-gold/10 border border-accent-gold/30 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <div>
-                    <div className="text-text-primary font-medium">
-                      Price Alert: {alert.itemName}
-                    </div>
-                    <div className="text-xs text-text-secondary">
-                      {alert.type} is {alert.condition} {alert.threshold}
+          {/* Price Alert Notifications */}
+          {triggeredAlerts.length > 0 && (
+            <div className="mb-6 space-y-2">
+              {triggeredAlerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className="flex items-center justify-between p-4 bg-accent-gold/10 border border-accent-gold/30 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <div>
+                      <div className="text-text-primary font-medium">
+                        Price Alert: {alert.itemName}
+                      </div>
+                      <div className="text-xs text-text-secondary">
+                        {alert.type} is {alert.condition} {alert.threshold}
+                      </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => dismissTriggered(alert.id)}
+                    className="text-text-secondary hover:text-text-primary"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
+              ))}
+            </div>
+          )}
+
+          {/* Form */}
+          <GlassmorphicCard className="mb-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Primary Fields */}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div className="space-y-3">
+                  <StationAutocomplete
+                    label="Station"
+                    value={form.station}
+                    onChange={(v) => updateForm('station', v)}
+                    placeholder="Jita IV - Moon 4 - Caldari Navy Assembly Plant"
+                    error={errors.station}
+                    required
+                  />
+                  <TradeHubPresets
+                    selectedStation={form.station}
+                    onStationSelect={(station) => updateForm('station', station)}
+                    compact
+                  />
+                </div>
+
+                <FormInput
+                  label="Minimum Profit"
+                  type="number"
+                  value={form.profit}
+                  onChange={(v) => updateForm('profit', v)}
+                  suffix="ISK"
+                  error={errors.profit}
+                  min={0}
+                />
+
+                <FormInput
+                  label="Minimum Volume"
+                  type="number"
+                  value={form.minVolume}
+                  onChange={(v) => updateForm('minVolume', v)}
+                  suffix="units"
+                  error={errors.minVolume}
+                  min={0}
+                />
+              </div>
+
+              {/* Category Filter */}
+              <div className="border-t border-accent-cyan/10 pt-6">
+                <FormSelect
+                  label="Item Category"
+                  value={categoryFilter}
+                  onChange={(v) => setCategoryFilter(v)}
+                  options={Object.entries(ITEM_CATEGORIES).map(([key, category]) => ({
+                    value: key,
+                    label: `${category.label}${categoryCounts[key] !== undefined ? ` (${categoryCounts[key]})` : ''}`,
+                  }))}
+                />
+              </div>
+
+              {/* Advanced Filters Toggle */}
+              <div className="border-t border-accent-cyan/10 pt-4">
                 <button
-                  onClick={() => dismissTriggered(alert.id)}
-                  className="text-text-secondary hover:text-text-primary"
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-2 text-sm text-accent-cyan hover:text-accent-cyan/80 transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
+                  {showAdvanced ? 'Hide' : 'Show'} Advanced Filters
                 </button>
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* Form */}
-        <GlassmorphicCard className="mb-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Primary Fields */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              <div className="space-y-3">
-                <StationAutocomplete
-                  label="Station"
-                  value={form.station}
-                  onChange={(v) => updateForm('station', v)}
-                  placeholder="Jita IV - Moon 4 - Caldari Navy Assembly Plant"
-                  error={errors.station}
-                  required
-                />
-                <TradeHubPresets
-                  selectedStation={form.station}
-                  onStationSelect={(station) => updateForm('station', station)}
-                  compact
-                />
-              </div>
-
-              <FormInput
-                label="Minimum Profit"
-                type="number"
-                value={form.profit}
-                onChange={(v) => updateForm('profit', v)}
-                suffix="ISK"
-                error={errors.profit}
-                min={0}
-              />
-
-              <FormInput
-                label="Minimum Volume"
-                type="number"
-                value={form.minVolume}
-                onChange={(v) => updateForm('minVolume', v)}
-                suffix="units"
-                error={errors.minVolume}
-                min={0}
-              />
-            </div>
-
-            {/* Category Filter */}
-            <div className="border-t border-accent-cyan/10 pt-6">
-              <FormSelect
-                label="Item Category"
-                value={categoryFilter}
-                onChange={(v) => setCategoryFilter(v)}
-                options={Object.entries(ITEM_CATEGORIES).map(([key, category]) => ({
-                  value: key,
-                  label: `${category.label}${categoryCounts[key] !== undefined ? ` (${categoryCounts[key]})` : ''}`,
-                }))}
-              />
-            </div>
-
-            {/* Advanced Filters Toggle */}
-            <div className="border-t border-accent-cyan/10 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-2 text-sm text-accent-cyan hover:text-accent-cyan/80 transition-colors"
-              >
-                <svg
-                  className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-                {showAdvanced ? 'Hide' : 'Show'} Advanced Filters
-              </button>
-            </div>
-
-            <div className="border-t border-accent-cyan/10 pt-4">
-              <Button
+              <div className="border-t border-accent-cyan/10 pt-4">
+                <Button
                   onClick={() => setShowSimulator(!showSimulator)}
                   variant="secondary"
                   className="w-full"
                   data-testid="toggle-simulator-button"
-              >
-                {showSimulator ? 'Hide' : 'Show'} Trade Simulator
-              </Button>
-            </div>
-
-            {/* Advanced Filters (Collapsible) */}
-            {showAdvanced && (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fadeIn">
-                <FormSelect
-                  label="Sales Tax Level"
-                  value={form.tax}
-                  onChange={(v) => updateForm('tax', parseFloat(v))}
-                  options={taxOptions}
-                />
-
-                <FormInput
-                  label="Broker Fee"
-                  type="number"
-                  value={form.brokerFee}
-                  onChange={(v) => updateForm('brokerFee', v)}
-                  suffix="%"
-                  step={0.01}
-                  error={errors.brokerFee}
-                  min={0}
-                  max={100}
-                />
-
-                <FormInput
-                  label="Margin Above"
-                  type="number"
-                  value={form.marginAbove}
-                  onChange={(v) => updateForm('marginAbove', v)}
-                  suffix="%"
-                  error={errors.marginAbove}
-                  min={0}
-                  max={100}
-                />
-
-                <FormInput
-                  label="Margin Below"
-                  type="number"
-                  value={form.marginBelow}
-                  onChange={(v) => updateForm('marginBelow', v)}
-                  suffix="%"
-                  error={errors.marginBelow}
-                  min={0}
-                  max={100}
-                />
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={loading || resourcesLoading}
-              variant="primary"
-              size="lg"
-              className="w-full text-base md:text-lg min-h-[44px]"
-              loading={loading}
-            >
-              {loading ? 'Searching...' : 'Find Trades'}
-            </Button>
-          </form>
-        </GlassmorphicCard>
-
-        {showSimulator && (
-          <div className="my-8">
-            <TradeSimulator prefillData={simulatorPrefill} />
-          </div>
-        )}
-
-        {/* Wallet Balance & Tax Rate Indicator */}
-        {isAuthenticated && (
-          <div className="mb-6 flex flex-wrap items-center gap-2 md:gap-4 text-xs sm:text-sm">
-            {walletBalance !== null && (
-              <div className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-gold/10 border border-accent-gold/20 rounded-lg">
-                <svg className="w-4 h-4 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span className="text-accent-gold font-medium">Wallet:</span>
-                <span className="text-text-primary font-mono">{formatISK(walletBalance, false)}</span>
-              </div>
-            )}
-            {usingPersonalTaxes && characterTaxes && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-green-400 font-medium">Using your tax rates:</span>
-                <span className="text-text-secondary">
-                  Broker {formatPercent(characterTaxes.brokerFee, 2)} / Sales {formatPercent(characterTaxes.salesTax, 2)}
-                  {characterTaxes.accountingLevel > 0 && (
-                    <span className="ml-1 text-xs">(Accounting V{characterTaxes.accountingLevel})</span>
-                  )}
-                  {characterTaxes.brokerRelationsLevel > 0 && (
-                    <span className="ml-1 text-xs">(Broker Relations V{characterTaxes.brokerRelationsLevel})</span>
-                  )}
-                </span>
-              </div>
-            )}
-            {!usingPersonalTaxes && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-accent-cyan/10 border border-accent-cyan/20 rounded-lg">
-                <svg className="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-accent-cyan">Using default tax rates</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Character Orders at This Station */}
-        {isAuthenticated && form.station && (
-          <GlassmorphicCard className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={() => setShowOrders(!showOrders)}
-                className="flex items-center gap-2 text-lg font-display text-text-primary hover:text-accent-cyan transition-colors"
-              >
-                <svg
-                  className={`w-5 h-5 transition-transform ${showOrders ? 'rotate-180' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-                Your Orders at This Station
-                {orders?.length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 text-xs bg-accent-cyan/20 text-accent-cyan rounded-full">
-                    {orders.length}
-                  </span>
-                )}
-              </button>
-              {showOrders && (
-                <button
-                  onClick={loadOrders}
-                  disabled={ordersLoading}
-                  className="p-2 text-text-secondary hover:text-accent-cyan transition-colors"
-                  title="Refresh orders"
-                >
-                  <svg className={`w-4 h-4 ${ordersLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-              )}
-            </div>
-
-            {showOrders && (
-              <>
-                {/* Enhanced Summary Stats - EVE Tycoon Style */}
-                {orders?.length > 0 && (
-                  <OrdersSummaryStats orders={orders} className="mb-6" />
-                )}
-
-                {/* Error */}
-                {ordersError && (
-                  <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                    {ordersError}
-                  </div>
-                )}
-
-                {/* Loading */}
-                {ordersLoading && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
-                    <span className="ml-2 text-text-secondary text-sm">Loading orders...</span>
-                  </div>
-                )}
-
-                {/* Enhanced Orders Table with Price Comparison */}
-                {!ordersLoading && orders?.length > 0 && (
-                  <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                    <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-space-dark z-10">
-                        <tr className="text-text-secondary border-b border-accent-cyan/20">
-                          <th className="text-left py-2 px-3">Item</th>
-                          <th className="text-left py-2 px-3">Type</th>
-                          <th className="text-right py-2 px-3">Your Price</th>
-                          <th className="text-center py-2 px-3">Status</th>
-                          <th className="text-right py-2 px-3">Difference</th>
-                          <th className="text-left py-2 px-3">Update To</th>
-                          <th className="text-right py-2 px-3">Volume</th>
-                          <th className="text-right py-2 px-3">Expires</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {orders.map((order) => {
-                          const volumeFilled = order.volume_total - order.volume_remain;
-                          const fillPercent = (volumeFilled / order.volume_total) * 100;
-                          const expiresDate = new Date(order.issued);
-                          expiresDate.setDate(expiresDate.getDate() + order.duration);
-                          const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
-
-                          // Find market price from current trade data
-                          const tradeData = Array.isArray(data) ? data.find(t =>
-                            (t['Item ID'] || t.itemId) === order.type_id
-                          ) : null;
-
-                          // For buy orders, compare to highest buy (Sell Price in our data)
-                          // For sell orders, compare to lowest sell (Buy Price in our data)
-                          const marketPrice = order.is_buy_order
-                            ? tradeData?.['Sell Price']  // Highest buy order price
-                            : tradeData?.['Buy Price'];  // Lowest sell order price
-
-                          return (
-                            <tr
-                              key={order.order_id}
-                              className="border-b border-accent-cyan/10 hover:bg-white/5 transition-colors"
-                            >
-                              <td className="py-2 px-3 text-text-primary">
-                                {typeNames[order.type_id] || `Type ${order.type_id}`}
-                              </td>
-                              <td className="py-2 px-3">
-                                <span className={`px-2 py-0.5 rounded text-xs ${order.is_buy_order
-                                  ? 'bg-red-500/20 text-red-400'
-                                  : 'bg-green-500/20 text-green-400'
-                                  }`}>
-                                  {order.is_buy_order ? 'BUY' : 'SELL'}
-                                </span>
-                              </td>
-                              <td className="py-2 px-3 text-right">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    copyToClipboard(String(order.price), 'Price copied!');
-                                  }}
-                                  className="font-mono text-text-primary hover:text-accent-cyan transition-colors"
-                                  title="Click to copy"
-                                >
-                                  {formatISK(order.price, false)}
-                                </button>
-                              </td>
-                              <td className="py-2 px-3 text-center">
-                                <PriceStatusBadge
-                                  orderPrice={order.price}
-                                  marketPrice={marketPrice}
-                                  isBuyOrder={order.is_buy_order}
-                                />
-                              </td>
-                              <td className="py-2 px-3 text-right">
-                                <PriceDifference
-                                  orderPrice={order.price}
-                                  marketPrice={marketPrice}
-                                  isBuyOrder={order.is_buy_order}
-                                />
-                              </td>
-                              <td className="py-2 px-3">
-                                <RecommendedPrice
-                                  marketPrice={marketPrice}
-                                  isBuyOrder={order.is_buy_order}
-                                  onCopy={(msg) => toast.success(msg)}
-                                />
-                              </td>
-                              <td className="py-2 px-3 text-right">
-                                <div className="flex flex-col items-end gap-1">
-                                  <span className="font-mono text-text-secondary text-xs">
-                                    {formatNumber(order.volume_remain, 0)} / {formatNumber(order.volume_total, 0)}
-                                  </span>
-                                  <div className="w-16 h-1.5 bg-space-dark rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-accent-cyan rounded-full"
-                                      style={{ width: `${fillPercent}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </td>
-                              <td className={`py-2 px-3 text-right text-sm ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'
-                                }`}>
-                                {daysLeft}d
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {/* Empty State */}
-                {!ordersLoading && orders.length === 0 && (
-                  <div className="text-center py-8 text-text-secondary">
-                    No active orders at this station
-                  </div>
-                )}
-              </>
-            )}
-          </GlassmorphicCard>
-        )}
-
-        {/* Trading Tools Panel - New Features */}
-        {isAuthenticated && orders?.length > 0 && (
-          <GlassmorphicCard className="mb-8">
-            <button
-              onClick={() => setShowTradingTools(!showTradingTools)}
-              className="w-full flex items-center justify-between p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-accent-purple/20 rounded-lg">
-                  <svg className="w-5 h-5 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <h3 className="text-text-primary font-medium">Trading Tools & Analysis</h3>
-                  <p className="text-xs text-text-secondary">
-                    Advanced order management and market analysis
-                  </p>
-                </div>
-              </div>
-              <svg
-                className={`w-5 h-5 text-text-secondary transition-transform ${showTradingTools ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {showTradingTools && (
-              <div className="px-4 pb-4 space-y-4">
-                {/* Tab Navigation */}
-                <div className="flex flex-wrap gap-2 p-1 bg-space-dark/50 rounded-lg">
-                  {[
-                    { id: 'overview', label: 'Overview', icon: '📊' },
-                    { id: 'orders', label: 'Order Management', icon: '📋' },
-                    { id: 'analysis', label: 'Market Analysis', icon: '🔍' },
-                    { id: 'tools', label: 'Smart Tools', icon: '🛠️' },
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveToolTab(tab.id)}
-                      className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        activeToolTab === tab.id
-                          ? 'bg-accent-cyan/20 text-accent-cyan'
-                          : 'text-text-secondary hover:bg-white/5'
-                      }`}
-                    >
-                      <span>{tab.icon}</span>
-                      <span className="hidden sm:inline">{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Tab Content */}
-                <div className="space-y-4">
-                  {/* Overview Tab */}
-                  {activeToolTab === 'overview' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {/* Price Undercut Alerts */}
-                      <PriceUndercutAlert
-                        orders={orders}
-                        marketData={data || []}
-                        typeNames={typeNames}
-                        onCopyPrice={(price, itemName) => {
-                          copyToClipboard(String(price), `Price for ${itemName} copied!`);
-                        }}
-                      />
-
-                      {/* ISK/Hour Estimator */}
-                      <ISKPerHourEstimator
-                        transactions={walletTransactions}
-                        activeSession={{
-                          startTime: session.startTime || Date.now(),
-                        }}
-                      />
-
-                      {/* Inventory Value Tracker */}
-                      <InventoryValueTracker
-                        orders={orders}
-                        typeNames={typeNames}
-                        invTypes={invTypes}
-                        walletBalance={walletBalance}
-                      />
-                    </div>
-                  )}
-
-                  {/* Order Management Tab */}
-                  {activeToolTab === 'orders' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {/* Order Update Priority Queue */}
-                      <OrderUpdatePriorityQueue
-                        orders={orders}
-                        marketData={data || []}
-                        typeNames={typeNames}
-                        onCopyPrice={(price, itemName) => {
-                          copyToClipboard(String(price), `Price for ${itemName} copied!`);
-                        }}
-                      />
-
-                      {/* Order Update Reminder */}
-                      <OrderUpdateReminder
-                        orders={orders}
-                        typeNames={typeNames}
-                        marketData={data || []}
-                        staleThresholdHours={4}
-                        onCopyPrice={(price, itemName) => {
-                          copyToClipboard(String(price), `Recommended price for ${itemName} copied!`);
-                        }}
-                      />
-
-                      {/* Order Expiry Tracker */}
-                      <OrderExpiryTracker
-                        orders={orders}
-                        typeNames={typeNames}
-                        warningDays={3}
-                        criticalDays={1}
-                      />
-                    </div>
-                  )}
-
-                  {/* Market Analysis Tab */}
-                  {activeToolTab === 'analysis' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {/* Volume Velocity Analysis */}
-                      <VolumeVelocityAnalysis
-                        orders={orders}
-                        marketData={data || []}
-                        typeNames={typeNames}
-                      />
-
-                      {/* Market Manipulation Alert */}
-                      <MarketManipulationAlert
-                        marketData={data || []}
-                      />
-
-                      {/* Competition Counter - placeholder, needs market orders data */}
-                      <div className="p-4 bg-white/5 rounded-xl border border-accent-cyan/10">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="text-xl">👥</span>
-                          <div>
-                            <h4 className="text-text-primary font-medium">Competition Analysis</h4>
-                            <p className="text-xs text-text-secondary">Coming soon - requires market orders API</p>
-                          </div>
-                        </div>
-                        <p className="text-xs text-text-secondary">
-                          This feature will analyze how many competitors are trading the same items
-                          and help you identify less crowded markets.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Smart Tools Tab */}
-                  {activeToolTab === 'tools' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {/* Smart Multibuy Budget */}
-                      <SmartMultibuyBudget
-                        trades={data || []}
-                        walletBalance={walletBalance || 0}
-                        onCopyMultibuy={(text) => {
-                          copyToClipboard(text, 'Smart multibuy list copied!');
-                        }}
-                      />
-
-                      {/* Quick Tips */}
-                      <div className="p-4 bg-accent-cyan/10 border border-accent-cyan/20 rounded-xl">
-                        <h4 className="text-accent-cyan font-medium mb-3 flex items-center gap-2">
-                          <span>💡</span> Station Trading Tips
-                        </h4>
-                        <ul className="space-y-2 text-sm text-text-secondary">
-                          <li className="flex items-start gap-2">
-                            <span className="text-accent-cyan">•</span>
-                            Update orders every 4-6 hours for best results
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-accent-cyan">•</span>
-                            Focus on items with &gt;10% margin and &gt;100 daily volume
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-accent-cyan">•</span>
-                            Diversify across 10-20 items to reduce risk
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-accent-cyan">•</span>
-                            Train Accounting and Broker Relations to reduce fees
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-accent-cyan">•</span>
-                            Avoid items with extremely high margins (&gt;50%) - often traps
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </GlassmorphicCard>
-        )}
-
-        {/* Error Display */}
-        {error && (
-          <ActionableError
-            error={error}
-            onRetry={() => handleSubmit({ preventDefault: () => { } })}
-            className="mb-8"
-          />
-        )}
-
-        {/* Loading State */}
-        {loading && (
-          <GlassmorphicCard>
-            <SkeletonTable rows={10} columns={7} />
-          </GlassmorphicCard>
-        )}
-
-        {/* Results */}
-        {data !== null && !loading && (() => {
-          // Normalize data to array and apply filtering
-          const allTrades = Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : []);
-          const trades = Array.isArray(sortedData) ? sortedData : (sortedData && typeof sortedData === 'object' ? [sortedData] : []);
-
-          if (allTrades.length === 0) {
-            return (
-              <EmptyState
-                icon={<SearchX className="w-10 h-10" />}
-                title="No trades found"
-                description="Try adjusting your filters or try different parameters to find more opportunities."
-                variant="search"
-              />
-            );
-          }
-
-          if (trades.length === 0 && allTrades.length > 0) {
-            return (
-              <EmptyState
-                icon={<SearchX className="w-10 h-10" />}
-                title="No trades found for this category"
-                description="Try selecting a different category or 'All Items' to see results."
-                variant="search"
-              />
-            );
-          }
-
-          return (
-            <>
-              {/* Dashboard Toggle and At-A-Glance View */}
-              <div className="mb-6 flex items-center justify-between">
-                <Button
-                  onClick={() => setShowDashboard(!showDashboard)}
-                  variant={showDashboard ? 'secondary' : 'ghost'}
-                  className={`border ${showDashboard ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan' : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'}`}
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                  </svg>
-                  <span className="font-medium">Dashboard</span>
-                  <kbd className="hidden sm:inline-block ml-2 px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">d</kbd>
+                  {showSimulator ? 'Hide' : 'Show'} Trade Simulator
                 </Button>
               </div>
 
-              {/* At-A-Glance Trading Dashboard */}
-              {showDashboard && (
-                <>
-                  <TradingDashboard
-                    data={trades}
-                    onItemClick={handleRowClick}
-                    walletBalance={walletBalance}
-                    className="mb-6"
+              {/* Advanced Filters (Collapsible) */}
+              {showAdvanced && (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-fadeIn">
+                  <FormSelect
+                    label="Sales Tax Level"
+                    value={form.tax}
+                    onChange={(v) => updateForm('tax', parseFloat(v))}
+                    options={taxOptions}
                   />
 
-                  {/* Profit Summary & Activity Feed - EVE Tycoon style */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-                    <div className="lg:col-span-2">
-                      <ProfitSummaryCard
-                        trades={trades}
-                        period="30d"
-                        walletBalance={walletBalance}
-                      />
-                    </div>
-                    <div className="lg:col-span-1">
-                      <TradeActivityFeed
-                        trades={trades}
-                        maxItems={5}
-                        className="h-full"
-                      />
-                    </div>
-                  </div>
-                </>
+                  <FormInput
+                    label="Broker Fee"
+                    type="number"
+                    value={form.brokerFee}
+                    onChange={(v) => updateForm('brokerFee', v)}
+                    suffix="%"
+                    step={0.01}
+                    error={errors.brokerFee}
+                    min={0}
+                    max={100}
+                  />
+
+                  <FormInput
+                    label="Margin Above"
+                    type="number"
+                    value={form.marginAbove}
+                    onChange={(v) => updateForm('marginAbove', v)}
+                    suffix="%"
+                    error={errors.marginAbove}
+                    min={0}
+                    max={100}
+                  />
+
+                  <FormInput
+                    label="Margin Below"
+                    type="number"
+                    value={form.marginBelow}
+                    onChange={(v) => updateForm('marginBelow', v)}
+                    suffix="%"
+                    error={errors.marginBelow}
+                    min={0}
+                    max={100}
+                  />
+                </div>
               )}
 
-              {/* Quick Filters Bar */}
-              <QuickFiltersBar
-                onFilterChange={setQuickFilterIds}
-                activeFilters={quickFilterIds}
-                data={allTrades}
-                className="mb-6 p-4 bg-space-dark/30 border border-accent-cyan/10 rounded-xl"
-              />
+              <Button
+                type="submit"
+                disabled={loading || resourcesLoading}
+                variant="primary"
+                size="lg"
+                className="w-full text-base md:text-lg min-h-[44px]"
+                loading={loading}
+              >
+                {loading ? 'Searching...' : 'Find Trades'}
+              </Button>
+            </form>
+          </GlassmorphicCard>
 
-              {/* Smart Filters */}
-              <SmartFilters
-                onChange={setSmartFilters}
-                initialFilters={smartFilters}
-                data={allTrades}
-              />
+          {showSimulator && (
+            <div className="my-8">
+              <TradeSimulator prefillData={simulatorPrefill} />
+            </div>
+          )}
 
-              {/* Advanced Sort Panel */}
-              <AdvancedSortPanel
-                currentSort={advancedSorts}
-                onChange={setAdvancedSorts}
-                className="mb-6"
-              />
+          {/* Wallet Balance & Tax Rate Indicator */}
+          {isAuthenticated && (
+            <div className="mb-6 flex flex-wrap items-center gap-2 md:gap-4 text-xs sm:text-sm">
+              {walletBalance !== null && (
+                <div className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-gold/10 border border-accent-gold/20 rounded-lg">
+                  <svg className="w-4 h-4 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span className="text-accent-gold font-medium">Wallet:</span>
+                  <span className="text-text-primary font-mono">{formatISK(walletBalance, false)}</span>
+                </div>
+              )}
+              {usingPersonalTaxes && characterTaxes && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-green-400 font-medium">Using your tax rates:</span>
+                  <span className="text-text-secondary">
+                    Broker {formatPercent(characterTaxes.brokerFee, 2)} / Sales {formatPercent(characterTaxes.salesTax, 2)}
+                    {characterTaxes.accountingLevel > 0 && (
+                      <span className="ml-1 text-xs">(Accounting V{characterTaxes.accountingLevel})</span>
+                    )}
+                    {characterTaxes.brokerRelationsLevel > 0 && (
+                      <span className="ml-1 text-xs">(Broker Relations V{characterTaxes.brokerRelationsLevel})</span>
+                    )}
+                  </span>
+                </div>
+              )}
+              {!usingPersonalTaxes && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-accent-cyan/10 border border-accent-cyan/20 rounded-lg">
+                  <svg className="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-accent-cyan">Using default tax rates</span>
+                </div>
+              )}
+            </div>
+          )}
 
-              {/* Action Bar */}
-              <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-2 md:gap-4 flex-wrap">
-                  <div className="text-text-secondary text-sm">
-                    Found <span className="text-accent-cyan font-medium">{trades.length}</span> profitable trades
-                    {categoryFilter !== 'all' && allTrades.length !== trades.length && (
-                      <span className="ml-2 text-text-secondary/70">
-                        (filtered from {allTrades.length} total)
-                      </span>
+          {/* Character Orders at This Station */}
+          {isAuthenticated && form.station && (
+            <GlassmorphicCard className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => setShowOrders(!showOrders)}
+                  className="flex items-center gap-2 text-lg font-display text-text-primary hover:text-accent-cyan transition-colors"
+                >
+                  <svg
+                    className={`w-5 h-5 transition-transform ${showOrders ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                  Your Orders at This Station
+                  {orders?.length > 0 && (
+                    <span className="ml-2 px-2 py-0.5 text-xs bg-accent-cyan/20 text-accent-cyan rounded-full">
+                      {orders.length}
+                    </span>
+                  )}
+                </button>
+                {showOrders && (
+                  <button
+                    onClick={loadOrders}
+                    disabled={ordersLoading}
+                    className="p-2 text-text-secondary hover:text-accent-cyan transition-colors"
+                    title="Refresh orders"
+                  >
+                    <svg className={`w-4 h-4 ${ordersLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {showOrders && (
+                <>
+                  {/* Enhanced Summary Stats - EVE Tycoon Style */}
+                  {orders?.length > 0 && (
+                    <OrdersSummaryStats orders={orders} className="mb-6" />
+                  )}
+
+                  {/* Error */}
+                  {ordersError && (
+                    <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                      {ordersError}
+                    </div>
+                  )}
+
+                  {/* Loading */}
+                  {ordersLoading && (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+                      <span className="ml-2 text-text-secondary text-sm">Loading orders...</span>
+                    </div>
+                  )}
+
+                  {/* Enhanced Orders Table with Price Comparison */}
+                  {!ordersLoading && orders?.length > 0 && (
+                    <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-space-dark z-10">
+                          <tr className="text-text-secondary border-b border-accent-cyan/20">
+                            <th className="text-left py-2 px-3">Item</th>
+                            <th className="text-left py-2 px-3">Type</th>
+                            <th className="text-right py-2 px-3">Your Price</th>
+                            <th className="text-center py-2 px-3">Status</th>
+                            <th className="text-right py-2 px-3">Difference</th>
+                            <th className="text-left py-2 px-3">Update To</th>
+                            <th className="text-right py-2 px-3">Volume</th>
+                            <th className="text-right py-2 px-3">Expires</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orders.map((order) => {
+                            const volumeFilled = order.volume_total - order.volume_remain;
+                            const fillPercent = (volumeFilled / order.volume_total) * 100;
+                            const expiresDate = new Date(order.issued);
+                            expiresDate.setDate(expiresDate.getDate() + order.duration);
+                            const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                            // Find market price from current trade data
+                            const tradeData = Array.isArray(data) ? data.find(t =>
+                              (t['Item ID'] || t.itemId) === order.type_id
+                            ) : null;
+
+                            // For buy orders, compare to highest buy (Sell Price in our data)
+                            // For sell orders, compare to lowest sell (Buy Price in our data)
+                            const marketPrice = order.is_buy_order
+                              ? tradeData?.['Sell Price']  // Highest buy order price
+                              : tradeData?.['Buy Price'];  // Lowest sell order price
+
+                            return (
+                              <tr
+                                key={order.order_id}
+                                className="border-b border-accent-cyan/10 hover:bg-white/5 transition-colors"
+                              >
+                                <td className="py-2 px-3 text-text-primary">
+                                  {typeNames[order.type_id] || `Type ${order.type_id}`}
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span className={`px-2 py-0.5 rounded text-xs ${order.is_buy_order
+                                    ? 'bg-red-500/20 text-red-400'
+                                    : 'bg-green-500/20 text-green-400'
+                                    }`}>
+                                    {order.is_buy_order ? 'BUY' : 'SELL'}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-right">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      copyToClipboard(String(order.price), 'Price copied!');
+                                    }}
+                                    className="font-mono text-text-primary hover:text-accent-cyan transition-colors"
+                                    title="Click to copy"
+                                  >
+                                    {formatISK(order.price, false)}
+                                  </button>
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  <PriceStatusBadge
+                                    orderPrice={order.price}
+                                    marketPrice={marketPrice}
+                                    isBuyOrder={order.is_buy_order}
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-right">
+                                  <PriceDifference
+                                    orderPrice={order.price}
+                                    marketPrice={marketPrice}
+                                    isBuyOrder={order.is_buy_order}
+                                  />
+                                </td>
+                                <td className="py-2 px-3">
+                                  <RecommendedPrice
+                                    marketPrice={marketPrice}
+                                    isBuyOrder={order.is_buy_order}
+                                    onCopy={(msg) => toast.success(msg)}
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-right">
+                                  <div className="flex flex-col items-end gap-1">
+                                    <span className="font-mono text-text-secondary text-xs">
+                                      {formatNumber(order.volume_remain, 0)} / {formatNumber(order.volume_total, 0)}
+                                    </span>
+                                    <div className="w-16 h-1.5 bg-space-dark rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-accent-cyan rounded-full"
+                                        style={{ width: `${fillPercent}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className={`py-2 px-3 text-right text-sm ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-text-secondary'
+                                  }`}>
+                                  {daysLeft}d
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {!ordersLoading && orders.length === 0 && (
+                    <div className="text-center py-8 text-text-secondary">
+                      No active orders at this station
+                    </div>
+                  )}
+                </>
+              )}
+            </GlassmorphicCard>
+          )}
+
+          {/* Trading Tools Panel - New Features */}
+          {isAuthenticated && orders?.length > 0 && (
+            <GlassmorphicCard className="mb-8">
+              <button
+                onClick={() => setShowTradingTools(!showTradingTools)}
+                className="w-full flex items-center justify-between p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-accent-purple/20 rounded-lg">
+                    <svg className="w-5 h-5 text-accent-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-text-primary font-medium">Trading Tools & Analysis</h3>
+                    <p className="text-xs text-text-secondary">
+                      Advanced order management and market analysis
+                    </p>
+                  </div>
+                </div>
+                <svg
+                  className={`w-5 h-5 text-text-secondary transition-transform ${showTradingTools ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showTradingTools && (
+                <div className="px-4 pb-4 space-y-4">
+                  {/* Tab Navigation */}
+                  <div className="flex flex-wrap gap-2 p-1 bg-space-dark/50 rounded-lg">
+                    {[
+                      { id: 'overview', label: 'Overview', icon: '📊' },
+                      { id: 'orders', label: 'Order Management', icon: '📋' },
+                      { id: 'analysis', label: 'Market Analysis', icon: '🔍' },
+                      { id: 'tools', label: 'Smart Tools', icon: '🛠️' },
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveToolTab(tab.id)}
+                        className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${activeToolTab === tab.id
+                          ? 'bg-accent-cyan/20 text-accent-cyan'
+                          : 'text-text-secondary hover:bg-white/5'
+                          }`}
+                      >
+                        <span>{tab.icon}</span>
+                        <span className="hidden sm:inline">{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Tab Content */}
+                  <div className="space-y-4">
+                    {/* Overview Tab */}
+                    {activeToolTab === 'overview' && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Price Undercut Alerts */}
+                        <PriceUndercutAlert
+                          orders={orders}
+                          marketData={data || []}
+                          typeNames={typeNames}
+                          onCopyPrice={(price, itemName) => {
+                            copyToClipboard(String(price), `Price for ${itemName} copied!`);
+                          }}
+                        />
+
+                        {/* ISK/Hour Estimator */}
+                        <ISKPerHourEstimator
+                          transactions={walletTransactions}
+                          activeSession={{
+                            startTime: session.startTime || Date.now(),
+                          }}
+                        />
+
+                        {/* Inventory Value Tracker */}
+                        <InventoryValueTracker
+                          orders={orders}
+                          typeNames={typeNames}
+                          invTypes={invTypes}
+                          walletBalance={walletBalance}
+                        />
+                      </div>
+                    )}
+
+                    {/* Order Management Tab */}
+                    {activeToolTab === 'orders' && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Order Update Priority Queue */}
+                        <OrderUpdatePriorityQueue
+                          orders={orders}
+                          marketData={data || []}
+                          typeNames={typeNames}
+                          onCopyPrice={(price, itemName) => {
+                            copyToClipboard(String(price), `Price for ${itemName} copied!`);
+                          }}
+                        />
+
+                        {/* Order Update Reminder */}
+                        <OrderUpdateReminder
+                          orders={orders}
+                          typeNames={typeNames}
+                          marketData={data || []}
+                          staleThresholdHours={4}
+                          onCopyPrice={(price, itemName) => {
+                            copyToClipboard(String(price), `Recommended price for ${itemName} copied!`);
+                          }}
+                        />
+
+                        {/* Order Expiry Tracker */}
+                        <OrderExpiryTracker
+                          orders={orders}
+                          typeNames={typeNames}
+                          warningDays={3}
+                          criticalDays={1}
+                        />
+                      </div>
+                    )}
+
+                    {/* Market Analysis Tab */}
+                    {activeToolTab === 'analysis' && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Volume Velocity Analysis */}
+                        <VolumeVelocityAnalysis
+                          orders={orders}
+                          marketData={data || []}
+                          typeNames={typeNames}
+                        />
+
+                        {/* Market Manipulation Alert */}
+                        <MarketManipulationAlert
+                          marketData={data || []}
+                        />
+
+                        {/* Competition Counter - placeholder, needs market orders data */}
+                        <div className="p-4 bg-white/5 rounded-xl border border-accent-cyan/10">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="text-xl">👥</span>
+                            <div>
+                              <h4 className="text-text-primary font-medium">Competition Analysis</h4>
+                              <p className="text-xs text-text-secondary">Coming soon - requires market orders API</p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-text-secondary">
+                            This feature will analyze how many competitors are trading the same items
+                            and help you identify less crowded markets.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Smart Tools Tab */}
+                    {activeToolTab === 'tools' && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Smart Multibuy Budget */}
+                        <SmartMultibuyBudget
+                          trades={data || []}
+                          walletBalance={walletBalance || 0}
+                          onCopyMultibuy={(text) => {
+                            copyToClipboard(text, 'Smart multibuy list copied!');
+                          }}
+                        />
+
+                        {/* Quick Tips */}
+                        <div className="p-4 bg-accent-cyan/10 border border-accent-cyan/20 rounded-xl">
+                          <h4 className="text-accent-cyan font-medium mb-3 flex items-center gap-2">
+                            <span>💡</span> Station Trading Tips
+                          </h4>
+                          <ul className="space-y-2 text-sm text-text-secondary">
+                            <li className="flex items-start gap-2">
+                              <span className="text-accent-cyan">•</span>
+                              Update orders every 4-6 hours for best results
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-accent-cyan">•</span>
+                              Focus on items with &gt;10% margin and &gt;100 daily volume
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-accent-cyan">•</span>
+                              Diversify across 10-20 items to reduce risk
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-accent-cyan">•</span>
+                              Train Accounting and Broker Relations to reduce fees
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-accent-cyan">•</span>
+                              Avoid items with extremely high margins (&gt;50%) - often traps
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <DataFreshnessIndicator
-                    lastUpdated={lastUpdated}
-                    onRefresh={() => handleSubmit({ preventDefault: () => { } })}
-                    isLoading={loading}
-                    compact
-                  />
-                  {favorites.length > 0 && (
-                    <button
-                      onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${showFavoritesOnly
-                        ? 'bg-accent-gold/20 border-accent-gold/50 text-accent-gold'
-                        : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
-                        }`}
-                      title="Toggle favorites filter (f)"
-                    >
-                      <svg
-                        className={`w-4 h-4 ${showFavoritesOnly ? 'fill-accent-gold' : 'fill-none'}`}
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                        />
-                      </svg>
-                      <span className="text-sm">
-                        {showFavoritesOnly ? 'Show All' : 'Favorites Only'}
-                      </span>
-                      <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">f</kbd>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setHighQualityOnly(!highQualityOnly)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${highQualityOnly
-                      ? 'bg-green-500/20 border-green-500/50 text-green-400'
-                      : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
-                      }`}
-                    title="Toggle high quality filter (h)"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-sm">
-                      {highQualityOnly ? 'All Trades' : 'High Quality'}
-                    </span>
-                    <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">h</kbd>
-                  </button>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full sm:w-auto">
-                  <button
-                    onClick={() => copyAllResults(trades)}
-                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
-                    title="Copy all results as table"
+              )}
+            </GlassmorphicCard>
+          )}
+
+          {/* Error Display */}
+          {error && (
+            <ActionableError
+              error={error}
+              onRetry={() => handleSubmit({ preventDefault: () => { } })}
+              className="mb-8"
+            />
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <GlassmorphicCard>
+              <SkeletonTable rows={10} columns={7} />
+            </GlassmorphicCard>
+          )}
+
+          {/* Results */}
+          {data !== null && !loading && (() => {
+            // Normalize data to array and apply filtering
+            const allTrades = Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : []);
+            const trades = Array.isArray(sortedData) ? sortedData : (sortedData && typeof sortedData === 'object' ? [sortedData] : []);
+
+            if (allTrades.length === 0) {
+              return (
+                <EmptyState
+                  icon={<SearchX className="w-10 h-10" />}
+                  title="No trades found"
+                  description="Try adjusting your filters or try different parameters to find more opportunities."
+                  variant="search"
+                />
+              );
+            }
+
+            if (trades.length === 0 && allTrades.length > 0) {
+              return (
+                <EmptyState
+                  icon={<SearchX className="w-10 h-10" />}
+                  title="No trades found for this category"
+                  description="Try selecting a different category or 'All Items' to see results."
+                  variant="search"
+                />
+              );
+            }
+
+            return (
+              <>
+                {/* Dashboard Toggle and At-A-Glance View */}
+                <div className="mb-6 flex items-center justify-between">
+                  <Button
+                    onClick={() => setShowDashboard(!showDashboard)}
+                    variant={showDashboard ? 'secondary' : 'ghost'}
+                    className={`border ${showDashboard ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan' : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'}`}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                     </svg>
-                    <span className="hidden sm:inline">Copy All</span>
-                    <span className="sm:hidden">Copy</span>
-                  </button>
-                  <button
-                    onClick={() => copyMultibuyFormat(trades)}
-                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors text-xs md:text-sm min-h-[44px]"
-                    title="Copy in EVE Online multibuy format"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    Multibuy
-                  </button>
-                  <button
-                    onClick={() => setShowSaveModal(true)}
-                    className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                    <span className="hidden sm:inline">Save Route</span>
-                    <span className="sm:hidden">Save</span>
-                  </button>
+                    <span className="font-medium">Dashboard</span>
+                    <kbd className="hidden sm:inline-block ml-2 px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">d</kbd>
+                  </Button>
                 </div>
-              </div>
 
-              {/* Top 10 Recommendations */}
-              <TopRecommendations
-                data={trades}
-                onItemClick={handleRowClick}
-                maxItems={10}
-              />
+                {/* At-A-Glance Trading Dashboard */}
+                {showDashboard && (
+                  <>
+                    <TradingDashboard
+                      data={trades}
+                      onItemClick={handleRowClick}
+                      walletBalance={walletBalance}
+                      className="mb-6"
+                    />
 
-              {/* Statistics Summary */}
-              <TradingStats data={trades} />
-
-              {/* Profit Distribution */}
-              <ProfitDistribution data={trades} className="mb-8" />
-
-              {/* Quality Legend */}
-              <div className="mb-4 flex flex-wrap items-center gap-4 text-xs text-text-secondary">
-                <span className="font-medium">Trade Quality:</span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-yellow-400/30 border-l-2 border-yellow-400"></span>
-                  Excellent
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-green-400/20 border-l-2 border-green-400"></span>
-                  Good
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-cyan-400/15 border-l-2 border-cyan-400"></span>
-                  Fair
-                </span>
-              </div>
-
-              {/* Full Results Table */}
-              <TradingTable
-                tableId="station-trading-table"
-                data={trades}
-                columns={tableColumns}
-                onRowClick={handleRowClick}
-                defaultSort={{ column: 'Net Profit', direction: 'desc' }}
-                emptyMessage="No trades found matching your criteria"
-                showQualityIndicators={true}
-                searchInputRef={searchInputRef}
-                selectedRowIndex={selectedRowIndex}
-                onClearFilters={() => {
-                  setSmartFilters({
-                    hideScams: false,
-                    hideLowVolume: false,
-                    highQualityOnly: false,
-                    verifiedOnly: false,
-                    minVolume: 0,
-                    maxVolume: null,
-                    minMargin: 0,
-                    maxMargin: 100,
-                    minProfit: 0,
-                    maxProfit: null,
-                    riskLevels: ['low', 'medium', 'high', 'extreme'],
-                  });
-                  setQuickFilterIds([]);
-                }}
-                expandableRowContent={(row) => {
-                  const itemId = row['Item ID'] || row.itemId;
-                  const stationData = getStationData(form.station, universeList);
-                  const regionId = stationData?.region;
-                  const stationId = stationData?.station;
-
-                  return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                      {/* Quick Price Copy Panel - Most Important! */}
-                      <div className="lg:col-span-1">
-                        <QuickPricePanel
-                          buyPrice={row['Buy Price']}
-                          sellPrice={row['Sell Price']}
-                          itemName={row['Item']}
-                          onCopy={(msg) => toast.success(msg)}
+                    {/* Profit Summary & Activity Feed - EVE Tycoon style */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                      <div className="lg:col-span-2">
+                        <ProfitSummaryCard
+                          trades={trades}
+                          period="30d"
+                          walletBalance={walletBalance}
                         />
                       </div>
-
-                      {/* Quick Calculator */}
                       <div className="lg:col-span-1">
-                        <QuickTradeCalculator
-                          buyPrice={row['Buy Price']}
-                          sellPrice={row['Sell Price']}
-                          initialQuantity={row['Volume'] || 1}
-                          brokerFee={characterTaxes?.brokerFee || form.brokerFee / 100}
-                          salesTax={characterTaxes?.salesTax || form.tax}
-                          itemName={row['Item']}
+                        <TradeActivityFeed
+                          trades={trades}
+                          maxItems={5}
+                          className="h-full"
                         />
-                      </div>
-
-                      {/* Trade Decision Card */}
-                      <div className="lg:col-span-1">
-                        <TradeDecisionCard
-                          trade={row}
-                          allTrades={Array.isArray(sortedData) ? sortedData : []}
-                        />
-                        {/* Affordability Card (if logged in) */}
-                        {walletBalance !== null && (
-                          <AffordabilityCard
-                            cost={row['Buy Price'] || 0}
-                            walletBalance={walletBalance}
-                            itemName={row['Item']}
-                            className="mt-4"
-                          />
-                        )}
-                      </div>
-
-                      {/* Order Book Preview */}
-                      <div className="lg:col-span-1">
-                        {regionId && itemId && (
-                          <OrderBookCard
-                            regionId={regionId}
-                            typeId={itemId}
-                            stationId={stationId}
-                            itemName={row['Item']}
-                          />
-                        )}
                       </div>
                     </div>
-                  );
-                }}
-              />
-            </>
-          );
-        })()}
+                  </>
+                )}
+
+                {/* Quick Filters Bar */}
+                <QuickFiltersBar
+                  onFilterChange={setQuickFilterIds}
+                  activeFilters={quickFilterIds}
+                  data={allTrades}
+                  className="mb-6 p-4 bg-space-dark/30 border border-accent-cyan/10 rounded-xl"
+                />
+
+                {/* Smart Filters */}
+                <SmartFilters
+                  onChange={setSmartFilters}
+                  initialFilters={smartFilters}
+                  data={allTrades}
+                />
+
+                {/* Advanced Sort Panel */}
+                <AdvancedSortPanel
+                  currentSort={advancedSorts}
+                  onChange={setAdvancedSorts}
+                  className="mb-6"
+                />
+
+                {/* Action Bar */}
+                <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 md:gap-4 flex-wrap">
+                    <div className="text-text-secondary text-sm">
+                      Found <span className="text-accent-cyan font-medium">{trades.length}</span> profitable trades
+                      {categoryFilter !== 'all' && allTrades.length !== trades.length && (
+                        <span className="ml-2 text-text-secondary/70">
+                          (filtered from {allTrades.length} total)
+                        </span>
+                      )}
+                    </div>
+                    <DataFreshnessIndicator
+                      lastUpdated={lastUpdated}
+                      onRefresh={() => handleSubmit({ preventDefault: () => { } })}
+                      isLoading={loading}
+                      compact
+                    />
+                    {favorites.length > 0 && (
+                      <button
+                        onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${showFavoritesOnly
+                          ? 'bg-accent-gold/20 border-accent-gold/50 text-accent-gold'
+                          : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
+                          }`}
+                        title="Toggle favorites filter (f)"
+                      >
+                        <svg
+                          className={`w-4 h-4 ${showFavoritesOnly ? 'fill-accent-gold' : 'fill-none'}`}
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                          />
+                        </svg>
+                        <span className="text-sm">
+                          {showFavoritesOnly ? 'Show All' : 'Favorites Only'}
+                        </span>
+                        <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">f</kbd>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setHighQualityOnly(!highQualityOnly)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${highQualityOnly
+                        ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                        : 'bg-white/5 border-accent-cyan/20 text-text-secondary hover:bg-white/10'
+                        }`}
+                      title="Toggle high quality filter (h)"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm">
+                        {highQualityOnly ? 'All Trades' : 'High Quality'}
+                      </span>
+                      <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono bg-space-dark/80 border border-accent-cyan/30 rounded">h</kbd>
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => copyAllResults(trades)}
+                      className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
+                      title="Copy all results as table"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span className="hidden sm:inline">Copy All</span>
+                      <span className="sm:hidden">Copy</span>
+                    </button>
+                    <button
+                      onClick={() => copyMultibuyFormat(trades)}
+                      className="flex items-center gap-2 px-3 md:px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors text-xs md:text-sm min-h-[44px]"
+                      title="Copy in EVE Online multibuy format"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Multibuy
+                    </button>
+                    <button
+                      onClick={() => setShowSaveModal(true)}
+                      className="flex items-center gap-2 px-3 md:px-4 py-2 bg-accent-cyan/20 text-accent-cyan rounded-lg hover:bg-accent-cyan/30 transition-colors text-xs md:text-sm min-h-[44px]"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                      <span className="hidden sm:inline">Save Route</span>
+                      <span className="sm:hidden">Save</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Top 10 Recommendations */}
+                <TopRecommendations
+                  data={trades}
+                  onItemClick={handleRowClick}
+                  maxItems={10}
+                />
+
+                {/* Statistics Summary */}
+                <TradingStats data={trades} />
+
+                {/* Profit Distribution */}
+                <ProfitDistribution data={trades} className="mb-8" />
+
+                {/* Quality Legend */}
+                <div className="mb-4 flex flex-wrap items-center gap-4 text-xs text-text-secondary">
+                  <span className="font-medium">Trade Quality:</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm bg-yellow-400/30 border-l-2 border-yellow-400"></span>
+                    Excellent
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm bg-green-400/20 border-l-2 border-green-400"></span>
+                    Good
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm bg-cyan-400/15 border-l-2 border-cyan-400"></span>
+                    Fair
+                  </span>
+                </div>
+
+                {/* Full Results Table */}
+                <TradingTable
+                  tableId="station-trading-table"
+                  data={trades}
+                  columns={tableColumns}
+                  onRowClick={handleRowClick}
+                  defaultSort={{ column: 'Net Profit', direction: 'desc' }}
+                  emptyMessage="No trades found matching your criteria"
+                  showQualityIndicators={true}
+                  searchInputRef={searchInputRef}
+                  selectedRowIndex={selectedRowIndex}
+                  onClearFilters={() => {
+                    setSmartFilters({
+                      hideScams: false,
+                      hideLowVolume: false,
+                      highQualityOnly: false,
+                      verifiedOnly: false,
+                      minVolume: 0,
+                      maxVolume: null,
+                      minMargin: 0,
+                      maxMargin: 100,
+                      minProfit: 0,
+                      maxProfit: null,
+                      riskLevels: ['low', 'medium', 'high', 'extreme'],
+                    });
+                    setQuickFilterIds([]);
+                  }}
+                  expandableRowContent={(row) => {
+                    const itemId = row['Item ID'] || row.itemId;
+                    const stationData = getStationData(form.station, universeList);
+                    const regionId = stationData?.region;
+                    const stationId = stationData?.station;
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        {/* Quick Price Copy Panel - Most Important! */}
+                        <div className="lg:col-span-1">
+                          <QuickPricePanel
+                            buyPrice={row['Buy Price']}
+                            sellPrice={row['Sell Price']}
+                            itemName={row['Item']}
+                            onCopy={(msg) => toast.success(msg)}
+                          />
+                        </div>
+
+                        {/* Quick Calculator */}
+                        <div className="lg:col-span-1">
+                          <QuickTradeCalculator
+                            buyPrice={row['Buy Price']}
+                            sellPrice={row['Sell Price']}
+                            initialQuantity={row['Volume'] || 1}
+                            brokerFee={characterTaxes?.brokerFee || form.brokerFee / 100}
+                            salesTax={characterTaxes?.salesTax || form.tax}
+                            itemName={row['Item']}
+                          />
+                        </div>
+
+                        {/* Trade Decision Card */}
+                        <div className="lg:col-span-1">
+                          <TradeDecisionCard
+                            trade={row}
+                            allTrades={Array.isArray(sortedData) ? sortedData : []}
+                          />
+                          {/* Affordability Card (if logged in) */}
+                          {walletBalance !== null && (
+                            <AffordabilityCard
+                              cost={row['Buy Price'] || 0}
+                              walletBalance={walletBalance}
+                              itemName={row['Item']}
+                              className="mt-4"
+                            />
+                          )}
+                        </div>
+
+                        {/* Order Book Preview */}
+                        <div className="lg:col-span-1">
+                          {regionId && itemId && (
+                            <OrderBookCard
+                              regionId={regionId}
+                              typeId={itemId}
+                              stationId={stationId}
+                              itemName={row['Item']}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
+              </>
+            );
+          })()}
         </div>
       </PullToRefresh>
 
@@ -2109,7 +1925,7 @@ Margin: ${formatPercent(item['Gross Margin'] / 100, 1)}`;
       {/* Mobile Quick Actions Bar */}
       {data !== null && !loading && (
         <MobileQuickActions
-          onRefresh={() => handleSubmit({ preventDefault: () => {} })}
+          onRefresh={() => handleSubmit({ preventDefault: () => { } })}
           onCopyAll={() => {
             const trades = Array.isArray(sortedData) ? sortedData : [];
             if (trades.length > 0) copyAllResults(trades);

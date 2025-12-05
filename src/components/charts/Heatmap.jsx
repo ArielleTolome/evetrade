@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { motion } from 'framer-motion';
+// motion import removed - not currently used
 import { cn } from '../../lib/utils';
 
 const DEEP_SEA_PALETTE = ['#0D1B2A', '#1B263B', '#415A77', '#778DA9', '#E0E1DD'];

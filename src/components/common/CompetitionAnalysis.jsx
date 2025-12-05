@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { formatISK, formatPercent, formatNumber } from '../../utils/formatters';
+import { formatISK, formatPercent } from '../../utils/formatters';
 
 const COMPETITION_LEVELS = {
   low: { label: 'Low Competition', color: 'text-green-400', bg: 'bg-green-400/20', icon: '🟢' },

@@ -51,21 +51,21 @@ const indexedDBMock = {
 Object.defineProperty(window, 'indexedDB', { value: indexedDBMock });
 
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
+globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+globalThis.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
 
 // Suppress console warnings in tests
-vi.spyOn(console, 'warn').mockImplementation(() => {});
+vi.spyOn(console, 'warn').mockImplementation(() => { });
 
 // Mock scrollIntoView for autocomplete tests
 Element.prototype.scrollIntoView = vi.fn();

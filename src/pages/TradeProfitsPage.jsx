@@ -5,7 +5,6 @@ import { Button } from '../components/common/Button';
 import { useEveAuth } from '../hooks/useEveAuth';
 import {
   getWalletTransactions,
-  getWalletJournal,
   getTypeNames,
   calculateTradingTaxes,
   getCharacterSkills,
@@ -19,7 +18,7 @@ import { formatISK, formatNumber, formatPercent } from '../utils/formatters';
 export function TradeProfitsPage() {
   const { isAuthenticated, character, getAccessToken, login } = useEveAuth();
   const [transactions, setTransactions] = useState([]);
-  const [journalEntries, setJournalEntries] = useState([]);
+
   const [typeNames, setTypeNames] = useState({});
   const [tradingTaxes, setTradingTaxes] = useState({ salesTax: 0.08, brokerFee: 0.03 });
   const [loading, setLoading] = useState(false);
@@ -34,7 +33,7 @@ export function TradeProfitsPage() {
     if (isAuthenticated && character?.id) {
       loadData();
     }
-  }, [isAuthenticated, character?.id]);
+  }, [isAuthenticated, character?.id, loadData]);
 
   const loadData = useCallback(async () => {
     if (!isAuthenticated || !character?.id) return;
@@ -47,14 +46,12 @@ export function TradeProfitsPage() {
       if (!accessToken) return;
 
       // Load transactions and journal in parallel
-      const [txns, journal, skills] = await Promise.all([
+      const [txns, skills] = await Promise.all([
         getWalletTransactions(character.id, accessToken),
-        getWalletJournal(character.id, accessToken, 1),
         getCharacterSkills(character.id, accessToken).catch(() => null),
       ]);
 
       setTransactions(txns || []);
-      setJournalEntries(journal || []);
 
       // Calculate trading taxes based on skills
       if (skills) {

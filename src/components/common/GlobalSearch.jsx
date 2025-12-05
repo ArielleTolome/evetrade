@@ -1,4 +1,4 @@
-import { useState, useRef, useId, useEffect, useCallback } from 'react';
+import { useState, useRef, useId, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Search, X, Loader2, Cube, Building, Globe, FileText, History } from 'lucide-react';
 import { useResources } from '../../hooks/useResources';

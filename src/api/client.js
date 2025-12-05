@@ -36,7 +36,7 @@ function getCircuitNameFromUrl(url) {
     const path = url.split('?')[0];
     const parts = path.split('/').filter(p => p && !/^\d+$/.test(p) && p !== 'api');
     return parts.length > 0 ? parts.join(':') : 'default';
-  } catch (e) {
+  } catch {
     return 'default';
   }
 }

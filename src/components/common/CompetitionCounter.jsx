@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatISK, formatNumber } from '../../utils/formatters';
+// formatISK, formatNumber available from '../../utils/formatters' if needed
 
 /**
  * CompetitionCounter - Counts and analyzes competition on your traded items
