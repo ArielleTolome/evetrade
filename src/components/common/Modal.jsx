@@ -1,12 +1,5 @@
-import React, { useEffect, useRef, useCallback, createContext, useContext, useState } from 'react';
+import React, { useEffect, useRef, useCallback, createContext, useContext } from 'react';
 import { createPortal } from 'react-dom';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-// Utility to merge Tailwind classes
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
-}
 
 /**
  * Modal Context for managing modal state
@@ -117,7 +110,7 @@ const unregisterModal = (id) => {
  */
 function ModalHeader({ children, className = '' }) {
   return (
-    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10', className)}>
+    <div className={`px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 ${className}`}>
       {children}
     </div>
   );
@@ -130,7 +123,7 @@ function ModalTitle({ children, className = '', id, ...props }) {
   return (
     <h2
       id={id}
-      className={cn('text-xl font-display font-bold text-text-primary', className)}
+      className={`text-xl font-display font-bold text-text-primary ${className}`}
       {...props}
     >
       {children}
@@ -143,7 +136,7 @@ function ModalTitle({ children, className = '', id, ...props }) {
  */
 function ModalBody({ children, className = '' }) {
   return (
-    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto max-h-[60dvh] sm:max-h-[70dvh]', className)}>
+    <div className={`px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto max-h-[60dvh] sm:max-h-[70dvh] ${className}`}>
       {children}
     </div>
   );
@@ -154,34 +147,11 @@ function ModalBody({ children, className = '' }) {
  */
 function ModalFooter({ children, className = '' }) {
   return (
-    <div className={cn('px-4 sm:px-6 py-3 sm:py-4 border-t border-white/10 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pb-safe', className)}>
+    <div className={`px-4 sm:px-6 py-3 sm:py-4 border-t border-white/10 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pb-safe ${className}`}>
       {children}
     </div>
   );
 }
-
-const animationMap = {
-  fade: {
-    enter: 'animate-modal-fade-in',
-    exit: 'animate-modal-fade-out',
-  },
-  'slide-up': {
-    enter: 'animate-modal-slide-up-in',
-    exit: 'animate-modal-slide-up-out',
-  },
-  'slide-down': {
-    enter: 'animate-modal-slide-down-in',
-    exit: 'animate-modal-slide-down-out',
-  },
-  'slide-right': {
-    enter: 'animate-modal-slide-right-in',
-    exit: 'animate-modal-slide-right-out',
-  },
-  scale: {
-    enter: 'animate-modal-scale-in',
-    exit: 'animate-modal-scale-out',
-  },
-};
 
 /**
  * Main Modal Component
@@ -189,23 +159,19 @@ const animationMap = {
  * @param {Object} props
  * @param {boolean} props.isOpen - Controls modal visibility
  * @param {Function} props.onClose - Callback when modal should close
- * @param {string} [props.size='md'] - Modal size: 'sm', 'md', 'lg', 'xl', 'full'
- * @param {string} [props.animation='fade'] - Animation type: 'fade', 'slide-up', 'slide-down', 'slide-right', 'scale'
- * @param {boolean} [props.fullscreen=false] - Fullscreen on mobile
- * @param {boolean} [props.closeOnBackdrop=true] - Close modal when clicking backdrop
- * @param {boolean} [props.closeOnEscape=true] - Close modal on Escape key
- * @param {boolean} [props.showCloseButton=true] - Show close button in header
- * @param {string} [props.title] - Optional title (creates automatic header)
+ * @param {string} props.size - Modal size: 'sm', 'md', 'lg', 'xl', 'full'
+ * @param {boolean} props.closeOnBackdrop - Close modal when clicking backdrop (default: true)
+ * @param {boolean} props.closeOnEscape - Close modal on Escape key (default: true)
+ * @param {boolean} props.showCloseButton - Show close button in header (default: true)
+ * @param {string} props.title - Optional title (creates automatic header)
  * @param {React.ReactNode} props.children - Modal content
- * @param {string} [props.className] - Additional classes for modal container
- * @param {string} [props.backdropClassName] - Additional classes for backdrop
+ * @param {string} props.className - Additional classes for modal container
+ * @param {string} props.backdropClassName - Additional classes for backdrop
  */
 export function Modal({
   isOpen,
   onClose,
   size = 'md',
-  animation = 'fade',
-  fullscreen = false,
   closeOnBackdrop = true,
   closeOnEscape = true,
   showCloseButton = true,
@@ -217,64 +183,45 @@ export function Modal({
   const modalRef = useRef(null);
   const modalId = useRef(`modal-${Math.random().toString(36).substr(2, 9)}`);
   const zIndexRef = useRef(1000);
-  const [isMounted, setIsMounted] = useState(isOpen);
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsMounted(true);
-      setIsAnimatingOut(false);
-    } else {
-      setIsAnimatingOut(true);
-      const timer = setTimeout(() => setIsMounted(false), 150); // Match exit animation duration
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
 
   // Manage focus trap
-  useFocusTrap(isMounted, modalRef);
+  useFocusTrap(isOpen, modalRef);
 
   // Manage body scroll lock
-  useBodyScrollLock(isMounted);
+  useBodyScrollLock(isOpen);
 
   // Register/unregister modal in stack
   useEffect(() => {
-    if (isMounted) {
+    if (isOpen) {
       zIndexRef.current = registerModal(modalId.current);
     }
     return () => {
       unregisterModal(modalId.current);
     };
-  }, [isMounted]);
-
-  const handleClose = useCallback(() => {
-    if (onClose) {
-      onClose();
-    }
-  }, [onClose]);
+  }, [isOpen]);
 
   // Handle escape key
   useEffect(() => {
-    if (!isMounted || !closeOnEscape) return;
+    if (!isOpen || !closeOnEscape) return;
 
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
-        handleClose();
+        onClose();
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isMounted, closeOnEscape, handleClose]);
+  }, [isOpen, closeOnEscape, onClose]);
 
   // Handle backdrop click
   const handleBackdropClick = useCallback((e) => {
     if (closeOnBackdrop && e.target === e.currentTarget) {
-      handleClose();
+      onClose();
     }
-  }, [closeOnBackdrop, handleClose]);
+  }, [closeOnBackdrop, onClose]);
 
-  if (!isMounted) return null;
+  if (!isOpen) return null;
 
   // Size configurations
   const sizeClasses = {
@@ -282,24 +229,17 @@ export function Modal({
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
-    full: 'max-w-[95vw] h-[95dvh]',
+    full: 'max-w-[95vw] h-[95vh]',
   };
 
+  // Check if children contains Modal.Header, Modal.Body, Modal.Footer
   const hasCustomLayout = React.Children.toArray(children).some(
     child => child?.type === ModalHeader || child?.type === ModalBody || child?.type === ModalFooter
   );
 
-  const animationClasses = animationMap[animation] || animationMap.fade;
-  const currentAnimation = isAnimatingOut ? animationClasses.exit : animationClasses.enter;
-  const backdropAnimation = isAnimatingOut ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop-in';
-
   const modalContent = (
     <div
-      className={cn(
-        'fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 pt-safe',
-        'motion-safe:transition-opacity motion-reduce:transition-none',
-        backdropClassName
-      )}
+      className={`fixed inset-0 z-[${zIndexRef.current}] flex items-end sm:items-center justify-center p-0 sm:p-6 pt-safe ${backdropClassName}`}
       style={{ zIndex: zIndexRef.current }}
       onClick={handleBackdropClick}
       role="dialog"
@@ -308,36 +248,30 @@ export function Modal({
     >
       {/* Backdrop */}
       <div
-        className={cn(
-          'absolute inset-0 bg-space-black/80 backdrop-blur-sm',
-          backdropAnimation
-        )}
+        className="absolute inset-0 bg-space-black/80 backdrop-blur-sm animate-fade-in motion-reduce:animate-none"
         aria-hidden="true"
       />
 
       {/* Modal Container */}
       <div
         ref={modalRef}
-        data-testid="modal-container"
-        className={cn(
-          'relative w-full',
-          sizeClasses[size],
-          'bg-space-dark/95 backdrop-blur-xl',
-          'rounded-t-2xl sm:rounded-2xl shadow-2xl',
-          'border border-accent-cyan/20 border-b-0 sm:border-b',
-          'overflow-hidden max-h-[90vh] sm:max-h-[85vh]',
-          { 'h-full w-full max-w-full max-h-full rounded-none sm:rounded-2xl': fullscreen },
-          size === 'full' ? 'flex flex-col' : '',
-          currentAnimation,
-          'motion-reduce:animate-none',
-          className
-        )}
+        className={`
+          relative w-full ${sizeClasses[size]}
+          bg-space-dark/95 backdrop-blur-xl
+          rounded-t-2xl sm:rounded-2xl shadow-2xl
+          border border-accent-cyan/20 border-b-0 sm:border-b
+          animate-fade-in-up motion-reduce:animate-none
+          overflow-hidden
+          max-h-[90vh] sm:max-h-[85vh]
+          ${size === 'full' ? 'flex flex-col' : ''}
+          ${className}
+        `}
         style={{
           boxShadow: '0 0 30px rgba(0, 240, 255, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5)',
         }}
       >
         {/* Content */}
-        <ModalContext.Provider value={{ onClose: handleClose, size }}>
+        <ModalContext.Provider value={{ onClose, size }}>
           {title && !hasCustomLayout ? (
             <>
               <ModalHeader>
@@ -345,7 +279,7 @@ export function Modal({
                   <ModalTitle id="modal-title">{title}</ModalTitle>
                   {showCloseButton && (
                     <button
-                      onClick={handleClose}
+                      onClick={onClose}
                       className="text-text-secondary hover:text-accent-cyan transition-colors p-1 rounded-lg hover:bg-white/5"
                       aria-label="Close modal"
                     >
@@ -372,7 +306,7 @@ export function Modal({
             <>
               {showCloseButton && !hasCustomLayout && (
                 <button
-                  onClick={handleClose}
+                  onClick={onClose}
                   className="absolute top-4 right-4 text-text-secondary hover:text-accent-cyan transition-colors p-1 rounded-lg hover:bg-white/5 z-10"
                   aria-label="Close modal"
                 >
@@ -399,6 +333,7 @@ export function Modal({
     </div>
   );
 
+  // Render to portal
   return createPortal(modalContent, document.body);
 }
 
@@ -418,7 +353,7 @@ Modal.Footer = ModalFooter;
  * @property {Function} toggle - Toggle modal state
  */
 export function useModal(initialState = false) {
-  const [isOpen, setIsOpen] = useState(initialState);
+  const [isOpen, setIsOpen] = React.useState(initialState);
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
