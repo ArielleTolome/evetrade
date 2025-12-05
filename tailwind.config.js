@@ -50,6 +50,11 @@ export default {
         'sec-02': '#f04800',   // 0.2
         'sec-01': '#d73000',   // 0.1
         'sec-00': '#f00000',   // 0.0 and below
+
+        // Notification Badge colors
+        'badge-default': '#415A77',
+        'badge-urgent': '#d73000',
+        'badge-text': '#E0E1DD',
       },
       backgroundColor: {
         'primary': 'var(--deep-sea-900)',
@@ -101,8 +106,23 @@ export default {
         'scale-in': 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'fade-in-down': 'fadeInDown 0.4s ease-out forwards',
         'slide-in-up': 'slideInUp 0.4s ease-out forwards',
+        'badge-pulse': 'badgePulse 2s ease-out infinite',
       },
       keyframes: {
+        badgePulse: {
+          '0%': {
+            transform: 'scale(1)',
+            boxShadow: '0 0 0 0 rgba(65, 90, 119, 0.7)',
+          },
+          '70%': {
+            transform: 'scale(1)',
+            boxShadow: '0 0 0 10px rgba(65, 90, 119, 0)',
+          },
+          '100%': {
+            transform: 'scale(1)',
+            boxShadow: '0 0 0 0 rgba(65, 90, 119, 0)',
+          },
+        },
         twinkle: {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.3', transform: 'scale(0.8)' },
