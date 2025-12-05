@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { cn } from '../../lib/utils';
 
@@ -85,6 +85,20 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
 
   const toastConfig = config[type] || config.info;
 
+  // Define handleDismiss before useEffect that uses it
+  const handleDismiss = useCallback(() => {
+    if (isExiting) return; // Already dismissing
+    setIsExiting(true);
+    // Clear any existing timeout before creating a new one
+    if (dismissTimeoutRef.current) {
+      clearTimeout(dismissTimeoutRef.current);
+    }
+    dismissTimeoutRef.current = setTimeout(() => {
+      onDismiss(id);
+      dismissTimeoutRef.current = null;
+    }, 300); // Match animation duration
+  }, [isExiting, onDismiss, id]);
+
   // Handle auto-dismiss with smooth progress animation
   useEffect(() => {
     if (duration === Infinity) return;
@@ -123,20 +137,7 @@ export function Toast({ id, type = 'info', message, duration = 5000, onDismiss, 
         clearTimeout(dismissTimeoutRef.current);
       }
     };
-  }, [duration]);
-
-  const handleDismiss = () => {
-    if (isExiting) return; // Already dismissing
-    setIsExiting(true);
-    // Clear any existing timeout before creating a new one
-    if (dismissTimeoutRef.current) {
-      clearTimeout(dismissTimeoutRef.current);
-    }
-    dismissTimeoutRef.current = setTimeout(() => {
-      onDismiss(id);
-      dismissTimeoutRef.current = null;
-    }, 300); // Match animation duration
-  };
+  }, [duration, handleDismiss]);
 
   const handleMouseEnter = () => {
     pausedRef.current = true;
