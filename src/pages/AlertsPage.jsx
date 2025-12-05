@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { EmptyState } from '../components/common/EmptyState';
@@ -11,7 +11,7 @@ import { formatISK, formatDateTime } from '../utils/formatters';
 /**
  * Alert Card Component
  */
-function AlertCard({ alert, onToggle, onDelete, onEdit, onCheckNow }) {
+function AlertCard({ alert, onToggle, onDelete, onCheckNow }) {
   const getAlertTypeInfo = (type) => {
     switch (type) {
       case 'price_below':
@@ -487,7 +487,6 @@ export function AlertsPage() {
                   alert={alert}
                   onToggle={toggleAlert}
                   onDelete={handleDeleteAlert}
-                  onEdit={setEditingAlert}
                   onCheckNow={handleCheckNow}
                 />
               ))}
